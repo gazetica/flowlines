@@ -141,3 +141,14 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Sensitive files - never commit
+google-services.json
+.env
+.env.local
+android/app/google-services.json
+
+# Android build
+android/build/
+android/.gradle/
+android/app/build/
