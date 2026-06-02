@@ -40,7 +40,7 @@ Claude Code must update this file at the end of every task:
 | `src/game/ScoreEngine.test.ts` | ✅ DONE | T-002. 39 Vitest tests passing (7 groups, all formula branches + 3 integration cases). |
 | `src/game/LevelManager.ts` | ✅ DONE | T-003. Loader/query: getLevel, getPack, getStars, isPackUnlocked, getNextLevelId, isPackStart. |
 | `src/game/levels.json` | ✅ DONE | T-003. 100 levels, packs 25/35/40. All 6 integrity checks pass. |
-| `src/components/TimerComponent.tsx` | ⬜ PENDING | |
+| `src/components/TimerComponent.tsx` | ✅ DONE | T-004. React countdown, onTick/onExpire, danger red+pulse <=10s, pause/resume, reset on duration change. 15 RTL tests. |
 | Game loop wire-up (GameScene.ts) | ⬜ PENDING | |
 | Modifier: shuffle | ⬜ PENDING | |
 | Modifier: fog | ⬜ PENDING | |
@@ -111,4 +111,6 @@ Claude Code must update this file at the end of every task:
 | 02 Jun 2026 | T-003: Star thresholds computed with round-half-to-even (banker's rounding) | Only rule that reproduces the brief's worked examples (85→[42,64,85], 45→[22,34,45]); plain Math.round (half-up) gives 43/23, contradicting the spec. |
 | 02 Jun 2026 | T-003: `levelsData.levels` cast via `as unknown as LevelConfig[]` | resolveJsonModule widens JSON literals (modifier:string, grid:number); the direct `as LevelConfig[]` in the brief does not type-check. Dataset is validated by the 6 integrity checks. |
 | 02 Jun 2026 | T-003: Added `resolveJsonModule: true` to tsconfig.app.json | Required for the typed `import levelsData from './levels.json'`; the only permitted tsconfig change for this task. |
+| 02 Jun 2026 | T-004: Installed `@testing-library/react`, `@testing-library/jest-dom`, `jsdom` | First React component test; RTL + jsdom env required. vite.config.ts gained jsdom/globals/setupFiles + `/// <reference types="vitest/config" />` so the `test` block type-checks. |
+| 02 Jun 2026 | T-004: Tests advance fake timers one second at a time (each in its own act()) | Advancing N seconds in one call fires all interval callbacks before React flushes the updater's clearInterval-at-zero, a fake-timer batching artifact; per-second flushing mirrors real 1s-interval runtime behaviour. Component code unchanged from brief skeleton. |
 | 02 Jun 2026 | T-002: `buildBreakdown` follows the prose Format rules (labelled `× N streak × N grid`), not the worked examples | Brief's examples omit the streak/grid labels and use zero-padded decimals (1.0, 2.0) that no single formatter reproduces (1.25 has 2 dp, 2.8 has 1); examples are not implementable, so the prescriptive prose wins. No test asserts the exact string. |
