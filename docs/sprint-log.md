@@ -36,8 +36,8 @@ Claude Code must update this file at the end of every task:
 | CLAUDE.md project brief | ✅ DONE | Root of project |
 | `src/game/GridEngine.ts` | ✅ DONE | T-001. Pure TS, zero Phaser. All 5 modifier hooks + asc/desc direction. |
 | `src/game/GridEngine.test.ts` | ✅ DONE | T-001. 40 Vitest tests passing (8 groups, every method + modifier). |
-| `src/game/ScoreEngine.ts` | ⬜ PENDING | |
-| `src/game/ScoreEngine.test.ts` | ⬜ PENDING | |
+| `src/game/ScoreEngine.ts` | ✅ DONE | T-002. Pure static calculator, no side effects. base/time/speed/streak/grid + getStars. |
+| `src/game/ScoreEngine.test.ts` | ✅ DONE | T-002. 39 Vitest tests passing (7 groups, all formula branches + 3 integration cases). |
 | `src/game/LevelManager.ts` | ⬜ PENDING | |
 | `src/game/levels.json` | ⬜ PENDING | All 100 level configs |
 | `src/components/TimerComponent.tsx` | ⬜ PENDING | |
@@ -108,3 +108,4 @@ Claude Code must update this file at the end of every task:
 | 02 Jun 2026 | T-001: Cell includes `display` field per api_contracts.md (brief's Cell omitted it) | api-contracts is the authoritative inter-module contract; field kept in sync with value via getDisplayValue logic. Non-breaking for tests. |
 | 02 Jun 2026 | T-001: `onCountdownTick` param renamed `_elapsedMs` | Contract names it `elapsedMs` but brief logic uses Date.now()-revealedAt; `_` prefix satisfies strict noUnusedParameters without changing the public signature shape. |
 | 02 Jun 2026 | T-001: Added `vitest` devDependency + `"test": "vitest"` script | Vitest was not installed; required to run GridEngine.test.ts per brief. |
+| 02 Jun 2026 | T-002: `buildBreakdown` follows the prose Format rules (labelled `× N streak × N grid`), not the worked examples | Brief's examples omit the streak/grid labels and use zero-padded decimals (1.0, 2.0) that no single formatter reproduces (1.25 has 2 dp, 2.8 has 1); examples are not implementable, so the prescriptive prose wins. No test asserts the exact string. |
