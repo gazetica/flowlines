@@ -38,8 +38,8 @@ Claude Code must update this file at the end of every task:
 | `src/game/GridEngine.test.ts` | ✅ DONE | T-001. 40 Vitest tests passing (8 groups, every method + modifier). |
 | `src/game/ScoreEngine.ts` | ✅ DONE | T-002. Pure static calculator, no side effects. base/time/speed/streak/grid + getStars. |
 | `src/game/ScoreEngine.test.ts` | ✅ DONE | T-002. 39 Vitest tests passing (7 groups, all formula branches + 3 integration cases). |
-| `src/game/LevelManager.ts` | ⬜ PENDING | |
-| `src/game/levels.json` | ⬜ PENDING | All 100 level configs |
+| `src/game/LevelManager.ts` | ✅ DONE | T-003. Loader/query: getLevel, getPack, getStars, isPackUnlocked, getNextLevelId, isPackStart. |
+| `src/game/levels.json` | ✅ DONE | T-003. 100 levels, packs 25/35/40. All 6 integrity checks pass. |
 | `src/components/TimerComponent.tsx` | ⬜ PENDING | |
 | Game loop wire-up (GameScene.ts) | ⬜ PENDING | |
 | Modifier: shuffle | ⬜ PENDING | |
@@ -108,4 +108,7 @@ Claude Code must update this file at the end of every task:
 | 02 Jun 2026 | T-001: Cell includes `display` field per api_contracts.md (brief's Cell omitted it) | api-contracts is the authoritative inter-module contract; field kept in sync with value via getDisplayValue logic. Non-breaking for tests. |
 | 02 Jun 2026 | T-001: `onCountdownTick` param renamed `_elapsedMs` | Contract names it `elapsedMs` but brief logic uses Date.now()-revealedAt; `_` prefix satisfies strict noUnusedParameters without changing the public signature shape. |
 | 02 Jun 2026 | T-001: Added `vitest` devDependency + `"test": "vitest"` script | Vitest was not installed; required to run GridEngine.test.ts per brief. |
+| 02 Jun 2026 | T-003: Star thresholds computed with round-half-to-even (banker's rounding) | Only rule that reproduces the brief's worked examples (85→[42,64,85], 45→[22,34,45]); plain Math.round (half-up) gives 43/23, contradicting the spec. |
+| 02 Jun 2026 | T-003: `levelsData.levels` cast via `as unknown as LevelConfig[]` | resolveJsonModule widens JSON literals (modifier:string, grid:number); the direct `as LevelConfig[]` in the brief does not type-check. Dataset is validated by the 6 integrity checks. |
+| 02 Jun 2026 | T-003: Added `resolveJsonModule: true` to tsconfig.app.json | Required for the typed `import levelsData from './levels.json'`; the only permitted tsconfig change for this task. |
 | 02 Jun 2026 | T-002: `buildBreakdown` follows the prose Format rules (labelled `× N streak × N grid`), not the worked examples | Brief's examples omit the streak/grid labels and use zero-padded decimals (1.0, 2.0) that no single formatter reproduces (1.25 has 2 dp, 2.8 has 1); examples are not implementable, so the prescriptive prose wins. No test asserts the exact string. |
