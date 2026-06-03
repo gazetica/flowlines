@@ -15,6 +15,7 @@ import Phaser from 'phaser';
 import { useGameStore } from '../store/gameStore';
 import { TimerComponent } from './TimerComponent';
 import { GameScene } from '../scenes/GameScene';
+import { initAppLifecycle, removeAppLifecycle } from '../services/appLifecycle';
 
 export function GameScreen() {
   const phaserRef = useRef<Phaser.Game | null>(null);
@@ -33,9 +34,12 @@ export function GameScreen() {
       parent: 'phaser-container',
       scene: [GameScene],
     });
+    // Restore rendering on resume from screen lock / backgrounding (T-007).
+    initAppLifecycle(phaserRef.current);
     // Start level 1 campaign
     startLevel(1, 'campaign');
     return () => {
+      removeAppLifecycle();
       phaserRef.current?.destroy(true);
       phaserRef.current = null;
     };
