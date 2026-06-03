@@ -12,6 +12,8 @@ import { useGameStore } from '../store/gameStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { LevelManager } from '../game/LevelManager';
 import { ScoreEngine } from '../game/ScoreEngine';
+import { LeaderPanel } from './LeaderPanel';
+import { submitCampaignScore } from '../services/campaignScores';
 
 export function ResultScreen() {
   const { t } = useTranslation();
@@ -65,6 +67,17 @@ export function ResultScreen() {
 
       // Record (idempotent — only improves)
       recordLevelComplete(currentLevel.id, earnedStars, finalScore, mode);
+
+      // Campaign: submit this level's score for the YOU vs LEADER panel (T-001).
+      // Fire-and-forget — never blocks the result flow. Daily (id 0) excluded.
+      if (mode === 'campaign' && currentLevel.id > 0) {
+        submitCampaignScore({
+          levelId: currentLevel.id,
+          score: finalScore,
+          timeSecs: Math.round(timeElapsed * 10) / 10,
+          gridSize: currentLevel.grid,
+        }).catch((err) => console.warn('[Result] submitCampaignScore:', err));
+      }
 
       // Daily challenge: bump the consecutive-day streak (also marks today played).
       if (mode === 'daily') {
@@ -178,6 +191,13 @@ export function ResultScreen() {
             <span style={{ color: 'var(--white)' }}>{t('result.total')}</span>
             <span style={{ fontFamily: "'Space Mono', monospace", color: 'var(--gold)', textShadow: '0 0 8px rgba(255,215,0,0.4)' }}>{displayScore.toLocaleString()}</span>
           </div>
+        </div>
+      )}
+
+      {/* Per-level leader panel (YOU vs LEADER) — campaign only (T-001). */}
+      {mode === 'campaign' && currentLevel && currentLevel.id > 0 && (
+        <div style={{ margin: '0 20px 12px', position: 'relative', zIndex: 1 }}>
+          <LeaderPanel levelId={currentLevel.id} compact={false} />
         </div>
       )}
 

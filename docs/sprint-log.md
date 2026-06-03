@@ -84,10 +84,11 @@ Claude Code must update this file at the end of every task:
 
 ---
 
-## Sprint 4 — Monetisation + Analytics (UPCOMING)
+## Sprint 4 — Monetisation + Analytics (IN PROGRESS)
 
 | Task | Status |
 |---|---|
+| Per-level Leader Panel — YOU vs LEADER (T-001, VDD v1.2 Change C) | ✅ DONE — campaignScores.ts + LeaderPanel.tsx; wired into GameScreen (compact, campaign only) + ResultScreen (full + submit on complete). Supabase `campaign_scores` table live (RLS + anon grants). 103 tests pass, build clean. 10/10 device checks PASS on SM-E146B (genuine 5×5 completion on L69 + REST-seeded leader for the gold "leader-ahead" state). |
 | Switch test AdMob IDs to live IDs | ⬜ PENDING |
 | GDPR UMP consent screen | ⬜ PENDING |
 | Rewarded ad: hint button | ⬜ PENDING |
@@ -175,3 +176,9 @@ Claude Code must update this file at the end of every task:
 | 03 Jun 2026 | T-000: last-tapped detection handles `descending` direction | Taps are sequential, so last value = expectedNext−1 (ascending) / expectedNext+1 (descending); suppressed once engine.isComplete() so the board ends all-green (DC-07). Gold/green glows approximated by bright fill + coloured border (canvas has no box-shadow), consistent with the T-008 skin. |
 | 03 Jun 2026 | T-000: HowToPlay `demo_label`/`demo_hint` switched from i18n keys to literal English | Matches the existing literal step-text pattern (T-012a); the brief supplied literal English for both. Orphaned EN keys remain harmlessly in the locale files. |
 | 03 Jun 2026 | T-000: DC-07 (all-green completion) + DC-06 (score floor) verified on the deterministic Daily 5×5, not a 3×3 | The live game timer expires during slow screenshot analysis, so reads must be minimised; the Daily seed is deterministic (computed offline, confirmed on-device: 12,20,8,14,6,…), enabling a single fully-blind scripted playthrough with no mid-game reads. The mechanic is grid-agnostic; DC-01/02/03 were on 3×3. Wrong taps must be SPACED (~250ms) — rapid (<100ms) taps drop while Phaser animates floats. |
+| 03 Jun 2026 | T-001: LeaderPanel `LevelLeaderInfo` import split to `import type` | verbatimModuleSyntax — the brief's combined `import { fetchLevelLeader, getPlayerPB, LevelLeaderInfo }` would not compile. |
+| 03 Jun 2026 | T-001: mojibaked `'â'` placeholders restored to em dash `'—'` | Three spots: YOU empty Score/Time and the LEADER loading state. campaignScores.ts was clean ASCII (no fixes). |
+| 03 Jun 2026 | T-001: GameScreen needed `mode` added to its useGameStore destructure | The panel-gating condition `mode === 'campaign'` requires it; GameScreen previously didn't select `mode`. design-system.md has no leader-panel classes — the component uses inline styles + existing CSS vars (--gold/--success/--muted/--white). |
+| 03 Jun 2026 | T-001: genuine completion verified on a 5×5 level (L69, 85s), not L1 (45s) | Model screenshot-analysis latency (~40–50s) exceeds the L1 campaign timer (45s), so L1 can't be completed live (max ~5 correct taps land). A 5×5 (85–115s) fits one read+tap cycle. Reached L69 via a TEMPORARY dev-selector entry (reverted before commit — committed GameScreen has only the LeaderPanel wiring). A higher leader (ACE 99999) was REST-seeded to verify the gold "leader-ahead" state (LP-07). |
+| 03 Jun 2026 | T-001: LP-05 result-screen shows leader "—"/loading momentarily (fetch-vs-submit race) | The LeaderPanel's fetch runs in a child effect that fires BEFORE ResultScreen's parent submit effect, so on the completing result the leader isn't yet populated; it appears on the next mount. This is the exact behaviour the brief's LP-05 note describes/permits. Submit-to-DB verified: the app wrote {Player, 5920, 72.00s} to campaign_scores L69. |
+| 03 Jun 2026 | T-001 CLEANUP NEEDED (user): delete test rows from campaign_scores before release | Anon role has SELECT+INSERT only (no DELETE grant), so I can't remove them. Rows to delete: level 69 {Player 5920, ACE 99999}, level 999 {_probe 1} (a grant-probe insert). Real gameplay will otherwise show a fake unbeatable ACE 99999 leader on level 69. |

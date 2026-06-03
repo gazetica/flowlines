@@ -16,13 +16,14 @@ import Phaser from 'phaser';
 import { useGameStore } from '../store/gameStore';
 import { TimerComponent } from './TimerComponent';
 import { GameScene } from '../scenes/GameScene';
+import { LeaderPanel } from './LeaderPanel';
 import { initAppLifecycle, removeAppLifecycle } from '../services/appLifecycle';
 
 export function GameScreen() {
   const navigate = useNavigate();
   const phaserRef = useRef<Phaser.Game | null>(null);
   const particleCanvasRef = useRef<HTMLCanvasElement>(null);
-  const { status, currentLevel, score, runId, startLevel, tickTimer, endGame, engine } =
+  const { status, currentLevel, mode, score, runId, startLevel, tickTimer, endGame, engine } =
     useGameStore();
 
   // Background: drifting faint gold numbers on a canvas behind the grid.
@@ -245,6 +246,23 @@ export function GameScreen() {
           </div>
         </div>
       </div>
+
+      {/* Per-level leader panel (YOU vs LEADER) — campaign only, in the dead
+          space below the grid. Daily uses synthetic level id 0 → excluded. */}
+      {mode === 'campaign' && currentLevel && currentLevel.id > 0 && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '8%',
+            left: 0,
+            right: 0,
+            padding: '0 16px',
+            zIndex: 10,
+          }}
+        >
+          <LeaderPanel levelId={currentLevel.id} compact={true} />
+        </div>
+      )}
 
       {/* DEV-only level selector for modifier testing. Removed in Sprint 3.
           Gated on DEV (true under `vite dev`) OR an explicit build-time flag
