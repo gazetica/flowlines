@@ -12,6 +12,10 @@ import { LanguageScreen } from './components/LanguageScreen';
 import { HowToPlayScreen } from './components/HowToPlayScreen';
 import { HomeScreen } from './components/HomeScreen';
 import { GameScreen } from './components/GameScreen';
+import { SettingsScreen } from './components/SettingsScreen';
+import { LeaderboardScreen } from './components/LeaderboardScreen';
+import { AboutScreen } from './components/AboutScreen';
+import { IAPScreen } from './components/IAPScreen';
 
 /**
  * Decides the first screen to show based on onboarding flags.
@@ -46,6 +50,10 @@ export function App() {
         <Route path="/how-to-play" element={<HowToPlayScreen />} />
         <Route path="/home" element={<HomeScreen />} />
         <Route path="/game" element={<GameScreen />} />
+        <Route path="/settings" element={<SettingsScreen />} />
+        <Route path="/leaderboard" element={<LeaderboardScreen />} />
+        <Route path="/about" element={<AboutScreen />} />
+        <Route path="/iap" element={<IAPScreen />} />
         {/* Fallback — anything unknown (incl. not-yet-built /leaderboard, /settings,
             /about from the bottom nav — those arrive in T-012b) goes to root, which
             re-routes to /home once onboarding is complete. */}
