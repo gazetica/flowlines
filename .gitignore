@@ -34,3 +34,6 @@ android/app/src/main/assets/capacitor.config.json
 
 # Secrets — NEVER commit
 android/app/google-services.json
+.env
+.env.local
+.env.*.local
