@@ -16,6 +16,8 @@ import { SettingsScreen } from './components/SettingsScreen';
 import { LeaderboardScreen } from './components/LeaderboardScreen';
 import { AboutScreen } from './components/AboutScreen';
 import { IAPScreen } from './components/IAPScreen';
+import { ResultScreen } from './components/ResultScreen';
+import { CampaignScreen } from './components/CampaignScreen';
 
 /**
  * Decides the first screen to show based on onboarding flags.
@@ -54,6 +56,8 @@ export function App() {
         <Route path="/leaderboard" element={<LeaderboardScreen />} />
         <Route path="/about" element={<AboutScreen />} />
         <Route path="/iap" element={<IAPScreen />} />
+        <Route path="/result" element={<ResultScreen />} />
+        <Route path="/campaign" element={<CampaignScreen />} />
         {/* Fallback — anything unknown (incl. not-yet-built /leaderboard, /settings,
             /about from the bottom nav — those arrive in T-012b) goes to root, which
             re-routes to /home once onboarding is complete. */}

@@ -14,8 +14,6 @@ import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Phaser from 'phaser';
 import { useGameStore } from '../store/gameStore';
-import { useSettingsStore } from '../store/settingsStore';
-import { LevelManager } from '../game/LevelManager';
 import { TimerComponent } from './TimerComponent';
 import { GameScene } from '../scenes/GameScene';
 import { initAppLifecycle, removeAppLifecycle } from '../services/appLifecycle';
@@ -24,7 +22,7 @@ export function GameScreen() {
   const navigate = useNavigate();
   const phaserRef = useRef<Phaser.Game | null>(null);
   const particleCanvasRef = useRef<HTMLCanvasElement>(null);
-  const { status, currentLevel, score, runId, mode, startLevel, tickTimer, endGame, engine } =
+  const { status, currentLevel, score, runId, startLevel, tickTimer, endGame, engine } =
     useGameStore();
 
   // Background: drifting faint gold numbers on a canvas behind the grid.
@@ -123,16 +121,12 @@ export function GameScreen() {
     }
   }, [status]);
 
-  // Handle game end — record progress, then return to Home.
-  // (Sprint 3 T-012b will route to a dedicated ResultScreen instead.)
+  // Handle game end — go to ResultScreen, which shows stars/score and records
+  // the completion (recording lives there now to avoid double-recording).
   useEffect(() => {
     if (status === 'complete' || status === 'failed') {
-      if (status === 'complete' && currentLevel) {
-        const timeEl = useGameStore.getState().timeElapsed;
-        const stars = LevelManager.getStars(currentLevel, timeEl);
-        useSettingsStore.getState().recordLevelComplete(currentLevel.id, stars, score, mode);
-      }
-      const id = setTimeout(() => navigate('/home'), 1200);
+      // Short delay so the player sees the final board before the transition.
+      const id = setTimeout(() => navigate('/result'), 600);
       return () => clearTimeout(id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

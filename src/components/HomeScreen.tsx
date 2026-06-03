@@ -103,6 +103,17 @@ export function HomeScreen() {
         </button>
       </div>
 
+      {/* Campaign progress */}
+      <div style={{ padding: '0 24px 0', position: 'relative', zIndex: 1 }}>
+        <button
+          className="btn-outline"
+          onClick={() => navigate('/campaign')}
+          style={{ width: '100%', padding: '10px', fontSize: 10, marginBottom: 12, letterSpacing: 1 }}
+        >
+          🗺️ CAMPAIGN PROGRESS
+        </button>
+      </div>
+
       {/* Mode buttons */}
       <div style={{ padding: '0 24px 0', position: 'relative', zIndex: 1 }}>
         <p style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: 'var(--muted)', letterSpacing: 2, textAlign: 'center', marginBottom: 10 }}>
