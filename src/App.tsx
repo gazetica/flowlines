@@ -1,122 +1,56 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+// App.tsx
+// Numtap | Gazetica Studio | Sprint 3 Day 4 | Task T-012a
+//
+// App shell + router. RedirectHandler picks the first screen from onboarding
+// flags (first-launch flow: Language -> HowToPlay -> Home). i18n is imported in
+// main.tsx (before render), so it is not re-imported here.
 
-function App() {
-  const [count, setCount] = useState(0)
+import { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { useSettingsStore } from './store/settingsStore';
+import { LanguageScreen } from './components/LanguageScreen';
+import { HowToPlayScreen } from './components/HowToPlayScreen';
+import { HomeScreen } from './components/HomeScreen';
+import { GameScreen } from './components/GameScreen';
 
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+/**
+ * Decides the first screen to show based on onboarding flags.
+ * Runs once after settings are hydrated.
+ */
+function RedirectHandler() {
+  const { hydrated, languageSelected, onboardingShown } = useSettingsStore();
+  const navigate = useNavigate();
 
-      <div className="ticks"></div>
+  useEffect(() => {
+    if (!hydrated) return;
+    if (!languageSelected) {
+      navigate('/language', { replace: true });
+    } else if (!onboardingShown) {
+      navigate('/how-to-play', { replace: true });
+    } else {
+      navigate('/home', { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated]);
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+  // Show nothing while deciding (hydration is fast — <100ms)
+  return null;
 }
 
-export default App
+export function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<RedirectHandler />} />
+        <Route path="/language" element={<LanguageScreen />} />
+        <Route path="/how-to-play" element={<HowToPlayScreen />} />
+        <Route path="/home" element={<HomeScreen />} />
+        <Route path="/game" element={<GameScreen />} />
+        {/* Fallback — anything unknown (incl. not-yet-built /leaderboard, /settings,
+            /about from the bottom nav — those arrive in T-012b) goes to root, which
+            re-routes to /home once onboarding is complete. */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}

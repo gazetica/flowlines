@@ -11,16 +11,20 @@
 // resumeGame) are also dropped to satisfy noUnusedLocals.
 
 import { useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Phaser from 'phaser';
 import { useGameStore } from '../store/gameStore';
+import { useSettingsStore } from '../store/settingsStore';
+import { LevelManager } from '../game/LevelManager';
 import { TimerComponent } from './TimerComponent';
 import { GameScene } from '../scenes/GameScene';
 import { initAppLifecycle, removeAppLifecycle } from '../services/appLifecycle';
 
 export function GameScreen() {
+  const navigate = useNavigate();
   const phaserRef = useRef<Phaser.Game | null>(null);
   const particleCanvasRef = useRef<HTMLCanvasElement>(null);
-  const { status, currentLevel, score, runId, startLevel, tickTimer, endGame, engine } =
+  const { status, currentLevel, score, runId, mode, startLevel, tickTimer, endGame, engine } =
     useGameStore();
 
   // Background: drifting faint gold numbers on a canvas behind the grid.
@@ -97,8 +101,12 @@ export function GameScreen() {
     });
     // Restore rendering on resume from screen lock / backgrounding (T-007).
     initAppLifecycle(phaserRef.current);
-    // Start level 1 campaign
-    startLevel(1, 'campaign');
+    // The level/mode is normally chosen by HomeScreen (startLevel before
+    // navigating here). Only start a fallback level if we arrived at /game with
+    // no active game (e.g. a direct navigation / reload).
+    if (useGameStore.getState().status !== 'playing') {
+      startLevel(1, 'campaign');
+    }
     return () => {
       removeAppLifecycle();
       phaserRef.current?.destroy(true);
@@ -115,19 +123,17 @@ export function GameScreen() {
     }
   }, [status]);
 
-  // Handle game end — show basic alert for now (Sprint 3 replaces with ResultScreen)
+  // Handle game end — record progress, then return to Home.
+  // (Sprint 3 T-012b will route to a dedicated ResultScreen instead.)
   useEffect(() => {
-    if (status === 'complete') {
-      setTimeout(() => {
-        alert(`Level Complete!\nScore: ${score}\nTap OK to play again.`);
-        startLevel(1, 'campaign');
-      }, 300);
-    }
-    if (status === 'failed') {
-      setTimeout(() => {
-        alert("Time's Up! Try again.");
-        startLevel(1, 'campaign');
-      }, 300);
+    if (status === 'complete' || status === 'failed') {
+      if (status === 'complete' && currentLevel) {
+        const timeEl = useGameStore.getState().timeElapsed;
+        const stars = LevelManager.getStars(currentLevel, timeEl);
+        useSettingsStore.getState().recordLevelComplete(currentLevel.id, stars, score, mode);
+      }
+      const id = setTimeout(() => navigate('/home'), 1200);
+      return () => clearTimeout(id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
