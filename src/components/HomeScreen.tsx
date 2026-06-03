@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useSettingsStore } from '../store/settingsStore';
 import { useGameStore } from '../store/gameStore';
+import { getTodayUTC } from '../game/DailyChallenge';
 
 export function HomeScreen() {
   const { t } = useTranslation();
@@ -34,6 +35,19 @@ export function HomeScreen() {
   const handleMode = (mode: 'daily' | 'endless' | 'speed') => {
     const levelMap = { daily: 63, endless: 63, speed: 9 };
     startLevel(levelMap[mode], mode);
+    navigate('/game');
+  };
+
+  // Daily Challenge: one attempt per UTC day. If already played today, show the
+  // leaderboard instead of starting a (blocked) second attempt.
+  const handleDaily = () => {
+    const today = getTodayUTC();
+    const { lastPlayedDate } = useSettingsStore.getState();
+    if (lastPlayedDate === today) {
+      navigate('/leaderboard');
+      return;
+    }
+    useGameStore.getState().startDailyChallenge();
     navigate('/game');
   };
 
@@ -129,7 +143,7 @@ export function HomeScreen() {
           ).map(([mode, label, sub]) => (
             <button
               key={mode}
-              onClick={() => handleMode(mode as 'daily' | 'endless' | 'speed')}
+              onClick={() => (mode === 'daily' ? handleDaily() : handleMode(mode as 'daily' | 'endless' | 'speed'))}
               style={{
                 background: 'rgba(10,26,46,0.75)',
                 border: '1px solid rgba(30,139,195,0.2)',

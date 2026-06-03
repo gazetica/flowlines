@@ -17,7 +17,7 @@ export function ResultScreen() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { status, currentLevel, score, timeElapsed, tapTimestamps, mode, startLevel } = useGameStore();
-  const { dailyStreak, recordLevelComplete } = useSettingsStore();
+  const { dailyStreak, recordLevelComplete, updateDailyStreak } = useSettingsStore();
 
   const [stars, setStars] = useState<0 | 1 | 2 | 3>(0);
   const [breakdown, setBreakdown] = useState<{
@@ -61,6 +61,11 @@ export function ResultScreen() {
 
       // Record (idempotent — only improves)
       recordLevelComplete(currentLevel.id, earnedStars, result.totalScore, mode);
+
+      // Daily challenge: bump the consecutive-day streak (also marks today played).
+      if (mode === 'daily') {
+        updateDailyStreak();
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, currentLevel]);
@@ -70,7 +75,9 @@ export function ResultScreen() {
     return null;
   }
 
-  const nextLevelId = LevelManager.getNextLevelId(currentLevel.id);
+  // Only campaign has a "next level". Daily uses synthetic id 0 (not in
+  // levels.json), so calling getNextLevelId(0) would throw — guard against it.
+  const nextLevelId = mode === 'campaign' ? LevelManager.getNextLevelId(currentLevel.id) : null;
   const isComplete = status === 'complete';
   const accuracy = isComplete ? '100%' : '—';
 
@@ -138,6 +145,11 @@ export function ResultScreen() {
         {isPB && (
           <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: 'var(--success)', letterSpacing: 2, textShadow: '0 0 8px rgba(46,204,113,0.4)' }}>
             ★ {t('result.new_pb')}
+          </div>
+        )}
+        {isComplete && mode === 'daily' && (
+          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, color: 'var(--gold)', letterSpacing: 1, marginTop: 6 }}>
+            🔥 {t('home.day_streak')}: {dailyStreak}
           </div>
         )}
       </div>

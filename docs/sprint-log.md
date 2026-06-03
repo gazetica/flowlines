@@ -50,7 +50,7 @@ Claude Code must update this file at the end of every task:
 
 ---
 
-## Sprint 3 — Phaser Visuals + React UI (IN PROGRESS)
+## Sprint 3 — Phaser Visuals + React UI ✅ COMPLETE
 
 | Task | Status |
 |---|---|
@@ -62,15 +62,17 @@ Claude Code must update this file at the end of every task:
 | Navigation shell + Home/Language/HowToPlay screens (T-012a) | ✅ DONE — App.tsx router + first-launch flow; 14/14 device checks PASS on SM-E146B; i18n live (DE selected → German UI) |
 | Settings + Leaderboard + About + IAP screens (T-012b) | ✅ DONE — 4 screens + 4 routes; 22/22 device checks PASS on SM-E146B; live Supabase board, FR language switch, Capacitor Browser links |
 | ResultScreen + CampaignScreen + progression (T-013) | ✅ DONE — VD-05 result (stars/breakdown/PB/next) + 100-level map; 22/22 device checks PASS on SM-E146B |
-| Phaser GameScene: NxN grid cells, number tiles, tap pulse animation | ⬜ PENDING |
-| Gold highlight on next target tile | ⬜ PENDING |
-| Correct tap animation (checkmark + green pulse) | ⬜ PENDING |
-| Wrong tap animation (red flash + shake) | ⬜ PENDING |
-| React screens: HomeScreen, ResultScreen, SettingsScreen | ⬜ PENDING |
-| Navy/gold skin applied with background particles | ⬜ PENDING |
-| i18next: en.json, de.json, fr.json, ko.json, pt.json, es.json | ⬜ PENDING |
-| Supabase leaderboard query + display | ⬜ PENDING |
-| Daily Challenge seeded grid | ⬜ PENDING |
+| Daily Challenge — seeded grid + one-attempt-per-day (T-014) | ✅ DONE — DailyChallenge.ts (mulberry32 seed) + gameStore.startDailyChallenge; 8/8 device + 2 test checks PASS; on-device grid matches seed |
+| (original generic Sprint 3 rows below — all delivered across T-005…T-014) | — |
+| Phaser GameScene cells/tiles/tap pulse | ✅ DONE (T-005/T-008) |
+| Gold highlight on next target tile | ✅ DONE (T-008 drawTileBg + updateNextPulse) |
+| Correct tap animation (checkmark + green pulse) | ✅ DONE (T-005/T-006) |
+| Wrong tap animation (red flash + shake) | ✅ DONE (T-005) |
+| React screens: Home/Result/Settings (+9 more) | ✅ DONE (T-012a/T-012b/T-013) |
+| Navy/gold skin + background particles | ✅ DONE (T-008) |
+| i18next: en/de/fr/ko/pt/es | ✅ DONE (T-010) |
+| Supabase leaderboard query + display | ✅ DONE (T-011 + T-012b LeaderboardScreen) |
+| Daily Challenge seeded grid | ✅ DONE (T-014) |
 
 ---
 
@@ -151,6 +153,10 @@ Claude Code must update this file at the end of every task:
 | 03 Jun 2026 | T-012b: ScreenShell defined per-file (4 copies) + type-split imports + `import type React` | Brief says "extract ScreenShell as a local helper inside each file"; each screen has its own copy. Language/ScoreRow/LeaderboardTab are types (verbatimModuleSyntax → import type). React.CSSProperties/ReactNode need `import type React` (new JSX transform). Mojibaked glyphs restored: ← (back), › (chevron), ★ (badge), ✓ (purchased), 🥇🥈🥉 (medals). |
 | 03 Jun 2026 | T-012b: installed @capacitor/browser@8.0.3 (cap sync registered it in android gradle files) | AboutScreen opens legal/support links in the in-app Chrome Custom Tab. `npx cap sync` modified android/app/capacitor.build.gradle + android/capacitor.settings.gradle (generated, required for the Android build) — must be committed (same as @capacitor/app in T-007). Brief git-add list omits them. |
 | 03 Jun 2026 | T-013: recordLevelComplete moved from GameScreen to ResultScreen | Brief routes game-end to /result (was a 1200ms home delay). Recording now happens once in ResultScreen's effect; GameScreen's `useSettingsStore`/`LevelManager`/`mode` became unused and were removed (noUnusedLocals). Removed unused `completedLevels` (ResultScreen) and `t`/useTranslation (CampaignScreen). Mojibaked glyphs restored: ⭐ ★ ▶ ↺ 🏠 🏆 ← — 🔒 🗺️. |
+| 03 Jun 2026 | T-014: GridEngine private field is `grid` (not `_grid`) — used for the seeded override | Verified in GridEngine.ts before writing. startDailyChallenge mutates `(engine as {grid}).grid` cell values (+display) with the seeded shuffle; generateGrid() already set expectedNext=1. |
+| 03 Jun 2026 | T-014 BUG FIXED: ResultScreen crashed (blank) for daily because getNextLevelId(0) throws | Daily uses synthetic level id 0 (not in levels.json); LevelManager.getNextLevelId(0)→getLevel(0) throws "Level 0 not found", crashing ResultScreen render. Fixed by computing nextLevelId only for mode==='campaign' (NEXT LEVEL button is campaign-only anyway). |
+| 03 Jun 2026 | T-014: added a Daily Streak display to ResultScreen (mode==='daily') | Brief's D5 expects the result to show the streak, but the brief's ResultScreen edit only added updateDailyStreak(). Added a "🔥 Day Streak: N" line for daily completions so D5 is verifiable. |
+| 03 Jun 2026 | T-014: brief said "7 tests / 101 total"; actual is 9 tests / 103 total | DailyChallenge.test.ts (written verbatim from the brief) has 9 tests (3 dateToSeed + 5 getDailyChallenge + 1 getTodayUTC). All pass. Determinism also proven via node (IDENTICAL=true) and on-device (grid matches seed: 12,20,8,14,6,4,16,17,9,1,...; value 1 at index 9). |
 | 03 Jun 2026 | T-013: brief's "22 verification items" all PASS (R1-12, C1-8, G1-2) | Verified on SM-E146B. Bonus: 3★ on level 1 (18s), NEW PERSONAL BEST flag, NEXT LEVEL advanced to level 2, TIME'S UP red result on expiry, campaign map shows 1&2 green ⭐⭐⭐ / level 3 unlocked / 4+ locked, progress bar 2/25·8%, Pack 4 teaser, tapping completed level restarts it. G2: Result/Campaign are static DOM (no RAF) — no jank. |
 | 03 Jun 2026 | T-012b: brief's "20 verification items" is actually 22 (S1-6, L1-5, A1-4, I1-5, G1-2) | All 22 listed items verified PASS on SM-E146B. Bonus confirmations: live FR language switch across all screens, alias persists, live Supabase row (TestPlayer/9999) on the board, Capacitor Browser opens CustomTabActivity. |
 | 03 Jun 2026 | T-012a (perf note): →/game transition has a one-time Phaser/WebGL boot spike; steady-state gameplay ~25fps median this session | DOM route transitions are instant/smooth; entering the game incurs inherent one-time GL-context+grid-render cost. Steady-state gfxinfo this session (37%→22% janky, ~25fps median, ~3% missed vsync) was higher-jank than T-008's reading — likely device thermal/load after an extended ADB test session. No visual stutter/corruption in captures. Watch on a cold device in Sprint 5 QA. |

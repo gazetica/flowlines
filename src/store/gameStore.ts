@@ -17,6 +17,7 @@ import { ScoreEngine } from '../game/ScoreEngine';
 import type { ScoreParams } from '../game/ScoreEngine';
 import { submitScore } from '../services/supabase';
 import { useSettingsStore } from './settingsStore';
+import { getDailyChallenge } from '../game/DailyChallenge';
 
 export type GameMode = 'campaign' | 'daily' | 'endless' | 'speed';
 export type GameStatus = 'idle' | 'playing' | 'paused' | 'complete' | 'failed';
@@ -48,8 +49,12 @@ interface GameState {
   hintUsed: boolean;
   hintActive: boolean;
 
+  // Daily challenge
+  dailyDate: string; // 'YYYY-MM-DD' of the active daily challenge
+
   // Actions
   startLevel: (levelId: number, mode: GameMode) => void;
+  startDailyChallenge: () => void;
   tapCell: (row: number, col: number) => TapResult | null;
   tickTimer: (elapsed: number) => void;
   pauseGame: () => void;
@@ -73,6 +78,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   timeElapsed: 0,
   hintUsed: false,
   hintActive: false,
+  dailyDate: '',
 
   startLevel: (levelId, mode) => {
     const level = LevelManager.getLevel(levelId);
@@ -91,6 +97,54 @@ export const useGameStore = create<GameState>((set, get) => ({
       timeElapsed: 0,
       hintUsed: false,
       hintActive: false,
+    });
+  },
+
+  startDailyChallenge: () => {
+    const daily = getDailyChallenge();
+    const n = daily.gridSize;
+
+    // Synthetic LevelConfig for the daily challenge (id 0 — not in levels.json).
+    const dailyLevel: LevelConfig = {
+      id: 0,
+      pack: 1,
+      grid: n,
+      modifier: 'none',
+      direction: 'ascending',
+      timeLimit: 90,
+      stars: [45, 68, 90],
+    };
+
+    // Build a 'none' 5x5 engine, then overwrite its cell values with the seeded
+    // shuffle. GridEngine's private field is `grid` (verified in GridEngine.ts);
+    // generateGrid() already set expectedNext=1 (ascending). We mutate the
+    // engine's internal grid directly so getGrid()/validateTap stay consistent.
+    const engine = new GridEngine(n, 'none', 'ascending');
+    engine.generateGrid();
+    const internal = (engine as unknown as { grid: Cell[][] }).grid;
+    let idx = 0;
+    for (let r = 0; r < n; r++) {
+      for (let c = 0; c < n; c++) {
+        const value = daily.shuffledNumbers[idx++];
+        internal[r][c].value = value;
+        internal[r][c].display = value; // 'none' modifier: display === value
+      }
+    }
+
+    set({
+      currentLevelId: 0,
+      currentLevel: dailyLevel,
+      mode: 'daily',
+      status: 'playing',
+      runId: get().runId + 1,
+      engine,
+      grid: engine.getGrid(),
+      score: 0,
+      tapTimestamps: [],
+      timeElapsed: 0,
+      hintUsed: false,
+      hintActive: false,
+      dailyDate: daily.date,
     });
   },
 
