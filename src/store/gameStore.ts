@@ -15,6 +15,8 @@ import { LevelManager } from '../game/LevelManager';
 import type { LevelConfig } from '../game/LevelManager';
 import { ScoreEngine } from '../game/ScoreEngine';
 import type { ScoreParams } from '../game/ScoreEngine';
+import { submitScore } from '../services/supabase';
+import { useSettingsStore } from './settingsStore';
 
 export type GameMode = 'campaign' | 'daily' | 'endless' | 'speed';
 export type GameStatus = 'idle' | 'playing' | 'paused' | 'complete' | 'failed';
@@ -132,7 +134,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   endGame: (reason) => {
-    const { currentLevel, tapTimestamps, timeElapsed } = get();
+    const { currentLevel, tapTimestamps, timeElapsed, mode } = get();
     if (!currentLevel) return;
     if (reason === 'complete') {
       const params: ScoreParams = {
@@ -145,6 +147,20 @@ export const useGameStore = create<GameState>((set, get) => ({
       };
       const result = ScoreEngine.calculate(params);
       set({ status: 'complete', score: result.totalScore });
+
+      // Submit to the leaderboard for eligible modes. Fire-and-forget —
+      // a network failure must never block or break the game flow.
+      if (mode === 'daily' || mode === 'endless' || mode === 'speed') {
+        const { alias } = useSettingsStore.getState();
+        submitScore({
+          alias: alias || 'Player',
+          score: result.totalScore,
+          mode,
+          gridSize: currentLevel.grid,
+          levelId: currentLevel.id,
+          country: 'XX', // T-014 will detect country from device locale
+        }).catch((err) => console.warn('[gameStore] submitScore failed:', err));
+      }
     } else {
       set({ status: 'failed' });
     }
