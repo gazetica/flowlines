@@ -76,6 +76,14 @@ Claude Code must update this file at the end of every task:
 
 ---
 
+## Pre-Sprint 4 Hotfix ✅ COMPLETE
+
+| Task | Status |
+|---|---|
+| Gameplay mechanic fix — last-tapped gold ✓, remove next-target highlight, −100 wrong-tap penalty (T-000) | ✅ DONE — GameScene + gameStore + ResultScreen + HowToPlay; 103 unit tests pass; 11/11 device checks PASS on SM-E146B (DC-04 float, DC-06 score floored to 0, DC-07 all-green completion, DC-08 one-gold invariant all verified via deterministic Daily 5×5 + 3×3 start) |
+
+---
+
 ## Sprint 4 — Monetisation + Analytics (UPCOMING)
 
 | Task | Status |
@@ -161,3 +169,9 @@ Claude Code must update this file at the end of every task:
 | 03 Jun 2026 | T-012b: brief's "20 verification items" is actually 22 (S1-6, L1-5, A1-4, I1-5, G1-2) | All 22 listed items verified PASS on SM-E146B. Bonus confirmations: live FR language switch across all screens, alias persists, live Supabase row (TestPlayer/9999) on the board, Capacitor Browser opens CustomTabActivity. |
 | 03 Jun 2026 | T-012a (perf note): →/game transition has a one-time Phaser/WebGL boot spike; steady-state gameplay ~25fps median this session | DOM route transitions are instant/smooth; entering the game incurs inherent one-time GL-context+grid-render cost. Steady-state gfxinfo this session (37%→22% janky, ~25fps median, ~3% missed vsync) was higher-jank than T-008's reading — likely device thermal/load after an extended ADB test session. No visual stutter/corruption in captures. Watch on a cold device in Sprint 5 QA. |
 | 02 Jun 2026 | T-002: `buildBreakdown` follows the prose Format rules (labelled `× N streak × N grid`), not the worked examples | Brief's examples omit the streak/grid labels and use zero-padded decimals (1.0, 2.0) that no single formatter reproduces (1.25 has 2 dp, 2.8 has 1); examples are not implementable, so the prescriptive prose wins. No test asserts the exact string. |
+| 03 Jun 2026 | T-000: scope expanded beyond the brief's "Files unlocked" header (GameScene+GameScreen) to also touch gameStore.ts, ResultScreen.tsx, HowToPlayScreen.tsx | The brief BODY requires them: §3.3 edits HowToPlay; §2 floors ResultScreen. gameStore is structurally unavoidable — the live score is recomputed on every correct tap there, so a view-only −100 would be wiped on the next tap; and §2's `Math.max(0, finalScore)` is only meaningful if the penalty reaches the final score. GameScreen.tsx ended up needing NO change (HUD reads `score` reactively). |
+| 03 Jun 2026 | T-000: wrong-tap penalty lives in gameStore (`wrongTaps`), not the view | tapCell deducts 100 on WRONG (live score may go negative); correct-tap recompute = correctTaps·100 − wrongTaps·100; endGame carries the penalty into the final score; leaderboard submit + ResultScreen display/PB/record floor at Math.max(0, …). Device-verified: live −3,520 → result Total 0. |
+| 03 Jun 2026 | T-000: −100 float implemented as a Phaser text tween in GameScene, NOT the brief's DOM `.penalty-float` CSS keyframe | The brief permitted implementing it "wherever the tile rendering lives" — tiles render on the Phaser canvas. So the `.penalty-float` CSS was NOT added to index.css (a DOM element would need canvas→DOM coordinate translation for no benefit). Float font is tile-proportional (max(14, tileSize·0.3)) rather than the spec's fixed 11px (illegibly small on a large tile). Float verified visible on device (DC-04). |
+| 03 Jun 2026 | T-000: last-tapped detection handles `descending` direction | Taps are sequential, so last value = expectedNext−1 (ascending) / expectedNext+1 (descending); suppressed once engine.isComplete() so the board ends all-green (DC-07). Gold/green glows approximated by bright fill + coloured border (canvas has no box-shadow), consistent with the T-008 skin. |
+| 03 Jun 2026 | T-000: HowToPlay `demo_label`/`demo_hint` switched from i18n keys to literal English | Matches the existing literal step-text pattern (T-012a); the brief supplied literal English for both. Orphaned EN keys remain harmlessly in the locale files. |
+| 03 Jun 2026 | T-000: DC-07 (all-green completion) + DC-06 (score floor) verified on the deterministic Daily 5×5, not a 3×3 | The live game timer expires during slow screenshot analysis, so reads must be minimised; the Daily seed is deterministic (computed offline, confirmed on-device: 12,20,8,14,6,…), enabling a single fully-blind scripted playthrough with no mid-game reads. The mechanic is grid-agnostic; DC-01/02/03 were on 3×3. Wrong taps must be SPACED (~250ms) — rapid (<100ms) taps drop while Phaser animates floats. |

@@ -31,11 +31,11 @@ export class GameScene extends Phaser.Scene {
   private countdownHidden = new Set<string>();
   private lastRunId = -1;
 
-  // T-008 skin: current tile size (for refreshTileLabels' gradient redraw) and
-  // a single repeating pulse tween that follows the current next-target tile.
+  // T-008 skin: current tile size (for refreshTileLabels' gradient redraw).
+  // T-000: the pre-tap next-target highlight (gold fill + scale pulse) was REMOVED.
+  // There is now NO visual cue on the next tile — the HUD NEXT value is the sole
+  // pre-tap cue. The only gold tile is the most-recently tapped one (LAST_TAPPED).
   private tileSize = 0;
-  private nextPulseTween: Phaser.Tweens.Tween | null = null;
-  private nextPulseTile: Phaser.GameObjects.Container | null = null;
 
   constructor() {
     super({ key: 'GameScene' });
@@ -164,11 +164,9 @@ export class GameScene extends Phaser.Scene {
   }
 
   renderGrid() {
-    // Clear existing tiles (and drop the pulse — its target is destroyed).
+    // Clear existing tiles.
     this.tileObjects.forEach((row) => row.forEach((c) => c.destroy()));
     this.tileObjects = [];
-    this.nextPulseTween = null;
-    this.nextPulseTile = null;
 
     const { grid, engine, currentLevel } = useGameStore.getState();
     if (!grid.length || !engine || !currentLevel) return;
@@ -231,72 +229,50 @@ export class GameScene extends Phaser.Scene {
         this.tileObjects[r][c] = container;
       }
     }
+  }
 
-    // Start the pulse on the current next-target tile.
-    this.updateNextPulse();
+  // Is this tapped cell the most-recently tapped one (LAST_TAPPED)? Taps happen
+  // in strict sequence, so the last tapped value is always one step behind
+  // expectedNext — `expectedNext - 1` ascending, `expectedNext + 1` descending.
+  // Once the level is complete there is no last tile (all render green).
+  private isLastTapped(cell: Cell): boolean {
+    if (!cell.tapped) return false;
+    const { engine, currentLevel } = useGameStore.getState();
+    if (!engine || !currentLevel || engine.isComplete()) return false;
+    const expected = engine.getExpectedNext();
+    const lastValue = currentLevel.direction === 'descending' ? expected + 1 : expected - 1;
+    return cell.value === lastValue;
   }
 
   // Draw a tile's gradient background + border based on its state.
+  //  - LAST_TAPPED (most recent correct tap): gold gradient + gold border
+  //  - TAPPED (all earlier correct taps): green gradient + green border
+  //  - DEFAULT (untapped, incl. the next target — NO pre-tap highlight): navy
+  // Canvas has no box-shadow, so the spec'd gold/green glows are approximated by
+  // the bright fill + coloured border (consistent with the T-008 skin approach).
   private drawTileBg(gfx: Phaser.GameObjects.Graphics, cell: Cell, size: number): void {
     gfx.clear();
     const half = size / 2;
 
     if (cell.tapped) {
-      gfx.fillGradientStyle(0x0d2a1a, 0x0d2a1a, 0x091f12, 0x091f12, 1, 1, 1, 1);
-      gfx.fillRect(-half, -half, size, size);
-      gfx.lineStyle(1, 0x2ecc71, 0.5);
-      gfx.strokeRect(-half, -half, size, size);
+      if (this.isLastTapped(cell)) {
+        gfx.fillGradientStyle(0xffd700, 0xffd700, 0xc8a800, 0xc8a800, 1, 1, 1, 1);
+        gfx.fillRect(-half, -half, size, size);
+        gfx.lineStyle(2, 0xffd700, 1);
+        gfx.strokeRect(-half, -half, size, size);
+      } else {
+        gfx.fillGradientStyle(0x0d2a1a, 0x0d2a1a, 0x091f12, 0x091f12, 1, 1, 1, 1);
+        gfx.fillRect(-half, -half, size, size);
+        gfx.lineStyle(1, 0x2ecc71, 0.5);
+        gfx.strokeRect(-half, -half, size, size);
+      }
       return;
     }
 
-    const { engine } = useGameStore.getState();
-    const isNext = cell.value === engine?.getExpectedNext() && this.isVisible(cell);
-
-    if (isNext) {
-      gfx.fillGradientStyle(0xffd700, 0xffd700, 0xc8a800, 0xc8a800, 1, 1, 1, 1);
-      gfx.fillRect(-half, -half, size, size);
-      gfx.lineStyle(2, 0xffd700, 1);
-      gfx.strokeRect(-half, -half, size, size);
-    } else {
-      gfx.fillGradientStyle(0x0f2a48, 0x0f2a48, 0x0a1e38, 0x0a1e38, 1, 1, 1, 1);
-      gfx.fillRect(-half, -half, size, size);
-      gfx.lineStyle(1, 0x1a3558, 0.6);
-      gfx.strokeRect(-half, -half, size, size);
-    }
-  }
-
-  // Move the slow scale-pulse onto whichever tile is the current next target.
-  private updateNextPulse(): void {
-    const { grid, engine } = useGameStore.getState();
-    if (!engine) return;
-    const expected = engine.getExpectedNext();
-    let target: Phaser.GameObjects.Container | null = null;
-    for (let r = 0; r < grid.length && !target; r++) {
-      for (let c = 0; c < grid[r].length && !target; c++) {
-        const cell = grid[r][c];
-        if (!cell.tapped && cell.value === expected && this.isVisible(cell)) {
-          target = this.tileObjects[r]?.[c] ?? null;
-        }
-      }
-    }
-    if (target === this.nextPulseTile) return; // already pulsing the right tile
-    if (this.nextPulseTween) {
-      this.nextPulseTween.stop();
-      if (this.nextPulseTile?.active) this.nextPulseTile.setScale(1);
-      this.nextPulseTween = null;
-    }
-    this.nextPulseTile = target;
-    if (target) {
-      this.nextPulseTween = this.tweens.add({
-        targets: target,
-        scaleX: 1.06,
-        scaleY: 1.06,
-        duration: 700,
-        yoyo: true,
-        repeat: -1,
-        ease: 'Sine.easeInOut',
-      });
-    }
+    gfx.fillGradientStyle(0x0f2a48, 0x0f2a48, 0x0a1e38, 0x0a1e38, 1, 1, 1, 1);
+    gfx.fillRect(-half, -half, size, size);
+    gfx.lineStyle(1, 0x1a3558, 0.6);
+    gfx.strokeRect(-half, -half, size, size);
   }
 
   private handleTap(row: number, col: number) {
@@ -334,6 +310,8 @@ export class GameScene extends Phaser.Scene {
   private playWrongAnimation(row: number, col: number) {
     const container = this.tileObjects[row]?.[col];
     if (!container) return;
+
+    // Shake.
     this.tweens.add({
       targets: container,
       x: container.x + 6,
@@ -341,6 +319,39 @@ export class GameScene extends Phaser.Scene {
       yoyo: true,
       repeat: 3,
       ease: 'Linear',
+    });
+
+    // Red flash: redraw the tile bg red for 400ms, then restore its default look.
+    const bg = container.list[0] as Phaser.GameObjects.Graphics;
+    const half = this.tileSize / 2;
+    bg.clear();
+    bg.fillStyle(0x2a0d0d, 1);
+    bg.fillRect(-half, -half, this.tileSize, this.tileSize);
+    bg.lineStyle(2, 0xe05050, 1);
+    bg.strokeRect(-half, -half, this.tileSize, this.tileSize);
+    this.time.delayedCall(400, () => {
+      if (!container.active) return;
+      const cell = useGameStore.getState().grid[row]?.[col];
+      if (cell) this.drawTileBg(bg, cell, this.tileSize);
+    });
+
+    // "−100" penalty float: red text rising from the tile centre, fading over 0.9s.
+    const penalty = this.add
+      .text(container.x, container.y, '−100', {
+        fontFamily: "'Space Mono', monospace",
+        fontSize: `${Math.max(14, Math.floor(this.tileSize * 0.3))}px`,
+        fontStyle: 'bold',
+        color: '#E05050',
+      })
+      .setOrigin(0.5)
+      .setDepth(100);
+    this.tweens.add({
+      targets: penalty,
+      y: container.y - 34,
+      alpha: 0,
+      duration: 900,
+      ease: 'Cubic.easeOut',
+      onComplete: () => penalty.destroy(),
     });
   }
 
@@ -390,15 +401,14 @@ export class GameScene extends Phaser.Scene {
         }
       }
     }
-    // Keep the pulse on the (possibly changed) next-target tile.
-    this.updateNextPulse();
   }
 
   // Label colour helper — tile fill/border are handled by drawTileBg().
+  //  - LAST_TAPPED: dark ✓ on the gold tile
+  //  - TAPPED: green ✓
+  //  - DEFAULT (untapped): light number, no pre-tap highlight
   private getTileTextColour(cell: Cell): string {
-    if (cell.tapped) return '#2ECC71';
-    const { engine } = useGameStore.getState();
-    if (cell.value === engine?.getExpectedNext()) return '#07111F'; // dark on gold bg
+    if (cell.tapped) return this.isLastTapped(cell) ? '#07111F' : '#2ECC71';
     return '#EEF4FF';
   }
 }

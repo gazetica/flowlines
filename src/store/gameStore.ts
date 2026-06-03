@@ -41,6 +41,11 @@ interface GameState {
   // Score tracking
   score: number;
   tapTimestamps: number[];
+  // T-000: count of wrong taps this round. Each wrong tap deducts 100 from the
+  // live score (which may go negative during play); the penalty also carries into
+  // the final score. The live score is recomputed on every correct tap, so the
+  // penalty must live here (a view-only deduction would be wiped on the next tap).
+  wrongTaps: number;
 
   // Timer
   timeElapsed: number;
@@ -75,6 +80,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   grid: [],
   score: 0,
   tapTimestamps: [],
+  wrongTaps: 0,
   timeElapsed: 0,
   hintUsed: false,
   hintActive: false,
@@ -94,6 +100,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       grid,
       score: 0,
       tapTimestamps: [],
+      wrongTaps: 0,
       timeElapsed: 0,
       hintUsed: false,
       hintActive: false,
@@ -141,6 +148,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       grid: engine.getGrid(),
       score: 0,
       tapTimestamps: [],
+      wrongTaps: 0,
       timeElapsed: 0,
       hintUsed: false,
       hintActive: false,
@@ -149,18 +157,24 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   tapCell: (row, col) => {
-    const { engine, status, tapTimestamps } = get();
+    const { engine, status, tapTimestamps, wrongTaps } = get();
     if (!engine || status !== 'playing') return null;
     const result = engine.validateTap(row, col);
     if (result === 'CORRECT') {
       const newTimestamps = [...tapTimestamps, Date.now()];
       const newGrid = engine.getGrid();
-      const newScore = newTimestamps.length * 100; // live score preview
+      // Live score preview: 100 per correct tap, less 100 per wrong tap so far.
+      const newScore = newTimestamps.length * 100 - wrongTaps * 100;
       set({ grid: newGrid, tapTimestamps: newTimestamps, score: newScore });
       // Check completion
       if (engine.isComplete()) {
         get().endGame('complete');
       }
+    } else if (result === 'WRONG') {
+      // T-000: −100 per wrong tap, applied immediately to the live score (which
+      // may go negative). Score is floored at 0 for display on the ResultScreen.
+      const newWrong = wrongTaps + 1;
+      set({ wrongTaps: newWrong, score: tapTimestamps.length * 100 - newWrong * 100 });
     }
     return result;
   },
@@ -188,7 +202,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   endGame: (reason) => {
-    const { currentLevel, tapTimestamps, timeElapsed, mode } = get();
+    const { currentLevel, tapTimestamps, timeElapsed, mode, wrongTaps } = get();
     if (!currentLevel) return;
     if (reason === 'complete') {
       const params: ScoreParams = {
@@ -200,7 +214,10 @@ export const useGameStore = create<GameState>((set, get) => ({
         dailyStreak: 0,
       };
       const result = ScoreEngine.calculate(params);
-      set({ status: 'complete', score: result.totalScore });
+      // T-000: carry the wrong-tap penalty into the final score. May be negative
+      // here (ResultScreen floors the displayed/recorded value at 0).
+      const finalScore = result.totalScore - wrongTaps * 100;
+      set({ status: 'complete', score: finalScore });
 
       // Submit to the leaderboard for eligible modes. Fire-and-forget —
       // a network failure must never block or break the game flow.
@@ -208,7 +225,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         const { alias } = useSettingsStore.getState();
         submitScore({
           alias: alias || 'Player',
-          score: result.totalScore,
+          score: Math.max(0, finalScore),
           mode,
           gridSize: currentLevel.grid,
           levelId: currentLevel.id,
@@ -227,6 +244,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       grid: [],
       score: 0,
       tapTimestamps: [],
+      wrongTaps: 0,
       timeElapsed: 0,
       hintUsed: false,
       hintActive: false,

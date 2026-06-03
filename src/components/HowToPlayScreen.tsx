@@ -45,8 +45,6 @@ export function HowToPlayScreen() {
     // Wrong tap — no state change (silent, no penalty in tutorial)
   };
 
-  const nextExpected = demoTapped.length + 1;
-
   return (
     <div
       style={{
@@ -126,8 +124,8 @@ export function HowToPlayScreen() {
                 </div>
                 <p style={{ fontSize: 13, color: 'var(--white)', lineHeight: 1.5 }}>
                   {key === 'step1'
-                    ? 'A grid of shuffled numbers appears. Tap them in order from 1 upward.'
-                    : 'The gold tile always shows your next target. Tap it before time runs out!'}
+                    ? "A grid of shuffled numbers appears. Tap them in order from 1 upward — the HUD shows what's next."
+                    : "The HUD shows NEXT — that's your only clue. Scan the grid and find it yourself. Faster = higher score."}
                 </p>
               </div>
             ))}
@@ -152,7 +150,7 @@ export function HowToPlayScreen() {
                   marginBottom: 8,
                 }}
               >
-                {t('how_to_play.demo_label')}
+                {"THE HUD TELLS YOU WHAT'S NEXT"}
               </p>
               <div
                 style={{
@@ -165,7 +163,10 @@ export function HowToPlayScreen() {
               >
                 {DEMO_NUMS.map((num) => {
                   const isTapped = demoTapped.includes(num);
-                  const isNext = num === nextExpected && !isTapped;
+                  // Mirrors the real mechanic: only the most-recently tapped tile
+                  // is gold (LAST_TAPPED, ✓ — no number). Earlier taps are green ✓.
+                  // The next target has NO highlight — find it yourself.
+                  const isLast = isTapped && num === demoTapped[demoTapped.length - 1];
                   return (
                     <button
                       key={num}
@@ -173,18 +174,18 @@ export function HowToPlayScreen() {
                       style={{
                         aspectRatio: '1',
                         borderRadius: 6,
-                        background: isTapped
-                          ? 'linear-gradient(145deg,#0d2a1a,#091f12)'
-                          : isNext
-                            ? 'linear-gradient(145deg,#FFD700,#C8A800)'
+                        background: isLast
+                          ? 'linear-gradient(145deg,#FFD700,#C8A800)'
+                          : isTapped
+                            ? 'linear-gradient(145deg,#0d2a1a,#091f12)'
                             : 'linear-gradient(145deg,#0F2A48,#0A1E38)',
-                        border: `1px solid ${isTapped ? 'rgba(46,204,113,0.5)' : isNext ? '#FFD700' : 'rgba(30,139,195,0.3)'}`,
+                        border: `1px solid ${isLast ? '#FFD700' : isTapped ? 'rgba(46,204,113,0.5)' : 'rgba(30,139,195,0.3)'}`,
                         fontFamily: "'Space Mono', monospace",
                         fontSize: 13,
-                        color: isTapped ? '#2ECC71' : isNext ? '#07111F' : '#EEF4FF',
-                        fontWeight: isNext ? 700 : 400,
+                        color: isLast ? '#07111F' : isTapped ? '#2ECC71' : '#EEF4FF',
+                        fontWeight: isLast ? 700 : 400,
                         cursor: 'pointer',
-                        boxShadow: isNext ? '0 0 10px rgba(255,215,0,0.4)' : 'none',
+                        boxShadow: isLast ? '0 0 10px rgba(255,215,0,0.4)' : 'none',
                       }}
                     >
                       {isTapped ? '✓' : num}
@@ -192,7 +193,9 @@ export function HowToPlayScreen() {
                   );
                 })}
               </div>
-              <p style={{ fontSize: 10, color: 'var(--muted)', textAlign: 'center' }}>{t('how_to_play.demo_hint')}</p>
+              <p style={{ fontSize: 10, color: 'var(--muted)', textAlign: 'center' }}>
+                Gold ✓ = last tapped · Green ✓ = done · Find the next one!
+              </p>
             </div>
           </div>
         )}
@@ -234,8 +237,8 @@ export function HowToPlayScreen() {
                 </div>
                 <p style={{ fontSize: 13, color: 'var(--white)', lineHeight: 1.5 }}>
                   {key === 'step3'
-                    ? 'Beat the clock, score big. Faster taps = higher score. Grids grow from 3×3 up to 7×7.'
-                    : 'Stuck? Tap HINT to reveal the target for 5 seconds.'}
+                    ? 'Wrong tap? −100 points. Accuracy matters. Grids grow from 3×3 up to 7×7 — harder to scan every time.'
+                    : 'Stuck? Tap HINT — watch a short ad and the target lights up gold for 5 seconds.'}
                 </p>
               </div>
             ))}

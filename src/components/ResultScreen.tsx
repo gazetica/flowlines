@@ -53,14 +53,18 @@ export function ResultScreen() {
         gridMult: result.gridMultiplier,
       });
 
+      // T-000: the live/final score in the store already carries the wrong-tap
+      // penalty (endGame). Floor it at 0 for PB comparison and for what we record.
+      const finalScore = Math.max(0, useGameStore.getState().score);
+
       // Personal best check (against the previously stored best)
       const storeKey = `${mode}_${currentLevel.id}`;
       const { bestScores } = useSettingsStore.getState();
       const prevBest = bestScores[storeKey] ?? 0;
-      setIsPB(result.totalScore > prevBest);
+      setIsPB(finalScore > prevBest);
 
       // Record (idempotent — only improves)
-      recordLevelComplete(currentLevel.id, earnedStars, result.totalScore, mode);
+      recordLevelComplete(currentLevel.id, earnedStars, finalScore, mode);
 
       // Daily challenge: bump the consecutive-day streak (also marks today played).
       if (mode === 'daily') {
@@ -80,6 +84,8 @@ export function ResultScreen() {
   const nextLevelId = mode === 'campaign' ? LevelManager.getNextLevelId(currentLevel.id) : null;
   const isComplete = status === 'complete';
   const accuracy = isComplete ? '100%' : '—';
+  // T-000: score may be negative during play (wrong-tap penalty); floor at 0 here.
+  const displayScore = Math.max(0, score);
 
   const handleNextLevel = () => {
     if (nextLevelId) {
@@ -140,7 +146,7 @@ export function ResultScreen() {
       {/* Score */}
       <div style={{ textAlign: 'center', padding: '8px 0', position: 'relative', zIndex: 1 }}>
         <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 36, fontWeight: 700, color: 'var(--gold)', textShadow: '0 0 16px rgba(255,215,0,0.4)' }}>
-          {score.toLocaleString()}
+          {displayScore.toLocaleString()}
         </div>
         {isPB && (
           <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: 'var(--success)', letterSpacing: 2, textShadow: '0 0 8px rgba(46,204,113,0.4)' }}>
@@ -170,7 +176,7 @@ export function ResultScreen() {
           ))}
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 16px', fontSize: 14, fontWeight: 600 }}>
             <span style={{ color: 'var(--white)' }}>{t('result.total')}</span>
-            <span style={{ fontFamily: "'Space Mono', monospace", color: 'var(--gold)', textShadow: '0 0 8px rgba(255,215,0,0.4)' }}>{score.toLocaleString()}</span>
+            <span style={{ fontFamily: "'Space Mono', monospace", color: 'var(--gold)', textShadow: '0 0 8px rgba(255,215,0,0.4)' }}>{displayScore.toLocaleString()}</span>
           </div>
         </div>
       )}
