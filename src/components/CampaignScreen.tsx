@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSettingsStore } from '../store/settingsStore';
 import { useGameStore } from '../store/gameStore';
 import { LevelManager } from '../game/LevelManager';
+import { ParticleCanvas } from './ParticleCanvas';
 
 export function CampaignScreen() {
   const navigate = useNavigate();
@@ -29,6 +30,7 @@ export function CampaignScreen() {
   return (
     <div style={{ position: 'relative', width: '100vw', height: '100vh', background: 'var(--navy)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <div className="bg-dots" />
+      <ParticleCanvas />
 
       {/* Header */}
       <div className="glass" style={{ display: 'flex', alignItems: 'center', padding: '48px 20px 16px', gap: 16, zIndex: 10, borderBottom: '1px solid rgba(30,139,195,0.2)' }}>

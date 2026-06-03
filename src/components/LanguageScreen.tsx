@@ -8,6 +8,7 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ParticleCanvas } from './ParticleCanvas';
 import { useTranslation } from 'react-i18next';
 import { useSettingsStore } from '../store/settingsStore';
 import type { Language } from '../store/settingsStore';
@@ -51,6 +52,7 @@ export function LanguageScreen() {
       }}
     >
       <div className="bg-dots" />
+      <ParticleCanvas />
 
       {/* Header */}
       <div style={{ textAlign: 'center', padding: '48px 24px 24px', position: 'relative', zIndex: 1 }}>

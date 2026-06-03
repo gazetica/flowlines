@@ -8,6 +8,7 @@ import type React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useSettingsStore } from '../store/settingsStore';
+import { ParticleCanvas } from './ParticleCanvas';
 
 export function IAPScreen() {
   const { t } = useTranslation();
@@ -110,6 +111,7 @@ function ScreenShell({ children, title }: { children: React.ReactNode; title: st
   return (
     <div style={{ position: 'relative', width: '100vw', height: '100vh', background: 'var(--navy)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <div className="bg-dots" />
+      <ParticleCanvas />
       <div className="glass" style={{ display: 'flex', alignItems: 'center', padding: '48px 20px 16px', gap: 16, zIndex: 10, borderBottom: '1px solid rgba(30,139,195,0.2)' }}>
         <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Space Mono', monospace", fontSize: 20, color: 'var(--muted)', padding: 0 }}>
           ←

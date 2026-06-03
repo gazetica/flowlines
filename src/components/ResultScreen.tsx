@@ -14,6 +14,7 @@ import { LevelManager } from '../game/LevelManager';
 import { ScoreEngine } from '../game/ScoreEngine';
 import { LeaderPanel } from './LeaderPanel';
 import { submitCampaignScore } from '../services/campaignScores';
+import { ParticleCanvas } from './ParticleCanvas';
 
 export function ResultScreen() {
   const { t } = useTranslation();
@@ -117,6 +118,7 @@ export function ResultScreen() {
   return (
     <div style={{ position: 'relative', width: '100vw', height: '100vh', background: 'var(--navy)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <div className="bg-dots" />
+      <ParticleCanvas />
 
       {/* Header */}
       <div className="glass" style={{ textAlign: 'center', padding: '48px 20px 16px', borderBottom: '1px solid rgba(30,139,195,0.2)', position: 'relative', zIndex: 2 }}>

@@ -129,3 +129,32 @@ text-[#EEF4FF]   → body text
 text-[#5E7A9C]   → muted text
 font-mono        → Space Mono
 ```
+
+---
+
+## VDD v1.2 Skin Constants — `src/styles/skin.ts` (T-003)
+
+`src/styles/skin.ts` is the canonical TypeScript source of truth for the v1.2
+skin. New React/DOM code imports `SKIN` from there instead of hardcoding hex.
+The CSS custom properties in `src/index.css` (`:root`) remain the canonical
+source for class-based styling (`.bg-dots`, `.glass`, `.btn-gold`, etc., shipped
+in T-008); `SKIN` mirrors those same values for inline-style/TS consumers.
+
+`SKIN` groups: page background + `dotPattern`/`ambientGlow`; tile states
+(`tileDefault`/`tileLastTapped`/`tileTapped` + borders + glows); `grid*`;
+`hud*`; `nav*`; `btnGold*`; text (`gold`/`goldGlow`/`success`/`muted`/`white`);
+card surfaces (`cardBg`/`cardBorder`).
+
+**v1.2 tile change (supersedes the "Tile States" table above):** there is no
+pre-tap "next target" highlight. The most-recently-tapped tile is **gold with a
+✓ (no number)**; all earlier tapped tiles are **green ✓**; the next target is a
+plain default tile (the HUD `NEXT` value is the sole cue). See T-000.
+
+**Phaser note:** `GameScene.ts` renders tiles on a canvas via Phaser's numeric
+`fillGradientStyle(0xRRGGBB, …)` API, which cannot consume `SKIN`'s CSS-gradient
+strings. GameScene therefore keeps its own numeric constants whose colours are
+identical to the `SKIN.tile*` values (verified on-device in T-000).
+
+**Background layer:** `src/components/ParticleCanvas.tsx` is the single reusable
+implementation of the ambient glow (§2.1) + floating-number particles (§2.2),
+mounted on every screen.

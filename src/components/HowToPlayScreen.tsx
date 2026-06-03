@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useSettingsStore } from '../store/settingsStore';
+import { ParticleCanvas } from './ParticleCanvas';
 
 const PAGES = 3;
 
@@ -58,6 +59,7 @@ export function HowToPlayScreen() {
       }}
     >
       <div className="bg-dots" />
+      <ParticleCanvas />
 
       {/* Header */}
       <div style={{ textAlign: 'center', padding: '32px 24px 16px', position: 'relative', zIndex: 1 }}>

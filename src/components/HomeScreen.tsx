@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { useSettingsStore } from '../store/settingsStore';
 import { useGameStore } from '../store/gameStore';
 import { getTodayUTC } from '../game/DailyChallenge';
+import { ParticleCanvas } from './ParticleCanvas';
 
 export function HomeScreen() {
   const { t } = useTranslation();
@@ -64,6 +65,7 @@ export function HomeScreen() {
       }}
     >
       <div className="bg-dots" />
+      <ParticleCanvas />
 
       {/* Title area */}
       <div style={{ textAlign: 'center', padding: '48px 24px 20px', position: 'relative', zIndex: 1 }}>

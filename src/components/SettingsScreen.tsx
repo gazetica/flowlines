@@ -8,6 +8,7 @@
 
 import type React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ParticleCanvas } from './ParticleCanvas';
 import { useTranslation } from 'react-i18next';
 import { useSettingsStore } from '../store/settingsStore';
 import type { Language } from '../store/settingsStore';
@@ -155,6 +156,7 @@ function ScreenShell({ children, title }: { children: React.ReactNode; title: st
       }}
     >
       <div className="bg-dots" />
+      <ParticleCanvas />
       <div
         className="glass"
         style={{
