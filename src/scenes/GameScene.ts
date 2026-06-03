@@ -21,42 +21,133 @@ export class GameScene extends Phaser.Scene {
   private tileObjects: Phaser.GameObjects.Container[][] = [];
   private hintGlowTween: Phaser.Tweens.Tween | null = null;
 
+  // Countdown modifier is driven in the VIEW LAYER here, not the engine.
+  // GridEngine.onCountdownTick only hides cells already flagged revealed+revealedAt,
+  // but nothing reveals countdown cells (the reveal path is fog-only, and getGrid()
+  // returns a copy so engine state can't be reveal-mutated externally), and
+  // GridEngine is locked. So we: show all numbers at level start, then hide each
+  // cell 3s after it was first shown. Player taps the (now-blank) tiles from memory.
+  private countdownFirstSeen = new Map<string, number>();
+  private countdownHidden = new Set<string>();
+  private lastRunId = -1;
+
   constructor() {
     super({ key: 'GameScene' });
   }
 
   create() {
     this.renderGrid();
+
+    // Fog modifier: a GLOBAL pointer listener reveals cells within a 1-cell
+    // radius of the pointer. This must be global (not per-tile) because a hidden
+    // fog tile's bg can't reliably emit pointermove for a number you can't see.
+    this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
+      const { engine, currentLevel } = useGameStore.getState();
+      if (!engine || currentLevel?.modifier !== 'fog') return;
+
+      // Convert pointer position to grid cell (same geometry as renderGrid).
+      const n = currentLevel.grid;
+      const screenW = this.scale.width;
+      const screenH = this.scale.height;
+      const padding = 24;
+      const availableW = screenW - padding * 2;
+      const availableH = screenH * 0.65;
+      const tileSize = Math.floor(Math.min(availableW, availableH) / n) - 4;
+      const gap = 4;
+      const gridPixelSize = n * (tileSize + gap) - gap;
+      const startX = (screenW - gridPixelSize) / 2;
+      const startY = screenH * 0.2;
+
+      const col = Math.floor((pointer.x - startX) / (tileSize + gap));
+      const row = Math.floor((pointer.y - startY) / (tileSize + gap));
+
+      if (row >= 0 && row < n && col >= 0 && col < n) {
+        engine.onPointerMove(row, col);
+        useGameStore.setState({ grid: engine.getGrid() });
+        this.refreshTileLabels();
+      }
+    });
   }
 
   update(_time: number, delta: number) {
-    const { status, engine } = useGameStore.getState();
+    const { status, engine, grid, currentLevel, runId } = useGameStore.getState();
     if (status !== 'playing' || !engine) return;
+
+    // Reset view-layer countdown state on a NEW level only. runId increments in
+    // startLevel() but NOT on a tap (tapCell creates a new grid array, so keying
+    // on grid identity would wrongly re-reveal everything after each correct tap).
+    if (runId !== this.lastRunId) {
+      this.lastRunId = runId;
+      this.countdownFirstSeen.clear();
+      this.countdownHidden.clear();
+    }
 
     // Shuffle modifier tick
     const reshuffled = engine.onShuffleTick(delta);
     if (reshuffled) {
       useGameStore.setState({ grid: engine.getGrid() });
-      this.renderGrid();
+      // Flash untapped tiles briefly so the player sees the reshuffle happened.
+      const { grid } = useGameStore.getState();
+      this.tileObjects.forEach((row, r) => {
+        row.forEach((container, c) => {
+          if (!grid[r]?.[c]?.tapped) {
+            this.tweens.add({
+              targets: container,
+              alpha: 0.3,
+              duration: 120,
+              yoyo: true,
+              ease: 'Linear',
+              onComplete: () => {
+                if (container.active) container.setAlpha(1);
+              },
+            });
+          }
+        });
+      });
+      // Delay renderGrid slightly so the flash is visible before tiles re-render.
+      this.time.delayedCall(150, () => this.renderGrid());
     }
 
-    // Countdown modifier tick
+    // Countdown modifier tick (engine call kept for contract; it is a no-op
+    // here because countdown cells are never revealed in the engine).
     const hidden = engine.onCountdownTick(delta);
     if (hidden.length > 0) {
       useGameStore.setState({ grid: engine.getGrid() });
       this.refreshTileLabels();
     }
-  }
 
-  // True when the current level's modifier hides numbers until revealed.
-  private isHidingModifier(): boolean {
-    const { currentLevel } = useGameStore.getState();
-    return currentLevel?.modifier === 'fog' || currentLevel?.modifier === 'countdown';
+    // Countdown modifier (view-layer): hide each untapped cell 3s after first shown.
+    if (currentLevel?.modifier === 'countdown') {
+      const now = this.time.now;
+      let changed = false;
+      for (let r = 0; r < grid.length; r++) {
+        for (let c = 0; c < grid[r].length; c++) {
+          if (grid[r][c].tapped) continue;
+          const k = `${r},${c}`;
+          const seen = this.countdownFirstSeen.get(k);
+          if (seen === undefined) {
+            this.countdownFirstSeen.set(k, now);
+          } else if (!this.countdownHidden.has(k) && now - seen > 3000) {
+            this.countdownHidden.add(k);
+            changed = true;
+          }
+        }
+      }
+      if (changed) this.refreshTileLabels();
+    }
   }
 
   // Whether a cell's number should currently render.
+  //  - tapped cells: always (they show the green check)
+  //  - fog: only while revealed (set by the pointer-move reveal)
+  //  - countdown: visible until hidden by the 3s view-layer timer
+  //  - none/shuffle/mirror: always visible
   private isVisible(cell: Cell): boolean {
-    return cell.tapped || !this.isHidingModifier() || cell.revealed;
+    if (cell.tapped) return true;
+    const mod = useGameStore.getState().currentLevel?.modifier;
+    if (mod === 'fog') return cell.revealed;
+    if (mod === 'countdown') return !this.countdownHidden.has(`${cell.row},${cell.col}`);
+    return true;
   }
 
   renderGrid() {
@@ -103,18 +194,19 @@ export class GameScene extends Phaser.Scene {
           })
           .setOrigin(0.5);
 
+        // Mirror modifier: visually flip the label horizontally. Combines with
+        // the digit-reversal already applied by engine.getDisplayValue().
+        if (currentLevel.modifier === 'mirror') {
+          label.setScale(-1, 1);
+        }
+
         container.add([bg, label]);
 
-        // Tap input — only on untapped tiles
+        // Tap input — only on untapped tiles. Fog reveal is handled by the
+        // global pointermove listener in create() (works over hidden tiles).
         if (!cell.tapped) {
           bg.setInteractive({ useHandCursor: true });
           bg.on('pointerdown', () => this.handleTap(r, c));
-          // Fog modifier: reveal on pointer move
-          bg.on('pointermove', () => {
-            useGameStore.getState().engine?.onPointerMove(r, c);
-            useGameStore.setState({ grid: useGameStore.getState().engine!.getGrid() });
-            this.refreshTileLabels();
-          });
         }
 
         this.tileObjects[r][c] = container;
@@ -205,6 +297,13 @@ export class GameScene extends Phaser.Scene {
         bg.setStrokeStyle(1, this.getTileBorderColour(cell));
         label.setText(cell.tapped ? '✓' : this.isVisible(cell) ? String(engine.getDisplayValue(cell)) : '');
         label.setColor(this.getTileTextColour(cell));
+        // Mirror modifier: re-apply the horizontal flip after setText; ensure
+        // non-mirror levels are never left flipped.
+        if (useGameStore.getState().currentLevel?.modifier === 'mirror') {
+          label.setScale(-1, 1);
+        } else {
+          label.setScale(1, 1);
+        }
       }
     }
   }

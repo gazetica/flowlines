@@ -28,7 +28,7 @@ Claude Code must update this file at the end of every task:
 
 ---
 
-## Sprint 2 — Core Game Logic 🔄 IN PROGRESS
+## Sprint 2 — Core Game Logic ✅ COMPLETE
 
 | Task | Status | Notes |
 |---|---|---|
@@ -42,10 +42,11 @@ Claude Code must update this file at the end of every task:
 | `src/game/levels.json` | ✅ DONE | T-003. 100 levels, packs 25/35/40. All 6 integrity checks pass. |
 | `src/components/TimerComponent.tsx` | ✅ DONE | T-004. React countdown, onTick/onExpire, danger red+pulse <=10s, pause/resume, reset on duration change. 15 RTL tests. |
 | Game loop wire-up (GameScene.ts) | ✅ DONE | T-005. gameStore + GameScene + GameScreen + main.tsx. Build+cap sync OK, 94 tests pass. All 14 device checks PASS on Samsung SM-E146B (driven via ADB taps + screenshots). Fixed timer-reset-on-restart bug (runId key). |
-| Modifier: shuffle | ⬜ PENDING | |
-| Modifier: fog | ⬜ PENDING | |
-| Modifier: mirror | ⬜ PENDING | |
-| Modifier: countdown | ⬜ PENDING | |
+| Modifier: shuffle | ✅ DONE | T-006. 8s reshuffle flash; tapped tiles stay; all numbers preserved. S1-S5 PASS on SM-E146B. |
+| Modifier: fog | ✅ DONE | T-006. Global pointer listener reveals 1-cell radius over hidden tiles; reveals persist. F1-F5 PASS. |
+| Modifier: mirror | ✅ DONE | T-006. Phaser label setScale(-1,1) horizontal flip; tapping underlying value registers. M1-M3 PASS. |
+| Modifier: countdown | ✅ DONE | T-006. View-layer countdown in GameScene (engine reveal path unusable); numbers show then hide after 3s; tapped persist. C1-C5 PASS. |
+| DEV level selector | ✅ DONE | T-006. GameScreen, gated `import.meta.env.DEV \|\| VITE_DEV_TOOLS==='true'`; hidden in production build. |
 
 ---
 
@@ -118,4 +119,7 @@ Claude Code must update this file at the end of every task:
 | 02 Jun 2026 | T-005: Removed dead `require('../game/LevelManager')` stars block in GameScreen | `require` is undefined in the ESM/Vite browser runtime (throws ReferenceError); the computed `stars` was never used. Dropped unused store selectors (grid, pauseGame, resumeGame) for noUnusedLocals. |
 | 02 Jun 2026 | T-005: GameScene `update(time,delta)` -> `update(_time,delta)` | `time` unused; noUnusedParameters. |
 | 02 Jun 2026 | T-005: Added `runId` to gameStore; GameScreen keys TimerComponent on it | DEVICE BUG found in verification: restarting a level with the same timeLimit (45->45) left TimerComponent's `remaining` stuck at 0 (its reset effect keyed on durationSeconds didn't re-fire), so every restart instantly re-fired onExpire -> grid unplayable after game 1. TimerComponent.tsx is locked (T-004), so fix is a remount-on-restart key from this task's own files. Verified fixed on device. |
+| 02 Jun 2026 | T-006: Selector gated on `import.meta.env.DEV \|\| VITE_DEV_TOOLS==='true'` (not bare DEV) | `import.meta.env.DEV` is always false for ANY `vite build` (incl. Capacitor APKs), and a `--mode development` build can't be used because React StrictMode double-invokes effects in dev and breaks Phaser boot (black screen). Test APK is built in PRODUCTION mode with VITE_DEV_TOOLS=true; `npm run build` leaves it unset so the shipped app hides the selector. |
+| 02 Jun 2026 | T-006: COUNTDOWN implemented in the VIEW LAYER (GameScene), not the engine | DEVICE FAIL found: countdown levels rendered all-blank. Root cause — GridEngine never reveals countdown cells (onCountdownTick only hides already-revealed cells; the reveal path is fog-only; getGrid() returns a copy so engine state can't be reveal-mutated externally) and GridEngine is locked. Brief Change 5 anticipated fixing isVisible() in GameScene. Fix: show all numbers at level start, hide each cell 3s after first shown, keyed off scene clock; reset per level via store `runId` (NOT grid identity — tapCell makes a new grid array each correct tap, which would wrongly re-reveal). C1-C5 PASS on device. |
+| 02 Jun 2026 | T-006 (env note): screen lock loses Phaser WebGL context -> blank canvas | During ADB verification, screen lock/unlock blanked the Phaser canvas (GL context loss not restored). Mitigated for testing with `svc power stayon true` + fresh app restart. Not an app bug for normal use, but flagged for Sprint 3 (consider Phaser WEBGL context-restore handling). |
 | 02 Jun 2026 | T-002: `buildBreakdown` follows the prose Format rules (labelled `× N streak × N grid`), not the worked examples | Brief's examples omit the streak/grid labels and use zero-padded decimals (1.0, 2.0) that no single formatter reproduces (1.25 has 2 dp, 2.8 has 1); examples are not implementable, so the prescriptive prose wins. No test asserts the exact string. |
