@@ -17,6 +17,7 @@ import {
   prefGetJSON,
   prefSetJSON,
 } from '../services/preferences';
+import i18n from '../i18n';
 
 export type Language = 'en' | 'de' | 'fr' | 'ko' | 'pt' | 'es';
 
@@ -138,12 +139,17 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       bestScores,
       hydrated: true,
     });
+
+    // Sync i18next with the loaded language.
+    const loadedLang = (language as Language) ?? 'en';
+    i18n.changeLanguage(loadedLang);
   },
 
   // —— Settings actions ——
   setLanguage: async (lang) => {
     set({ language: lang });
     await prefSet(PREF_KEYS.LANGUAGE, lang);
+    i18n.changeLanguage(lang); // sync i18next with the store
   },
   setSoundEnabled: async (v) => {
     set({ soundEnabled: v });

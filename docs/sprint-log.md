@@ -57,6 +57,7 @@ Claude Code must update this file at the end of every task:
 | WebGL context/loop restore on app resume (T-007) | ✅ DONE — appLifecycle.ts via @capacitor/app; 4/4 device checks PASS on SM-E146B |
 | Phaser skin: gradient tiles, gold glow, radial glow, particles (T-008) | ✅ DONE — index.css skin + drawTileBg + particle canvas; 10/10 device checks PASS on SM-E146B |
 | settingsStore + Capacitor Preferences service (T-009) | ✅ DONE — preferences.ts typed wrapper + settingsStore (settings/progress/IAP); hydrate on startup. 4/4 logic checks pass. |
+| i18n locale files — 6 languages (T-010) | ✅ DONE — en/de/fr/ko/pt/es (136 keys each) + i18n.ts; changeLanguage wired to settingsStore. 4/4 validation checks pass. |
 | Phaser GameScene: NxN grid cells, number tiles, tap pulse animation | ⬜ PENDING |
 | Gold highlight on next target tile | ⬜ PENDING |
 | Correct tap animation (checkmark + green pulse) | ⬜ PENDING |
@@ -90,6 +91,7 @@ Claude Code must update this file at the end of every task:
 |---|---|
 | 30+ game sessions QA | ⬜ PENDING |
 | Test on 2nd Android device | ⬜ PENDING |
+| Native-speaker review of i18n locales (esp. KO, DE) — machine-generated in T-010 | ⬜ PENDING |
 | Signed release AAB + keystore backup | ⬜ PENDING |
 | Play Store screenshots (6 per language) | ⬜ PENDING |
 | Privacy Policy live at gazetica.com/privacy | ⬜ PENDING |
@@ -134,4 +136,6 @@ Claude Code must update this file at the end of every task:
 | 03 Jun 2026 | T-008: next-target pulse managed by updateNextPulse() (renderGrid + refreshTileLabels), not only renderGrid | The brief adds the pulse tween only in renderGrid, but the target changes on each correct tap (which calls refreshTileLabels, not renderGrid). updateNextPulse stops the old tween and starts a fresh one on the new target so the pulse follows the gold tile. Verified on device (gold tile area varies frame-to-frame). |
 | 03 Jun 2026 | T-009: alias sanitisation yields 'badchars' for 'bad chars! @#$', not 'bad_chars' | The spec'd regex `replace(/[^a-zA-Z0-9_]/g, '')` STRIPS disallowed chars (incl. spaces); it does not convert spaces to underscores. The brief's check-2 comment ('bad_chars') was inaccurate — implementation copied verbatim is correct, validated as 'badchars'. |
 | 03 Jun 2026 | T-009: console checks run via a temporary mocked-Preferences vitest harness, then deleted | The brief's validation is interactive browser-console steps; the headless env can't drive a browser console. The 4 checks are pure store logic, so they were run against the REAL settingsStore with @capacitor/preferences mocked in-memory (all 4 pass), plus an `npm run dev` smoke test (HTTP 200). No test file committed; the `window.__ZUSTAND_SETTINGS__` debug line was never added. |
+| 03 Jun 2026 | T-010: corrected mojibaked symbols from the brief to real Unicode | The brief doc was UTF-8-mojibaked (Ã—, Â·, â). Restored intended glyphs: × (multiply), · (middot), ✓ (check, e.g. "Purchased ✓"), — (em dash, "Consumable — 5 uses"), © (copyright), ★ (star, "Rate Numtap ★"). Same glyphs carried verbatim across all 6 locales. |
+| 03 Jun 2026 | T-010: validation run via a Node key/placeholder diff script (deleted after) | 136 keys per file confirmed structurally identical; all {{...}} placeholders match en; app.name=="Numtap" in all 6; 5 spot strings differ from en (translated) per language. modifiers.none is intentionally "" in every locale (matches en). |
 | 02 Jun 2026 | T-002: `buildBreakdown` follows the prose Format rules (labelled `× N streak × N grid`), not the worked examples | Brief's examples omit the streak/grid labels and use zero-padded decimals (1.0, 2.0) that no single formatter reproduces (1.25 has 2 dp, 2.8 has 1); examples are not implementable, so the prescriptive prose wins. No test asserts the exact string. |

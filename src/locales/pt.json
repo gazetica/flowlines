@@ -1,0 +1,185 @@
+{
+  "app": {
+    "name": "Numtap",
+    "tagline": "Quebra-cabeça de tocar números",
+    "by": "por Gazetica"
+  },
+
+  "nav": {
+    "home": "Início",
+    "leaderboard": "Placar",
+    "settings": "Configurações",
+    "about": "Sobre"
+  },
+
+  "home": {
+    "play_now": "JOGAR AGORA",
+    "classic_mode": "Modo Clássico",
+    "modes_label": "MODOS DE JOGO",
+    "mode_daily": "DIÁRIO",
+    "mode_daily_sub": "5×5 · 1 tentativa",
+    "mode_speed": "VELOCIDADE",
+    "mode_speed_sub": "4×4 · 2× pts",
+    "mode_endless": "INFINITO",
+    "mode_endless_sub": "5×5 · 3 min",
+    "best_score": "Melhor pontuação",
+    "day_streak": "Sequência de dias",
+    "rank": "RANK",
+    "games": "JOGOS",
+    "avg": "MÉD"
+  },
+
+  "game": {
+    "hud_timer": "TEMPO",
+    "hud_next": "PRÓXIMO",
+    "hud_score": "PONTOS",
+    "btn_pause": "PAUSAR",
+    "btn_hint": "DICA (Anúncio)",
+    "progress_tapped": "{{tapped}} de {{total}} tocados",
+    "paused_title": "PAUSADO",
+    "btn_resume": "CONTINUAR",
+    "btn_restart": "REINICIAR",
+    "btn_home": "INÍCIO"
+  },
+
+  "result": {
+    "level_complete": "NÍVEL CONCLUÍDO!",
+    "times_up": "TEMPO ESGOTADO!",
+    "new_pb": "NOVO RECORDE PESSOAL!",
+    "score_label": "Pontuação",
+    "base_score": "Pontuação base",
+    "time_bonus": "Bônus de tempo",
+    "speed_bonus": "Bônus de velocidade",
+    "accuracy": "Precisão",
+    "total": "Total",
+    "btn_next_level": "PRÓXIMO NÍVEL",
+    "btn_play_again": "JOGAR DE NOVO",
+    "btn_home": "INÍCIO",
+    "btn_leaderboard": "PLACAR",
+    "ad_slot": "Anúncio"
+  },
+
+  "leaderboard": {
+    "title": "PLACAR",
+    "tab_daily": "DIÁRIO",
+    "tab_endless": "INFINITO",
+    "tab_alltime": "GERAL",
+    "you": "Você",
+    "anonymous_note": "Anônimo · Sem login · Defina um apelido nas Configurações",
+    "loading": "Carregando...",
+    "empty": "Ainda sem pontuações. Seja o primeiro!"
+  },
+
+  "settings": {
+    "title": "CONFIGURAÇÕES",
+    "section_audio": "ÁUDIO",
+    "sound_effects": "Efeitos sonoros",
+    "music": "Música",
+    "section_display": "EXIBIÇÃO",
+    "haptic_feedback": "Vibração",
+    "language": "Idioma",
+    "section_profile": "PERFIL",
+    "alias_label": "Apelido no placar",
+    "alias_sub": "Exibido no placar global",
+    "alias_placeholder": "Digite um apelido",
+    "section_purchases": "COMPRAS",
+    "remove_ads": "Remover anúncios para sempre",
+    "remove_ads_sub": "Compra única",
+    "remove_ads_purchased": "Comprado ✓",
+    "restore_purchases": "Restaurar compras"
+  },
+
+  "iap": {
+    "title": "DESBLOQUEAR MAIS",
+    "sub": "Apoie a Gazetica · Jogue sem anúncios",
+    "popular_badge": "MAIS POPULAR",
+    "remove_ads_title": "Remover anúncios para sempre",
+    "remove_ads_desc": "Sem intersticiais. Sem anúncios antes das dicas. Jogue livremente, sempre.",
+    "hint_pack_title": "Pacote de dicas · 5 dicas",
+    "hint_pack_desc": "Pule o anúncio. Use as dicas direto. Consumível — 5 usos.",
+    "btn_buy": "COMPRAR AGORA",
+    "btn_buy_short": "COMPRAR",
+    "restore": "RESTAURAR COMPRAS ANTERIORES",
+    "payment_note": "Pagamento processado pelo Google Play.",
+    "terms_note": "Ao comprar, você concorda com nossos Termos e Condições."
+  },
+
+  "consent": {
+    "title": "Sua privacidade importa",
+    "body": "O Numtap usa publicidade para continuar gratuito. Nós e nossos parceiros podemos usar seus dados para mostrar anúncios personalizados. Você pode aceitar ou usar anúncios limitados. Você pode mudar isso a qualquer momento nas Configurações.",
+    "btn_accept": "ACEITAR ANÚNCIOS PERSONALIZADOS",
+    "btn_limited": "USAR APENAS ANÚNCIOS LIMITADOS",
+    "privacy_link": "Política de Privacidade",
+    "terms_link": "Termos e Condições"
+  },
+
+  "how_to_play": {
+    "badge": "COMO JOGAR",
+    "title": "Toque os números em ordem",
+    "sub": "Domine o Numtap em 30 segundos",
+    "step1": "Uma grade de {{adjective}}números embaralhados{{end}} aparece. Seu objetivo: tocá-los {{em}}em ordem{{end}} a partir do 1.",
+    "step2": "A {{gold}}peça dourada{{end}} sempre mostra seu próximo alvo. Toque nela antes do tempo acabar!",
+    "step3": "Vença o relógio, faça muitos pontos. {{em}}Toques mais rápidos = pontuação maior.{{end}} As grades crescem de 3×3 até 7×7.",
+    "step4": "Travou? Toque em {{gold}}DICA{{end}} para revelar o alvo por 5 segundos. Uma dica grátis por nível.",
+    "demo_label": "TOQUE O NÚMERO DOURADO A SEGUIR",
+    "demo_hint": "Peça dourada = tocar a seguir · ✓ = já tocado",
+    "btn_play": "VAMOS JOGAR!",
+    "btn_skip": "PULAR TUTORIAL"
+  },
+
+  "language": {
+    "title": "Escolha seu idioma",
+    "sub": "Você pode mudar isso a qualquer momento nas Configurações",
+    "detected": "Detectado: {{language}}",
+    "btn_continue": "CONTINUAR",
+    "btn_later": "Escolher depois"
+  },
+
+  "about": {
+    "title": "SOBRE",
+    "version": "Versão {{version}}",
+    "bundle_id": "com.gazetica.numtap",
+    "privacy_policy": "Política de Privacidade",
+    "terms": "Termos e Condições",
+    "ad_preferences": "Preferências de anúncios (GDPR)",
+    "rate_app": "Avaliar o Numtap ★",
+    "contact": "Contato / Suporte",
+    "more_games": "Mais jogos da Gazetica",
+    "footer": "Gazetica Studio · Voraky Retail LLP",
+    "copyright": "© 2026 Voraky Retail LLP. Todos os direitos reservados."
+  },
+
+  "splash": {
+    "loading": "Carregando..."
+  },
+
+  "common": {
+    "ok": "OK",
+    "cancel": "Cancelar",
+    "close": "Fechar",
+    "back": "Voltar",
+    "save": "Salvar",
+    "loading": "Carregando...",
+    "error": "Algo deu errado.",
+    "retry": "Tentar de novo",
+    "pack_locked": "Conclua o Pacote {{pack}} para desbloquear",
+    "pack_coming_soon": "Em breve",
+    "level": "Nível {{id}}",
+    "pack": "Pacote {{pack}}"
+  },
+
+  "modes": {
+    "campaign": "Campanha",
+    "daily": "Desafio Diário",
+    "endless": "Infinito",
+    "speed": "Velocidade"
+  },
+
+  "modifiers": {
+    "none": "",
+    "shuffle": "Embaralhar",
+    "fog": "Névoa",
+    "mirror": "Espelho",
+    "countdown": "Contagem regressiva"
+  }
+}

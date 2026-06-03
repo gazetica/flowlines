@@ -1,0 +1,185 @@
+{
+  "app": {
+    "name": "Numtap",
+    "tagline": "Zahlen-Tipp-Puzzle",
+    "by": "von Gazetica"
+  },
+
+  "nav": {
+    "home": "Start",
+    "leaderboard": "Rangliste",
+    "settings": "Einstellungen",
+    "about": "Über"
+  },
+
+  "home": {
+    "play_now": "JETZT SPIELEN",
+    "classic_mode": "Klassischer Modus",
+    "modes_label": "SPIELMODI",
+    "mode_daily": "TÄGLICH",
+    "mode_daily_sub": "5×5 · 1 Versuch",
+    "mode_speed": "SPEED",
+    "mode_speed_sub": "4×4 · 2× Pkt.",
+    "mode_endless": "ENDLOS",
+    "mode_endless_sub": "5×5 · 3 Min.",
+    "best_score": "Bestwert",
+    "day_streak": "Tagesserie",
+    "rank": "RANG",
+    "games": "SPIELE",
+    "avg": "Ø"
+  },
+
+  "game": {
+    "hud_timer": "ZEIT",
+    "hud_next": "NÄCHSTE",
+    "hud_score": "PUNKTE",
+    "btn_pause": "PAUSE",
+    "btn_hint": "TIPP (Werbung)",
+    "progress_tapped": "{{tapped}} von {{total}} getippt",
+    "paused_title": "PAUSIERT",
+    "btn_resume": "FORTSETZEN",
+    "btn_restart": "NEU STARTEN",
+    "btn_home": "START"
+  },
+
+  "result": {
+    "level_complete": "LEVEL GESCHAFFT!",
+    "times_up": "ZEIT ABGELAUFEN!",
+    "new_pb": "NEUER PERSÖNLICHER REKORD!",
+    "score_label": "Punkte",
+    "base_score": "Grundpunkte",
+    "time_bonus": "Zeitbonus",
+    "speed_bonus": "Geschwindigkeitsbonus",
+    "accuracy": "Genauigkeit",
+    "total": "Gesamt",
+    "btn_next_level": "NÄCHSTES LEVEL",
+    "btn_play_again": "NOCHMAL SPIELEN",
+    "btn_home": "START",
+    "btn_leaderboard": "RANGLISTE",
+    "ad_slot": "Werbung"
+  },
+
+  "leaderboard": {
+    "title": "RANGLISTE",
+    "tab_daily": "TÄGLICH",
+    "tab_endless": "ENDLOS",
+    "tab_alltime": "ALLZEIT",
+    "you": "Du",
+    "anonymous_note": "Anonym · Keine Anmeldung nötig · Alias in den Einstellungen festlegen",
+    "loading": "Wird geladen...",
+    "empty": "Noch keine Punkte. Sei der Erste!"
+  },
+
+  "settings": {
+    "title": "EINSTELLUNGEN",
+    "section_audio": "AUDIO",
+    "sound_effects": "Soundeffekte",
+    "music": "Musik",
+    "section_display": "ANZEIGE",
+    "haptic_feedback": "Haptisches Feedback",
+    "language": "Sprache",
+    "section_profile": "PROFIL",
+    "alias_label": "Ranglisten-Alias",
+    "alias_sub": "Auf der globalen Rangliste sichtbar",
+    "alias_placeholder": "Alias eingeben",
+    "section_purchases": "KÄUFE",
+    "remove_ads": "Werbung dauerhaft entfernen",
+    "remove_ads_sub": "Einmaliger Kauf",
+    "remove_ads_purchased": "Gekauft ✓",
+    "restore_purchases": "Käufe wiederherstellen"
+  },
+
+  "iap": {
+    "title": "MEHR FREISCHALTEN",
+    "sub": "Unterstütze Gazetica · Spiele werbefrei",
+    "popular_badge": "AM BELIEBTESTEN",
+    "remove_ads_title": "Werbung dauerhaft entfernen",
+    "remove_ads_desc": "Keine Interstitials. Keine Werbung vor Tipps. Spiele immer ungestört.",
+    "hint_pack_title": "Tipp-Paket · 5 Tipps",
+    "hint_pack_desc": "Überspringe die Werbung. Nutze Tipps direkt. Verbrauchbar — 5 Nutzungen.",
+    "btn_buy": "JETZT KAUFEN",
+    "btn_buy_short": "KAUFEN",
+    "restore": "FRÜHERE KÄUFE WIEDERHERSTELLEN",
+    "payment_note": "Zahlung über Google Play abgewickelt.",
+    "terms_note": "Mit dem Kauf stimmst du unseren AGB zu."
+  },
+
+  "consent": {
+    "title": "Dein Datenschutz zählt",
+    "body": "Numtap finanziert sich durch Werbung, um kostenlos zu bleiben. Wir und unsere Partner können deine Daten nutzen, um dir personalisierte Werbung zu zeigen. Du kannst zustimmen oder eingeschränkte Werbung wählen. Du kannst dies jederzeit in den Einstellungen ändern.",
+    "btn_accept": "PERSONALISIERTE WERBUNG AKZEPTIEREN",
+    "btn_limited": "NUR EINGESCHRÄNKTE WERBUNG",
+    "privacy_link": "Datenschutzerklärung",
+    "terms_link": "AGB"
+  },
+
+  "how_to_play": {
+    "badge": "SO WIRD GESPIELT",
+    "title": "Tippe Zahlen der Reihe nach",
+    "sub": "Meistere Numtap in 30 Sekunden",
+    "step1": "Ein Raster aus {{adjective}}gemischten Zahlen{{end}} erscheint. Dein Ziel: tippe sie {{em}}der Reihe nach{{end}} ab 1 aufwärts.",
+    "step2": "Die {{gold}}goldene Kachel{{end}} zeigt immer dein nächstes Ziel. Tippe sie, bevor die Zeit abläuft!",
+    "step3": "Schlage die Uhr, hole viele Punkte. {{em}}Schnellere Tipps = höhere Punktzahl.{{end}} Die Raster wachsen von 3×3 bis 7×7.",
+    "step4": "Steckst du fest? Tippe auf {{gold}}TIPP{{end}}, um das Ziel 5 Sekunden lang zu zeigen. Ein kostenloser Tipp pro Level.",
+    "demo_label": "TIPPE ALS NÄCHSTES DIE GOLDENE ZAHL",
+    "demo_hint": "Goldene Kachel = als Nächstes tippen · ✓ = bereits getippt",
+    "btn_play": "LOS GEHT'S!",
+    "btn_skip": "TUTORIAL ÜBERSPRINGEN"
+  },
+
+  "language": {
+    "title": "Wähle deine Sprache",
+    "sub": "Du kannst dies jederzeit in den Einstellungen ändern",
+    "detected": "Erkannt: {{language}}",
+    "btn_continue": "WEITER",
+    "btn_later": "Später wählen"
+  },
+
+  "about": {
+    "title": "ÜBER",
+    "version": "Version {{version}}",
+    "bundle_id": "com.gazetica.numtap",
+    "privacy_policy": "Datenschutzerklärung",
+    "terms": "AGB",
+    "ad_preferences": "Werbeeinstellungen (DSGVO)",
+    "rate_app": "Numtap bewerten ★",
+    "contact": "Kontakt / Support",
+    "more_games": "Mehr Spiele von Gazetica",
+    "footer": "Gazetica Studio · Voraky Retail LLP",
+    "copyright": "© 2026 Voraky Retail LLP. Alle Rechte vorbehalten."
+  },
+
+  "splash": {
+    "loading": "Wird geladen..."
+  },
+
+  "common": {
+    "ok": "OK",
+    "cancel": "Abbrechen",
+    "close": "Schließen",
+    "back": "Zurück",
+    "save": "Speichern",
+    "loading": "Wird geladen...",
+    "error": "Etwas ist schiefgelaufen.",
+    "retry": "Erneut versuchen",
+    "pack_locked": "Schließe Paket {{pack}} ab, um freizuschalten",
+    "pack_coming_soon": "Demnächst",
+    "level": "Level {{id}}",
+    "pack": "Paket {{pack}}"
+  },
+
+  "modes": {
+    "campaign": "Kampagne",
+    "daily": "Tägliche Challenge",
+    "endless": "Endlos",
+    "speed": "Speed"
+  },
+
+  "modifiers": {
+    "none": "",
+    "shuffle": "Mischen",
+    "fog": "Nebel",
+    "mirror": "Spiegel",
+    "countdown": "Countdown"
+  }
+}

@@ -1,0 +1,185 @@
+{
+  "app": {
+    "name": "Numtap",
+    "tagline": "Number Tap Puzzle",
+    "by": "by Gazetica"
+  },
+
+  "nav": {
+    "home": "Home",
+    "leaderboard": "Board",
+    "settings": "Settings",
+    "about": "About"
+  },
+
+  "home": {
+    "play_now": "PLAY NOW",
+    "classic_mode": "Classic Mode",
+    "modes_label": "GAME MODES",
+    "mode_daily": "DAILY",
+    "mode_daily_sub": "5×5 · 1 try",
+    "mode_speed": "SPEED",
+    "mode_speed_sub": "4×4 · 2× pts",
+    "mode_endless": "ENDLESS",
+    "mode_endless_sub": "5×5 · 3 min",
+    "best_score": "Best Score",
+    "day_streak": "Day Streak",
+    "rank": "RANK",
+    "games": "GAMES",
+    "avg": "AVG"
+  },
+
+  "game": {
+    "hud_timer": "TIMER",
+    "hud_next": "NEXT",
+    "hud_score": "SCORE",
+    "btn_pause": "PAUSE",
+    "btn_hint": "HINT (Ad)",
+    "progress_tapped": "{{tapped}} of {{total}} tapped",
+    "paused_title": "PAUSED",
+    "btn_resume": "RESUME",
+    "btn_restart": "RESTART",
+    "btn_home": "HOME"
+  },
+
+  "result": {
+    "level_complete": "LEVEL COMPLETE!",
+    "times_up": "TIME'S UP!",
+    "new_pb": "NEW PERSONAL BEST!",
+    "score_label": "Score",
+    "base_score": "Base Score",
+    "time_bonus": "Time Bonus",
+    "speed_bonus": "Speed Bonus",
+    "accuracy": "Accuracy",
+    "total": "Total",
+    "btn_next_level": "NEXT LEVEL",
+    "btn_play_again": "PLAY AGAIN",
+    "btn_home": "HOME",
+    "btn_leaderboard": "BOARD",
+    "ad_slot": "Ad"
+  },
+
+  "leaderboard": {
+    "title": "LEADERBOARD",
+    "tab_daily": "DAILY",
+    "tab_endless": "ENDLESS",
+    "tab_alltime": "ALL-TIME",
+    "you": "You",
+    "anonymous_note": "Anonymous · No login required · Set alias in Settings",
+    "loading": "Loading...",
+    "empty": "No scores yet. Be the first!"
+  },
+
+  "settings": {
+    "title": "SETTINGS",
+    "section_audio": "AUDIO",
+    "sound_effects": "Sound Effects",
+    "music": "Music",
+    "section_display": "DISPLAY",
+    "haptic_feedback": "Haptic Feedback",
+    "language": "Language",
+    "section_profile": "PROFILE",
+    "alias_label": "Leaderboard Alias",
+    "alias_sub": "Shown on global board",
+    "alias_placeholder": "Enter alias",
+    "section_purchases": "PURCHASES",
+    "remove_ads": "Remove Ads Forever",
+    "remove_ads_sub": "One-time purchase",
+    "remove_ads_purchased": "Purchased ✓",
+    "restore_purchases": "Restore Purchases"
+  },
+
+  "iap": {
+    "title": "UNLOCK MORE",
+    "sub": "Support Gazetica · Play ad-free",
+    "popular_badge": "MOST POPULAR",
+    "remove_ads_title": "Remove Ads Forever",
+    "remove_ads_desc": "No interstitials. No ads before hints. Play freely, always.",
+    "hint_pack_title": "Hint Pack · 5 Hints",
+    "hint_pack_desc": "Skip the ad. Use hints directly. Consumable — 5 uses.",
+    "btn_buy": "BUY NOW",
+    "btn_buy_short": "BUY",
+    "restore": "RESTORE PREVIOUS PURCHASES",
+    "payment_note": "Payment processed by Google Play.",
+    "terms_note": "By purchasing you agree to our Terms & Conditions."
+  },
+
+  "consent": {
+    "title": "Your Privacy Matters",
+    "body": "Numtap uses advertising to stay free. We and our partners may use your data to show you personalised ads. You can choose to accept or use limited ads. You can change this anytime in Settings.",
+    "btn_accept": "ACCEPT PERSONALISED ADS",
+    "btn_limited": "USE LIMITED ADS ONLY",
+    "privacy_link": "Privacy Policy",
+    "terms_link": "Terms & Conditions"
+  },
+
+  "how_to_play": {
+    "badge": "HOW TO PLAY",
+    "title": "Tap Numbers in Order",
+    "sub": "Master Numtap in 30 seconds",
+    "step1": "A grid of {{adjective}}shuffled numbers{{end}} appears. Your goal: tap them {{em}}in order{{end}} from 1 upward.",
+    "step2": "The {{gold}}gold tile{{end}} always shows your next target. Tap it before time runs out!",
+    "step3": "Beat the clock, score big. {{em}}Faster taps = higher score.{{end}} Grids grow from 3×3 up to 7×7.",
+    "step4": "Stuck? Tap {{gold}}HINT{{end}} to reveal the target for 5 seconds. One free hint per level.",
+    "demo_label": "TAP THE GOLD NUMBER NEXT",
+    "demo_hint": "Gold tile = tap next · ✓ = already tapped",
+    "btn_play": "LET'S PLAY!",
+    "btn_skip": "SKIP TUTORIAL"
+  },
+
+  "language": {
+    "title": "Choose Your Language",
+    "sub": "You can change this anytime in Settings",
+    "detected": "Detected: {{language}}",
+    "btn_continue": "CONTINUE",
+    "btn_later": "I'll choose later"
+  },
+
+  "about": {
+    "title": "ABOUT",
+    "version": "Version {{version}}",
+    "bundle_id": "com.gazetica.numtap",
+    "privacy_policy": "Privacy Policy",
+    "terms": "Terms & Conditions",
+    "ad_preferences": "Ad Preferences (GDPR)",
+    "rate_app": "Rate Numtap ★",
+    "contact": "Contact / Support",
+    "more_games": "More Games by Gazetica",
+    "footer": "Gazetica Studio · Voraky Retail LLP",
+    "copyright": "© 2026 Voraky Retail LLP. All rights reserved."
+  },
+
+  "splash": {
+    "loading": "Loading..."
+  },
+
+  "common": {
+    "ok": "OK",
+    "cancel": "Cancel",
+    "close": "Close",
+    "back": "Back",
+    "save": "Save",
+    "loading": "Loading...",
+    "error": "Something went wrong.",
+    "retry": "Try Again",
+    "pack_locked": "Complete Pack {{pack}} to unlock",
+    "pack_coming_soon": "Coming Soon",
+    "level": "Level {{id}}",
+    "pack": "Pack {{pack}}"
+  },
+
+  "modes": {
+    "campaign": "Campaign",
+    "daily": "Daily Challenge",
+    "endless": "Endless",
+    "speed": "Speed"
+  },
+
+  "modifiers": {
+    "none": "",
+    "shuffle": "Shuffle",
+    "fog": "Fog",
+    "mirror": "Mirror",
+    "countdown": "Countdown"
+  }
+}

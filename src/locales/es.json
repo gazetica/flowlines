@@ -1,0 +1,185 @@
+{
+  "app": {
+    "name": "Numtap",
+    "tagline": "Rompecabezas de tocar números",
+    "by": "por Gazetica"
+  },
+
+  "nav": {
+    "home": "Inicio",
+    "leaderboard": "Marcador",
+    "settings": "Configuración",
+    "about": "Acerca de"
+  },
+
+  "home": {
+    "play_now": "JUGAR AHORA",
+    "classic_mode": "Modo Clásico",
+    "modes_label": "MODOS DE JUEGO",
+    "mode_daily": "DIARIO",
+    "mode_daily_sub": "5×5 · 1 intento",
+    "mode_speed": "VELOCIDAD",
+    "mode_speed_sub": "4×4 · 2× pts",
+    "mode_endless": "INFINITO",
+    "mode_endless_sub": "5×5 · 3 min",
+    "best_score": "Mejor puntuación",
+    "day_streak": "Racha de días",
+    "rank": "RANGO",
+    "games": "PARTIDAS",
+    "avg": "PROM"
+  },
+
+  "game": {
+    "hud_timer": "TIEMPO",
+    "hud_next": "SIGUIENTE",
+    "hud_score": "PUNTOS",
+    "btn_pause": "PAUSA",
+    "btn_hint": "PISTA (Anuncio)",
+    "progress_tapped": "{{tapped}} de {{total}} tocados",
+    "paused_title": "EN PAUSA",
+    "btn_resume": "REANUDAR",
+    "btn_restart": "REINICIAR",
+    "btn_home": "INICIO"
+  },
+
+  "result": {
+    "level_complete": "¡NIVEL COMPLETADO!",
+    "times_up": "¡SE ACABÓ EL TIEMPO!",
+    "new_pb": "¡NUEVO RÉCORD PERSONAL!",
+    "score_label": "Puntuación",
+    "base_score": "Puntuación base",
+    "time_bonus": "Bono de tiempo",
+    "speed_bonus": "Bono de velocidad",
+    "accuracy": "Precisión",
+    "total": "Total",
+    "btn_next_level": "SIGUIENTE NIVEL",
+    "btn_play_again": "JUGAR DE NUEVO",
+    "btn_home": "INICIO",
+    "btn_leaderboard": "MARCADOR",
+    "ad_slot": "Anuncio"
+  },
+
+  "leaderboard": {
+    "title": "MARCADOR",
+    "tab_daily": "DIARIO",
+    "tab_endless": "INFINITO",
+    "tab_alltime": "HISTÓRICO",
+    "you": "Tú",
+    "anonymous_note": "Anónimo · Sin inicio de sesión · Configura un alias en Configuración",
+    "loading": "Cargando...",
+    "empty": "Aún no hay puntuaciones. ¡Sé el primero!"
+  },
+
+  "settings": {
+    "title": "CONFIGURACIÓN",
+    "section_audio": "AUDIO",
+    "sound_effects": "Efectos de sonido",
+    "music": "Música",
+    "section_display": "PANTALLA",
+    "haptic_feedback": "Respuesta háptica",
+    "language": "Idioma",
+    "section_profile": "PERFIL",
+    "alias_label": "Alias del marcador",
+    "alias_sub": "Se muestra en el marcador global",
+    "alias_placeholder": "Ingresa un alias",
+    "section_purchases": "COMPRAS",
+    "remove_ads": "Quitar anuncios para siempre",
+    "remove_ads_sub": "Compra única",
+    "remove_ads_purchased": "Comprado ✓",
+    "restore_purchases": "Restaurar compras"
+  },
+
+  "iap": {
+    "title": "DESBLOQUEAR MÁS",
+    "sub": "Apoya a Gazetica · Juega sin anuncios",
+    "popular_badge": "MÁS POPULAR",
+    "remove_ads_title": "Quitar anuncios para siempre",
+    "remove_ads_desc": "Sin intersticiales. Sin anuncios antes de las pistas. Juega libremente, siempre.",
+    "hint_pack_title": "Paquete de pistas · 5 pistas",
+    "hint_pack_desc": "Sáltate el anuncio. Usa las pistas directamente. Consumible — 5 usos.",
+    "btn_buy": "COMPRAR AHORA",
+    "btn_buy_short": "COMPRAR",
+    "restore": "RESTAURAR COMPRAS ANTERIORES",
+    "payment_note": "Pago procesado por Google Play.",
+    "terms_note": "Al comprar, aceptas nuestros Términos y Condiciones."
+  },
+
+  "consent": {
+    "title": "Tu privacidad importa",
+    "body": "Numtap usa publicidad para seguir siendo gratis. Nosotros y nuestros socios podemos usar tus datos para mostrarte anuncios personalizados. Puedes aceptar o usar anuncios limitados. Puedes cambiar esto en cualquier momento en Configuración.",
+    "btn_accept": "ACEPTAR ANUNCIOS PERSONALIZADOS",
+    "btn_limited": "USAR SOLO ANUNCIOS LIMITADOS",
+    "privacy_link": "Política de Privacidad",
+    "terms_link": "Términos y Condiciones"
+  },
+
+  "how_to_play": {
+    "badge": "CÓMO JUGAR",
+    "title": "Toca los números en orden",
+    "sub": "Domina Numtap en 30 segundos",
+    "step1": "Aparece una cuadrícula de {{adjective}}números mezclados{{end}}. Tu objetivo: tocarlos {{em}}en orden{{end}} desde el 1.",
+    "step2": "La {{gold}}casilla dorada{{end}} siempre muestra tu siguiente objetivo. ¡Tócala antes de que se acabe el tiempo!",
+    "step3": "Gánale al reloj, suma muchos puntos. {{em}}Toques más rápidos = mayor puntuación.{{end}} Las cuadrículas crecen de 3×3 hasta 7×7.",
+    "step4": "¿Atascado? Toca {{gold}}PISTA{{end}} para revelar el objetivo durante 5 segundos. Una pista gratis por nivel.",
+    "demo_label": "TOCA A CONTINUACIÓN EL NÚMERO DORADO",
+    "demo_hint": "Casilla dorada = tocar a continuación · ✓ = ya tocado",
+    "btn_play": "¡A JUGAR!",
+    "btn_skip": "OMITIR TUTORIAL"
+  },
+
+  "language": {
+    "title": "Elige tu idioma",
+    "sub": "Puedes cambiar esto en cualquier momento en Configuración",
+    "detected": "Detectado: {{language}}",
+    "btn_continue": "CONTINUAR",
+    "btn_later": "Elegir más tarde"
+  },
+
+  "about": {
+    "title": "ACERCA DE",
+    "version": "Versión {{version}}",
+    "bundle_id": "com.gazetica.numtap",
+    "privacy_policy": "Política de Privacidad",
+    "terms": "Términos y Condiciones",
+    "ad_preferences": "Preferencias de anuncios (GDPR)",
+    "rate_app": "Calificar Numtap ★",
+    "contact": "Contacto / Soporte",
+    "more_games": "Más juegos de Gazetica",
+    "footer": "Gazetica Studio · Voraky Retail LLP",
+    "copyright": "© 2026 Voraky Retail LLP. Todos los derechos reservados."
+  },
+
+  "splash": {
+    "loading": "Cargando..."
+  },
+
+  "common": {
+    "ok": "OK",
+    "cancel": "Cancelar",
+    "close": "Cerrar",
+    "back": "Atrás",
+    "save": "Guardar",
+    "loading": "Cargando...",
+    "error": "Algo salió mal.",
+    "retry": "Reintentar",
+    "pack_locked": "Completa el Paquete {{pack}} para desbloquear",
+    "pack_coming_soon": "Próximamente",
+    "level": "Nivel {{id}}",
+    "pack": "Paquete {{pack}}"
+  },
+
+  "modes": {
+    "campaign": "Campaña",
+    "daily": "Desafío Diario",
+    "endless": "Infinito",
+    "speed": "Velocidad"
+  },
+
+  "modifiers": {
+    "none": "",
+    "shuffle": "Mezcla",
+    "fog": "Niebla",
+    "mirror": "Espejo",
+    "countdown": "Cuenta regresiva"
+  }
+}

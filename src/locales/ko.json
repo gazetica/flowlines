@@ -1,0 +1,185 @@
+{
+  "app": {
+    "name": "Numtap",
+    "tagline": "숫자 탭 퍼즐",
+    "by": "Gazetica 제작"
+  },
+
+  "nav": {
+    "home": "홈",
+    "leaderboard": "순위표",
+    "settings": "설정",
+    "about": "정보"
+  },
+
+  "home": {
+    "play_now": "지금 플레이",
+    "classic_mode": "클래식 모드",
+    "modes_label": "게임 모드",
+    "mode_daily": "데일리",
+    "mode_daily_sub": "5×5 · 1회",
+    "mode_speed": "스피드",
+    "mode_speed_sub": "4×4 · 2× 점수",
+    "mode_endless": "엔드리스",
+    "mode_endless_sub": "5×5 · 3분",
+    "best_score": "최고 점수",
+    "day_streak": "연속 일수",
+    "rank": "랭킹",
+    "games": "게임 수",
+    "avg": "평균"
+  },
+
+  "game": {
+    "hud_timer": "시간",
+    "hud_next": "다음",
+    "hud_score": "점수",
+    "btn_pause": "일시정지",
+    "btn_hint": "힌트 (광고)",
+    "progress_tapped": "{{total}}개 중 {{tapped}}개 탭함",
+    "paused_title": "일시정지됨",
+    "btn_resume": "계속하기",
+    "btn_restart": "다시 시작",
+    "btn_home": "홈"
+  },
+
+  "result": {
+    "level_complete": "레벨 완료!",
+    "times_up": "시간 종료!",
+    "new_pb": "신기록 달성!",
+    "score_label": "점수",
+    "base_score": "기본 점수",
+    "time_bonus": "시간 보너스",
+    "speed_bonus": "스피드 보너스",
+    "accuracy": "정확도",
+    "total": "합계",
+    "btn_next_level": "다음 레벨",
+    "btn_play_again": "다시 플레이",
+    "btn_home": "홈",
+    "btn_leaderboard": "순위표",
+    "ad_slot": "광고"
+  },
+
+  "leaderboard": {
+    "title": "순위표",
+    "tab_daily": "데일리",
+    "tab_endless": "엔드리스",
+    "tab_alltime": "전체",
+    "you": "나",
+    "anonymous_note": "익명 · 로그인 불필요 · 설정에서 별명을 정하세요",
+    "loading": "불러오는 중...",
+    "empty": "아직 점수가 없습니다. 첫 번째가 되어보세요!"
+  },
+
+  "settings": {
+    "title": "설정",
+    "section_audio": "오디오",
+    "sound_effects": "효과음",
+    "music": "음악",
+    "section_display": "화면",
+    "haptic_feedback": "햅틱 피드백",
+    "language": "언어",
+    "section_profile": "프로필",
+    "alias_label": "순위표 별명",
+    "alias_sub": "전체 순위표에 표시됩니다",
+    "alias_placeholder": "별명 입력",
+    "section_purchases": "구매",
+    "remove_ads": "광고 영구 제거",
+    "remove_ads_sub": "일회성 구매",
+    "remove_ads_purchased": "구매 완료 ✓",
+    "restore_purchases": "구매 복원"
+  },
+
+  "iap": {
+    "title": "더 많은 기능 잠금 해제",
+    "sub": "Gazetica를 응원하고 · 광고 없이 즐기세요",
+    "popular_badge": "가장 인기",
+    "remove_ads_title": "광고 영구 제거",
+    "remove_ads_desc": "전면 광고 없음. 힌트 전 광고 없음. 언제나 자유롭게 플레이하세요.",
+    "hint_pack_title": "힌트 팩 · 5개",
+    "hint_pack_desc": "광고를 건너뛰세요. 힌트를 바로 사용하세요. 소모성 — 5회 사용.",
+    "btn_buy": "지금 구매",
+    "btn_buy_short": "구매",
+    "restore": "이전 구매 복원",
+    "payment_note": "결제는 Google Play를 통해 처리됩니다.",
+    "terms_note": "구매하면 이용약관에 동의하게 됩니다."
+  },
+
+  "consent": {
+    "title": "회원님의 개인정보는 소중합니다",
+    "body": "Numtap은 무료로 유지하기 위해 광고를 사용합니다. 당사와 파트너는 회원님의 데이터를 사용하여 맞춤형 광고를 표시할 수 있습니다. 동의하거나 제한된 광고만 사용하도록 선택할 수 있습니다. 설정에서 언제든지 변경할 수 있습니다.",
+    "btn_accept": "맞춤형 광고 허용",
+    "btn_limited": "제한된 광고만 사용",
+    "privacy_link": "개인정보 처리방침",
+    "terms_link": "이용약관"
+  },
+
+  "how_to_play": {
+    "badge": "플레이 방법",
+    "title": "숫자를 순서대로 탭하세요",
+    "sub": "30초 만에 Numtap 마스터하기",
+    "step1": "{{adjective}}뒤섞인 숫자{{end}} 격자가 나타납니다. 목표: 1부터 {{em}}순서대로{{end}} 탭하세요.",
+    "step2": "{{gold}}금색 칸{{end}}은 항상 다음 목표를 보여줍니다. 시간이 끝나기 전에 탭하세요!",
+    "step3": "시간 안에 높은 점수를 노리세요. {{em}}빠르게 탭할수록 점수가 높아집니다.{{end}} 격자는 3×3부터 7×7까지 커집니다.",
+    "step4": "막혔나요? {{gold}}힌트{{end}}를 탭하면 5초 동안 목표가 표시됩니다. 레벨당 무료 힌트 1회.",
+    "demo_label": "다음에 금색 숫자를 탭하세요",
+    "demo_hint": "금색 칸 = 다음에 탭 · ✓ = 이미 탭함",
+    "btn_play": "플레이 시작!",
+    "btn_skip": "튜토리얼 건너뛰기"
+  },
+
+  "language": {
+    "title": "언어를 선택하세요",
+    "sub": "설정에서 언제든지 변경할 수 있습니다",
+    "detected": "감지됨: {{language}}",
+    "btn_continue": "계속",
+    "btn_later": "나중에 선택"
+  },
+
+  "about": {
+    "title": "정보",
+    "version": "버전 {{version}}",
+    "bundle_id": "com.gazetica.numtap",
+    "privacy_policy": "개인정보 처리방침",
+    "terms": "이용약관",
+    "ad_preferences": "광고 설정 (GDPR)",
+    "rate_app": "Numtap 평가하기 ★",
+    "contact": "문의 / 지원",
+    "more_games": "Gazetica의 다른 게임",
+    "footer": "Gazetica Studio · Voraky Retail LLP",
+    "copyright": "© 2026 Voraky Retail LLP. 모든 권리 보유."
+  },
+
+  "splash": {
+    "loading": "불러오는 중..."
+  },
+
+  "common": {
+    "ok": "확인",
+    "cancel": "취소",
+    "close": "닫기",
+    "back": "뒤로",
+    "save": "저장",
+    "loading": "불러오는 중...",
+    "error": "문제가 발생했습니다.",
+    "retry": "다시 시도",
+    "pack_locked": "{{pack}}번 팩을 완료하면 잠금 해제됩니다",
+    "pack_coming_soon": "곧 출시",
+    "level": "레벨 {{id}}",
+    "pack": "{{pack}}번 팩"
+  },
+
+  "modes": {
+    "campaign": "캠페인",
+    "daily": "데일리 챌린지",
+    "endless": "엔드리스",
+    "speed": "스피드"
+  },
+
+  "modifiers": {
+    "none": "",
+    "shuffle": "셔플",
+    "fog": "안개",
+    "mirror": "미러",
+    "countdown": "카운트다운"
+  }
+}
