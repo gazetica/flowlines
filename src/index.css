@@ -1,122 +1,108 @@
+/* Numtap game skin — VDD v1.1. T-008.
+   NOTE: @import must precede all other rules (CSS spec), so it's hoisted to the
+   top here even though the brief listed it mid-file (where browsers ignore it).
+   Fonts degrade gracefully to monospace/sans-serif if the device is offline. */
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;600&display=swap');
+
+/* —— Reset —— */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* —— Root variables —— */
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
-
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
-
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
+  --navy:        #07111F;
+  --navy-card:   #0F2040;
+  --navy-border: #1A3558;
+  --gold:        #FFD700;
+  --gold-dim:    #C8A800;
+  --blue:        #1E8BC3;
+  --blue-light:  #4FAEE0;
+  --white:       #EEF4FF;
+  --muted:       #5E7A9C;
+  --success:     #2ECC71;
+  --danger:      #E05050;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
+/* —— Base —— */
+html, body, #root {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: var(--navy);
+  color: var(--white);
+  font-family: 'DM Sans', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
+/* —— Scrollbar hide —— */
+::-webkit-scrollbar { display: none; }
+* { scrollbar-width: none; }
+
+/* —— Dot pattern background —— */
+.bg-dots {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image: radial-gradient(
+    circle, rgba(30,139,195,0.12) 1px, transparent 1px
+  );
+  background-size: 18px 18px;
+  opacity: 0.6;
 }
 
-body {
-  margin: 0;
+/* —— Particle canvas (floating numbers) —— */
+#particle-canvas {
+  position: fixed; inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none; z-index: 0;
+  opacity: 1;
 }
 
-/* Numtap TimerComponent danger-state pulse (remaining <= 10s). See T-004. */
+/* —— Timer pulse animation (from T-004) —— */
 @keyframes timerPulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.6;
-  }
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
 }
 
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
+/* —— Gold glow text —— */
+.text-gold-glow {
+  color: var(--gold);
+  text-shadow: 0 0 10px rgba(255,215,0,0.5);
 }
 
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
-  margin: 0;
+/* —— Glassmorphism surface —— */
+.glass {
+  background: rgba(10, 26, 46, 0.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(30,139,195,0.2);
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+/* —— Gold glow button —— */
+.btn-gold {
+  background: linear-gradient(135deg, #FFD700, #C8A800);
+  color: #07111F;
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  border: none;
+  border-radius: 7px;
+  box-shadow: 0 0 16px rgba(255,215,0,0.35), 0 4px 12px rgba(0,0,0,0.4);
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.btn-gold:active {
+  transform: scale(0.97);
+  box-shadow: 0 0 8px rgba(255,215,0,0.25);
 }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+/* —— Outline button —— */
+.btn-outline {
+  background: rgba(10,26,46,0.7);
+  border: 1px solid rgba(30,139,195,0.4);
+  color: var(--blue-light);
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
 }
+.btn-outline:hover { border-color: rgba(30,139,195,0.7); }

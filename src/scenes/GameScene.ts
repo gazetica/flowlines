@@ -31,11 +31,24 @@ export class GameScene extends Phaser.Scene {
   private countdownHidden = new Set<string>();
   private lastRunId = -1;
 
+  // T-008 skin: current tile size (for refreshTileLabels' gradient redraw) and
+  // a single repeating pulse tween that follows the current next-target tile.
+  private tileSize = 0;
+  private nextPulseTween: Phaser.Tweens.Tween | null = null;
+  private nextPulseTile: Phaser.GameObjects.Container | null = null;
+
   constructor() {
     super({ key: 'GameScene' });
   }
 
   create() {
+    // Radial ambient glow behind the grid area (subtle gold->blue).
+    const glow = this.add.graphics();
+    glow.fillGradientStyle(0xffd700, 0xffd700, 0x1e8bc3, 0x1e8bc3, 0.06, 0.06, 0.04, 0.04);
+    glow.fillCircle(this.scale.width / 2, this.scale.height * 0.55, Math.min(this.scale.width, this.scale.height) * 0.55);
+    glow.setBlendMode(Phaser.BlendModes.ADD);
+    glow.setDepth(-1);
+
     this.renderGrid();
 
     // Fog modifier: a GLOBAL pointer listener reveals cells within a 1-cell
@@ -151,9 +164,11 @@ export class GameScene extends Phaser.Scene {
   }
 
   renderGrid() {
-    // Clear existing tiles
+    // Clear existing tiles (and drop the pulse — its target is destroyed).
     this.tileObjects.forEach((row) => row.forEach((c) => c.destroy()));
     this.tileObjects = [];
+    this.nextPulseTween = null;
+    this.nextPulseTile = null;
 
     const { grid, engine, currentLevel } = useGameStore.getState();
     if (!grid.length || !engine || !currentLevel) return;
@@ -165,6 +180,7 @@ export class GameScene extends Phaser.Scene {
     const availableW = screenW - padding * 2;
     const availableH = screenH * 0.65; // grid takes 65% of screen height
     const tileSize = Math.floor(Math.min(availableW, availableH) / n) - 4;
+    this.tileSize = tileSize; // store for refreshTileLabels
     const gap = 4;
     const gridPixelSize = n * (tileSize + gap) - gap;
     const startX = (screenW - gridPixelSize) / 2;
@@ -179,9 +195,9 @@ export class GameScene extends Phaser.Scene {
 
         const container = this.add.container(x + tileSize / 2, y + tileSize / 2);
 
-        // Tile background
-        const bg = this.add.rectangle(0, 0, tileSize, tileSize, this.getTileColour(cell));
-        bg.setStrokeStyle(1, this.getTileBorderColour(cell));
+        // Tile background — gradient via Graphics (drawTileBg).
+        const bg = this.add.graphics();
+        this.drawTileBg(bg, cell, tileSize);
 
         // Tile label
         const displayVal = engine.getDisplayValue(cell);
@@ -202,15 +218,84 @@ export class GameScene extends Phaser.Scene {
 
         container.add([bg, label]);
 
-        // Tap input — only on untapped tiles. Fog reveal is handled by the
-        // global pointermove listener in create() (works over hidden tiles).
+        // Tap input — a transparent rectangle is the hit target (Graphics has no
+        // intrinsic input geometry; a sized rect gives reliable taps). Fog reveal
+        // is handled by the global pointermove listener in create().
         if (!cell.tapped) {
-          bg.setInteractive({ useHandCursor: true });
-          bg.on('pointerdown', () => this.handleTap(r, c));
+          const hit = this.add.rectangle(0, 0, tileSize, tileSize, 0x000000, 0);
+          hit.setInteractive({ useHandCursor: true });
+          hit.on('pointerdown', () => this.handleTap(r, c));
+          container.add(hit);
         }
 
         this.tileObjects[r][c] = container;
       }
+    }
+
+    // Start the pulse on the current next-target tile.
+    this.updateNextPulse();
+  }
+
+  // Draw a tile's gradient background + border based on its state.
+  private drawTileBg(gfx: Phaser.GameObjects.Graphics, cell: Cell, size: number): void {
+    gfx.clear();
+    const half = size / 2;
+
+    if (cell.tapped) {
+      gfx.fillGradientStyle(0x0d2a1a, 0x0d2a1a, 0x091f12, 0x091f12, 1, 1, 1, 1);
+      gfx.fillRect(-half, -half, size, size);
+      gfx.lineStyle(1, 0x2ecc71, 0.5);
+      gfx.strokeRect(-half, -half, size, size);
+      return;
+    }
+
+    const { engine } = useGameStore.getState();
+    const isNext = cell.value === engine?.getExpectedNext() && this.isVisible(cell);
+
+    if (isNext) {
+      gfx.fillGradientStyle(0xffd700, 0xffd700, 0xc8a800, 0xc8a800, 1, 1, 1, 1);
+      gfx.fillRect(-half, -half, size, size);
+      gfx.lineStyle(2, 0xffd700, 1);
+      gfx.strokeRect(-half, -half, size, size);
+    } else {
+      gfx.fillGradientStyle(0x0f2a48, 0x0f2a48, 0x0a1e38, 0x0a1e38, 1, 1, 1, 1);
+      gfx.fillRect(-half, -half, size, size);
+      gfx.lineStyle(1, 0x1a3558, 0.6);
+      gfx.strokeRect(-half, -half, size, size);
+    }
+  }
+
+  // Move the slow scale-pulse onto whichever tile is the current next target.
+  private updateNextPulse(): void {
+    const { grid, engine } = useGameStore.getState();
+    if (!engine) return;
+    const expected = engine.getExpectedNext();
+    let target: Phaser.GameObjects.Container | null = null;
+    for (let r = 0; r < grid.length && !target; r++) {
+      for (let c = 0; c < grid[r].length && !target; c++) {
+        const cell = grid[r][c];
+        if (!cell.tapped && cell.value === expected && this.isVisible(cell)) {
+          target = this.tileObjects[r]?.[c] ?? null;
+        }
+      }
+    }
+    if (target === this.nextPulseTile) return; // already pulsing the right tile
+    if (this.nextPulseTween) {
+      this.nextPulseTween.stop();
+      if (this.nextPulseTile?.active) this.nextPulseTile.setScale(1);
+      this.nextPulseTween = null;
+    }
+    this.nextPulseTile = target;
+    if (target) {
+      this.nextPulseTween = this.tweens.add({
+        targets: target,
+        scaleX: 1.06,
+        scaleY: 1.06,
+        duration: 700,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+      });
     }
   }
 
@@ -291,10 +376,9 @@ export class GameScene extends Phaser.Scene {
         const cell = grid[r][c];
         const container = this.tileObjects[r]?.[c];
         if (!container) continue;
-        const bg = container.list[0] as Phaser.GameObjects.Rectangle;
+        const bg = container.list[0] as Phaser.GameObjects.Graphics;
         const label = container.list[1] as Phaser.GameObjects.Text;
-        bg.setFillStyle(this.getTileColour(cell));
-        bg.setStrokeStyle(1, this.getTileBorderColour(cell));
+        this.drawTileBg(bg, cell, this.tileSize);
         label.setText(cell.tapped ? '✓' : this.isVisible(cell) ? String(engine.getDisplayValue(cell)) : '');
         label.setColor(this.getTileTextColour(cell));
         // Mirror modifier: re-apply the horizontal flip after setText; ensure
@@ -306,24 +390,11 @@ export class GameScene extends Phaser.Scene {
         }
       }
     }
+    // Keep the pulse on the (possibly changed) next-target tile.
+    this.updateNextPulse();
   }
 
-  // Colour helpers — use design system values
-  private getTileColour(cell: Cell): number {
-    if (cell.tapped) return 0x0d2a1a; // dark green
-    const { engine } = useGameStore.getState();
-    const expected = engine?.getExpectedNext();
-    if (cell.value === expected && this.isVisible(cell)) return 0xffd700; // gold — next target
-    return 0x0f2040; // navy card
-  }
-
-  private getTileBorderColour(cell: Cell): number {
-    if (cell.tapped) return 0x2ecc71; // success green
-    const { engine } = useGameStore.getState();
-    if (cell.value === engine?.getExpectedNext() && this.isVisible(cell)) return 0xffd700; // gold border on target
-    return 0x1a3558; // navy border
-  }
-
+  // Label colour helper — tile fill/border are handled by drawTileBg().
   private getTileTextColour(cell: Cell): string {
     if (cell.tapped) return '#2ECC71';
     const { engine } = useGameStore.getState();

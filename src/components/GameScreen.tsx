@@ -19,8 +19,66 @@ import { initAppLifecycle, removeAppLifecycle } from '../services/appLifecycle';
 
 export function GameScreen() {
   const phaserRef = useRef<Phaser.Game | null>(null);
+  const particleCanvasRef = useRef<HTMLCanvasElement>(null);
   const { status, currentLevel, score, runId, startLevel, tickTimer, endGame, engine } =
     useGameStore();
+
+  // Background: drifting faint gold numbers on a canvas behind the grid.
+  useEffect(() => {
+    const canvas = particleCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    type Particle = { x: number; y: number; num: number; size: number; speed: number; opacity: number; drift: number };
+    const particles: Particle[] = [];
+
+    const spawn = (): Particle => ({
+      x: Math.random() * canvas.width,
+      y: canvas.height + 10,
+      num: Math.floor(Math.random() * 49) + 1,
+      size: 9 + Math.random() * 7,
+      speed: 0.18 + Math.random() * 0.22,
+      opacity: 0.04 + Math.random() * 0.05,
+      drift: (Math.random() - 0.5) * 0.15,
+    });
+
+    // Pre-populate
+    for (let i = 0; i < 14; i++) {
+      const p = spawn();
+      p.y = Math.random() * canvas.height;
+      particles.push(p);
+    }
+
+    let frameId: number;
+    let frameCount = 0;
+
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      frameCount++;
+      if (frameCount % 200 === 0) particles.push(spawn());
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.y -= p.speed;
+        p.x += p.drift;
+        ctx.save();
+        ctx.globalAlpha = p.opacity;
+        ctx.fillStyle = '#FFD700';
+        ctx.font = `${p.size}px 'Space Mono', monospace`;
+        ctx.fillText(String(p.num).padStart(2, '0'), p.x, p.y);
+        ctx.restore();
+        if (p.y < -20) particles.splice(i, 1);
+      }
+      frameId = requestAnimationFrame(draw);
+    };
+
+    draw();
+    return () => cancelAnimationFrame(frameId);
+  }, []);
 
   // Boot Phaser once on mount
   useEffect(() => {
@@ -29,8 +87,11 @@ export function GameScreen() {
       type: Phaser.AUTO,
       width: window.innerWidth,
       height: window.innerHeight,
-      backgroundColor: '#07111F',
-      transparent: false,
+      // Transparent so the DOM background (navy + dot pattern + drifting particle
+      // canvas, all z-index 0) shows through behind the Phaser grid (z-index 1).
+      // The navy base comes from index.css (html/body), the grid + radial glow
+      // render on the transparent canvas on top.
+      transparent: true,
       parent: 'phaser-container',
       scene: [GameScene],
     });
@@ -85,11 +146,22 @@ export function GameScreen() {
         overflow: 'hidden',
       }}
     >
-      {/* Phaser canvas container */}
-      <div id="phaser-container" style={{ position: 'absolute', inset: 0 }} />
+      {/* Dot pattern background (z-index 0) */}
+      <div className="bg-dots" />
 
-      {/* HUD overlay — rendered by React over the Phaser canvas */}
+      {/* Particle canvas — floating gold numbers (z-index 0) */}
+      <canvas
+        id="particle-canvas"
+        ref={particleCanvasRef}
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }}
+      />
+
+      {/* Phaser canvas container (z-index 1, above background, below HUD) */}
+      <div id="phaser-container" style={{ position: 'absolute', inset: 0, zIndex: 1 }} />
+
+      {/* HUD overlay — glassmorphism bar rendered over the Phaser canvas */}
       <div
+        className="glass"
         style={{
           position: 'absolute',
           top: 0,
@@ -100,8 +172,6 @@ export function GameScreen() {
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '0 20px',
-          background: 'rgba(10,26,46,0.9)',
-          borderBottom: '1px solid rgba(30,139,195,0.2)',
           zIndex: 10,
         }}
       >
@@ -141,11 +211,11 @@ export function GameScreen() {
             NEXT
           </div>
           <div
+            className="text-gold-glow"
             style={{
               fontFamily: "'Space Mono',monospace",
               fontSize: '32px',
-              color: '#FFD700',
-              textShadow: '0 0 10px rgba(255,215,0,0.5)',
+              fontWeight: 700,
             }}
           >
             {String(expectedNext).padStart(2, '0')}
