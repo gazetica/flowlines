@@ -44,11 +44,14 @@ interface SettingsState {
 
   // IAP
   removeAdsPurchased: boolean;
-  hintPackCount: number;
+
+  // Hint inventory (T-006) — unified hint currency (💎). Default 3 on fresh install.
+  hintCount: number;
 
   // Progress
   dailyStreak: number;
-  lastPlayedDate: string; // ISO date string 'YYYY-MM-DD' or ''
+  lastPlayedDate: string; // ISO date string 'YYYY-MM-DD' or '' (any-mode last play)
+  lastDailyCompletionDate: string; // 'YYYY-MM-DD' all-3-daily submitted, or ''
   completedLevels: CompletedLevels;
   bestScores: BestScores;
 
@@ -69,11 +72,37 @@ interface SettingsState {
   setOnboardingShown: () => Promise<void>;
 
   setRemoveAds: () => Promise<void>;
-  decrementHints: () => Promise<void>;
+
+  // Hint inventory (T-006)
+  setHintCount: (n: number) => Promise<void>;
   addHints: (n: number) => Promise<void>;
+  consumeHint: () => boolean; // false if 0 available (no decrement); true + decrement otherwise
 
   recordLevelComplete: (levelId: number, stars: number, score: number, mode: string) => Promise<void>;
   updateDailyStreak: () => Promise<void>;
+  // T-006: daily-challenge streak setters + completion-date tracking.
+  setDailyStreak: (n: number) => Promise<void>;
+  setLastDailyCompletionDate: (d: string) => Promise<void>;
+}
+
+// T-006: default hint inventory granted to a fresh install.
+export const DEFAULT_HINT_COUNT = 3;
+
+/**
+ * Pure daily-streak transition (T-006). Given the date all-3 challenges were last
+ * completed, today's date, and the current streak, returns the new streak count.
+ *  - already submitted today  → unchanged
+ *  - last completion = yesterday → streak + 1
+ *  - otherwise (gap / first ever) → reset to 1
+ * Dates are 'YYYY-MM-DD' (UTC). Pure + side-effect-free for unit testing.
+ */
+export function nextDailyStreak(lastCompletionDate: string, today: string, currentStreak: number): number {
+  if (lastCompletionDate === today) return currentStreak;
+  const d = new Date(today + 'T00:00:00.000Z');
+  d.setUTCDate(d.getUTCDate() - 1);
+  const yesterday = d.toISOString().slice(0, 10);
+  if (lastCompletionDate === yesterday) return currentStreak + 1;
+  return 1;
 }
 
 // T-005: best-effort country guess from the device timezone (covers the brief's
@@ -108,9 +137,10 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   alias: '',
   country: 'XX',
   removeAdsPurchased: false,
-  hintPackCount: 0,
+  hintCount: DEFAULT_HINT_COUNT,
   dailyStreak: 0,
   lastPlayedDate: '',
+  lastDailyCompletionDate: '',
   completedLevels: {},
   bestScores: {},
   hydrated: false,
@@ -126,9 +156,10 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       hapticsEnabled,
       alias,
       removeAdsPurchased,
-      hintPackCount,
+      hintCount,
       dailyStreak,
       lastPlayedDate,
+      lastDailyCompletionDate,
       completedLevels,
       bestScores,
       country,
@@ -141,9 +172,10 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       prefGetBool(PREF_KEYS.HAPTICS_ENABLED, true),
       prefGet(PREF_KEYS.ALIAS),
       prefGetBool(PREF_KEYS.REMOVE_ADS, false),
-      prefGetNumber(PREF_KEYS.HINT_PACK_COUNT, 0),
+      prefGetNumber(PREF_KEYS.HINT_COUNT, DEFAULT_HINT_COUNT),
       prefGetNumber(PREF_KEYS.DAILY_STREAK, 0),
       prefGet(PREF_KEYS.LAST_PLAYED_DATE),
+      prefGet(PREF_KEYS.LAST_DAILY_COMPLETION_DATE),
       prefGetJSON<CompletedLevels>(PREF_KEYS.COMPLETED_LEVELS, {}),
       prefGetJSON<BestScores>(PREF_KEYS.BEST_SCORES, {}),
       prefGet(PREF_KEYS.COUNTRY),
@@ -158,9 +190,10 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       hapticsEnabled,
       alias: alias ?? '',
       removeAdsPurchased,
-      hintPackCount,
+      hintCount,
       dailyStreak,
       lastPlayedDate: lastPlayedDate ?? '',
+      lastDailyCompletionDate: lastDailyCompletionDate ?? '',
       completedLevels,
       bestScores,
       // T-005: stored country, else a best-effort guess from the device timezone.
@@ -217,16 +250,28 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     set({ removeAdsPurchased: true });
     await prefSetBool(PREF_KEYS.REMOVE_ADS, true);
   },
-  decrementHints: async () => {
-    const current = get().hintPackCount;
-    const next = Math.max(0, current - 1);
-    set({ hintPackCount: next });
-    await prefSetNumber(PREF_KEYS.HINT_PACK_COUNT, next);
+  // —— Hint inventory (T-006) ——
+  setHintCount: async (n) => {
+    const next = Math.max(0, n);
+    set({ hintCount: next });
+    await prefSetNumber(PREF_KEYS.HINT_COUNT, next);
   },
   addHints: async (n) => {
-    const next = get().hintPackCount + n;
-    set({ hintPackCount: next });
-    await prefSetNumber(PREF_KEYS.HINT_PACK_COUNT, next);
+    const next = get().hintCount + n;
+    set({ hintCount: next });
+    await prefSetNumber(PREF_KEYS.HINT_COUNT, next);
+  },
+  // Synchronous (returns the can-use result immediately so the UI can branch);
+  // the Preferences write-through is fire-and-forget.
+  consumeHint: () => {
+    const current = get().hintCount;
+    if (current <= 0) return false;
+    const next = current - 1;
+    set({ hintCount: next });
+    prefSetNumber(PREF_KEYS.HINT_COUNT, next).catch((err) =>
+      console.warn('[settingsStore] consumeHint persist failed:', err)
+    );
+    return true;
   },
 
   // —— Progress ——
@@ -271,5 +316,17 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       prefSetNumber(PREF_KEYS.DAILY_STREAK, newStreak),
       prefSet(PREF_KEYS.LAST_PLAYED_DATE, today),
     ]);
+  },
+
+  // T-006: explicit streak setters used by the Daily Hub's SUBMIT / CLAIM flows
+  // (which compute the new value via nextDailyStreak / reset to 0 on claim).
+  setDailyStreak: async (n) => {
+    const next = Math.max(0, n);
+    set({ dailyStreak: next });
+    await prefSetNumber(PREF_KEYS.DAILY_STREAK, next);
+  },
+  setLastDailyCompletionDate: async (d) => {
+    set({ lastDailyCompletionDate: d });
+    await prefSet(PREF_KEYS.LAST_DAILY_COMPLETION_DATE, d);
   },
 }));

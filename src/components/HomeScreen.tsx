@@ -4,6 +4,7 @@
 // Main menu: gold title, best-score / streak stats, PLAY NOW (campaign),
 // mode buttons (daily/speed/endless), and the bottom nav bar.
 
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useSettingsStore } from '../store/settingsStore';
@@ -11,10 +12,22 @@ import { useGameStore } from '../store/gameStore';
 import { ParticleCanvas } from './ParticleCanvas';
 import { BottomNav } from './BottomNav';
 
+// T-006 Part 1.3: three equal SQUARE mode cards (replaces the old small
+// rectangular row). Endless/Speed go through the difficulty pre-screen; Free
+// Play has its own config screen.
+type ModeCardKey = 'endless' | 'freeplay' | 'speed';
+const MODE_CARDS: { key: ModeCardKey; icon: string; label: string; sub: string; accent: string; iconColour: string }[] = [
+  { key: 'endless', icon: '∞', label: 'ENDLESS', sub: '5×5 · 3min', accent: 'rgba(147,51,234,0.4)', iconColour: '#9333EA' },
+  { key: 'freeplay', icon: '▦', label: 'FREE PLAY', sub: 'Your rules', accent: 'rgba(59,130,246,0.4)', iconColour: '#3B82F6' },
+  { key: 'speed', icon: '⚡', label: 'SPEED', sub: '4×4 · 2×pt', accent: 'rgba(245,158,11,0.4)', iconColour: '#F59E0B' },
+];
+
 export function HomeScreen() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { completedLevels, bestScores, dailyStreak } = useSettingsStore();
+  // Gold border flash on tap before navigating (T-006 Part 1.3).
+  const [flashCard, setFlashCard] = useState<ModeCardKey | null>(null);
 
   // Best score across all campaign levels
   const campaignBest = Math.max(
@@ -114,70 +127,86 @@ export function HomeScreen() {
         </button>
       </div>
 
-      {/* Campaign progress */}
-      <div style={{ padding: '0 24px 0', position: 'relative', zIndex: 1 }}>
+      {/* Campaign progress (full-width dark, unchanged) */}
+      <div style={{ padding: '0 24px 12px', position: 'relative', zIndex: 1 }}>
         <button
           className="btn-outline"
           onClick={() => navigate('/campaign')}
-          style={{ width: '100%', padding: '10px', fontSize: 10, marginBottom: 12, letterSpacing: 1 }}
+          style={{ width: '100%', padding: '10px', fontSize: 10, letterSpacing: 1 }}
         >
           🗺️ CAMPAIGN PROGRESS
         </button>
       </div>
 
-      {/* Mode buttons */}
-      <div style={{ padding: '0 24px 0', position: 'relative', zIndex: 1 }}>
-        <p style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: 'var(--muted)', letterSpacing: 2, textAlign: 'center', marginBottom: 10 }}>
-          —— {t('home.modes_label')} ——
-        </p>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-          {(
-            [
-              ['daily', t('home.mode_daily'), t('home.mode_daily_sub')],
-              ['speed', t('home.mode_speed'), t('home.mode_speed_sub')],
-              ['endless', t('home.mode_endless'), t('home.mode_endless_sub')],
-            ] as [string, string, string][]
-          ).map(([mode, label, sub]) => (
-            <button
-              key={mode}
-              onClick={() => (mode === 'daily' ? handleDaily() : handleMode(mode as 'daily' | 'endless' | 'speed'))}
-              style={{
-                background: 'rgba(10,26,46,0.75)',
-                border: '1px solid rgba(30,139,195,0.2)',
-                borderRadius: 7,
-                padding: '10px 6px',
-                textAlign: 'center',
-                cursor: 'pointer',
-              }}
-            >
-              <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: 'var(--blue-light)', letterSpacing: 0.5, marginBottom: 2 }}>
-                {label}
-              </div>
-              <div style={{ fontSize: 9, color: 'var(--muted)' }}>{sub}</div>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Free Play (T-004B P2) — your grid, your rules, no leaderboard. */}
-      <div style={{ padding: '10px 24px 0', position: 'relative', zIndex: 1 }}>
+      {/* Daily Challenge — full-width TEAL card (T-006 Part 1.2) */}
+      <div style={{ padding: '0 24px 12px', position: 'relative', zIndex: 1 }}>
         <button
-          onClick={() => navigate('/free-play-config')}
+          onClick={handleDaily}
           style={{
             width: '100%',
-            background: 'rgba(10,26,46,0.75)',
-            border: '1px solid rgba(30,139,195,0.2)',
-            borderRadius: 7,
-            padding: '10px 14px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            background: 'linear-gradient(135deg, #0D3D4F 0%, #0A2A38 100%)',
+            border: '1px solid rgba(0,210,200,0.4)',
+            borderRadius: 10,
+            boxShadow: '0 0 16px rgba(0,210,200,0.12), 0 4px 12px rgba(0,0,0,0.4)',
+            padding: '14px 16px',
             textAlign: 'left',
             cursor: 'pointer',
           }}
         >
-          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: 'var(--blue-light)', letterSpacing: 0.5, marginBottom: 2 }}>
-            {t('home.freePlayLabel')}
+          <span style={{ fontSize: 22 }}>🔥</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, color: '#00D2C8', letterSpacing: 1 }}>
+              DAILY CHALLENGE
+            </div>
+            <div style={{ fontSize: 10, color: 'var(--muted)', marginTop: 2 }}>Complete all 3 challenges</div>
           </div>
-          <div style={{ fontSize: 10, color: 'var(--muted)' }}>{t('home.freePlaySub')}</div>
+          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: '#00D2C8' }}>
+            Streak: {dailyStreak} 🔥
+          </span>
         </button>
+      </div>
+
+      {/* Three SQUARE mode cards (T-006 Part 1.3) */}
+      <div style={{ padding: '0 24px 0', position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+          {MODE_CARDS.map((card) => {
+            const isFlashing = flashCard === card.key;
+            return (
+              <button
+                key={card.key}
+                onClick={() => {
+                  setFlashCard(card.key);
+                  setTimeout(() => {
+                    if (card.key === 'freeplay') navigate('/free-play-config');
+                    else handleMode(card.key);
+                  }, 160);
+                }}
+                style={{
+                  background: 'linear-gradient(145deg, #0F2A48 0%, #0A1E38 100%)',
+                  border: `1px solid ${isFlashing ? 'var(--gold)' : card.accent}`,
+                  borderRadius: 10,
+                  aspectRatio: '1 / 1',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  cursor: 'pointer',
+                  transition: 'border-color 0.3s',
+                }}
+              >
+                <span style={{ fontSize: 28, color: card.iconColour, lineHeight: 1 }}>{card.icon}</span>
+                <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: 'var(--white)', letterSpacing: 0.5, textTransform: 'uppercase' }}>
+                  {card.label}
+                </div>
+                <div style={{ fontSize: 8, color: 'var(--muted)' }}>{card.sub}</div>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Bottom nav (shared component — T-004A Fix 6) */}

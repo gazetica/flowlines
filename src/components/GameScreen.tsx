@@ -10,14 +10,17 @@
 // alert. That dead block is removed here. Unused store selectors (grid, pauseGame,
 // resumeGame) are also dropped to satisfy noUnusedLocals.
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Phaser from 'phaser';
 import { useGameStore } from '../store/gameStore';
+import { useSettingsStore } from '../store/settingsStore';
 import { TimerComponent } from './TimerComponent';
 import { GameScene } from '../scenes/GameScene';
 import { LeaderPanel } from './LeaderPanel';
+import { GetHintModal } from './GetHintModal';
 import { initAppLifecycle, removeAppLifecycle } from '../services/appLifecycle';
+import { SKIN } from '../styles/skin';
 
 export function GameScreen() {
   const navigate = useNavigate();
@@ -25,6 +28,31 @@ export function GameScreen() {
   const particleCanvasRef = useRef<HTMLCanvasElement>(null);
   const { status, currentLevel, mode, score, runId, startLevel, tickTimer, endGame, engine, timed } =
     useGameStore();
+
+  // T-006 Part 2.3: hint inventory + GetHintModal.
+  const hintCount = useSettingsStore((s) => s.hintCount);
+  const consumeHint = useSettingsStore((s) => s.consumeHint);
+  const [hintModalOpen, setHintModalOpen] = useState(false);
+
+  // Highlight the current target tile (gold) for ~5s via the existing
+  // GameScene.showHint tween, marking the hint active so the next tap clears it.
+  const applyHintToTile = () => {
+    const scene = phaserRef.current?.scene.getScene('GameScene') as GameScene | null;
+    const next = useGameStore.getState().engine?.getExpectedNext() ?? 1;
+    useGameStore.getState().useHint();
+    scene?.showHint(next);
+    // Safety: clear the active flag after the 5s highlight if no tap cleared it.
+    setTimeout(() => useGameStore.getState().deactivateHint(), 5000);
+  };
+
+  const handleHintTap = () => {
+    if (status !== 'playing') return;
+    if (consumeHint()) {
+      applyHintToTile();
+    } else {
+      setHintModalOpen(true);
+    }
+  };
 
   // Background: drifting faint gold numbers on a canvas behind the grid.
   useEffect(() => {
@@ -251,6 +279,51 @@ export function GameScreen() {
           </div>
         </div>
       </div>
+
+      {/* T-006 Part 2.3: HINT bar in the dead space below the grid, above the
+          LeaderPanel. Left = 💡 tap button, right = 💎 gem count. Shown for all
+          play modes (GameScreen is never reached during onboarding). */}
+      {status === 'playing' && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: mode === 'campaign' && currentLevel && currentLevel.id > 0 ? '15%' : '8%',
+            left: 0,
+            right: 0,
+            padding: '0 16px',
+            zIndex: 10,
+          }}
+        >
+          <button
+            onClick={handleHintTap}
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              background: SKIN.cardBg,
+              border: '1px solid rgba(0,210,200,0.4)',
+              borderRadius: 8,
+              padding: '10px 16px',
+              cursor: 'pointer',
+            }}
+          >
+            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, color: '#00D2C8', letterSpacing: 1 }}>
+              💡 HINT
+            </span>
+            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, color: SKIN.white }}>
+              💎 ×{hintCount}
+            </span>
+          </button>
+        </div>
+      )}
+
+      {hintModalOpen && (
+        <GetHintModal
+          onClose={() => setHintModalOpen(false)}
+          onApplyHint={applyHintToTile}
+        />
+      )}
 
       {/* Per-level leader panel (YOU vs LEADER) — campaign only, in the dead
           space below the grid. Daily uses synthetic level id 0 → excluded. */}

@@ -25,11 +25,15 @@ export const PREF_KEYS = {
 
   // IAP flags
   REMOVE_ADS:          'removeAdsPurchased',
-  HINT_PACK_COUNT:     'hintPackCount',
+
+  // Hint inventory (T-006 — unified hint currency, default 3 on fresh install)
+  HINT_COUNT:          'hintCount',
 
   // Progress
   DAILY_STREAK:        'dailyStreak',
   LAST_PLAYED_DATE:    'lastPlayedDate',
+  // T-006: date all 3 daily challenges were last submitted ('YYYY-MM-DD').
+  LAST_DAILY_COMPLETION_DATE: 'lastDailyCompletionDate',
   COMPLETED_LEVELS:    'completedLevels',   // JSON: { [levelId]: starsEarned }
   BEST_SCORES:         'bestScores',        // JSON: { [mode_levelId]: score }
 } as const;

@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { fetchCampaignLeaderboard, fetchAllTimeLeaderboard } from '../services/supabase';
-import { fetchDailyLeaderboard } from '../services/dailyScores';
+import { fetchDailyLeaderboard, getLocalDailyScores } from '../services/dailyScores';
 import { getTodayDateString } from '../game/DailyChallenge';
 import { countryFlag } from '../utils/countryFlag';
 import { ParticleCanvas } from './ParticleCanvas';
@@ -35,10 +35,17 @@ const MEDALS = ['🥇', '🥈', '🥉'];
 
 export function LeaderboardScreen() {
   const { t } = useTranslation();
-  const { alias } = useSettingsStore();
+  const { alias, country, bestScores } = useSettingsStore();
   const [tab, setTab] = useState<Tab>('alltime');
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
+  // T-006 Part 5: the player's local score for this tab — used for the pinned
+  // row when they fall outside the fetched top-50 (null = no score for this tab).
+  const [playerScore, setPlayerScore] = useState<number | null>(null);
+
+  // Player's index within the fetched (top-50) list, or -1 when not present.
+  const playerIndex = alias ? rows.findIndex((r) => r.alias === alias) : -1;
+  const playerInList = playerIndex >= 0;
 
   useEffect(() => {
     setLoading(true);
@@ -51,17 +58,30 @@ export function LeaderboardScreen() {
       }
       return (await fetchAllTimeLeaderboard()).map((r) => ({ alias: r.alias, country: r.country, score: r.alltime_score }));
     };
+    // Best-effort local score for this tab (Supabase is read-only and exposes no
+    // out-of-top-50 rank RPC, so the pinned row uses locally-known scores).
+    const localScore = async (): Promise<number> => {
+      const campaign = Object.entries(bestScores)
+        .filter(([k]) => k.startsWith('campaign_'))
+        .reduce((sum, [, v]) => sum + v, 0);
+      if (tab === 'campaign') return campaign;
+      const daily = await getLocalDailyScores();
+      const dailyTotal = (daily.c1 ?? 0) + (daily.c2 ?? 0) + (daily.c3 ?? 0);
+      if (tab === 'daily') return dailyTotal;
+      return campaign + dailyTotal; // all-time
+    };
     let active = true;
-    load().then((data) => {
+    Promise.all([load(), localScore()]).then(([data, local]) => {
       if (active) {
         setRows(data);
+        setPlayerScore(local > 0 ? local : null);
         setLoading(false);
       }
     });
     return () => {
       active = false;
     };
-  }, [tab]);
+  }, [tab, bestScores]);
 
   return (
     <ScreenShell title={t('leaderboard.title')}>
@@ -106,7 +126,11 @@ export function LeaderboardScreen() {
                 padding: '10px 20px',
                 gap: 12,
                 borderBottom: '1px solid rgba(30,139,195,0.08)',
-                background: isMe ? 'rgba(255,215,0,0.05)' : 'transparent',
+                // T-006 Part 5.2: player's own row (in top 50) gets a gold tint +
+                // gold left/right border.
+                background: isMe ? 'rgba(255,215,0,0.08)' : 'transparent',
+                borderLeft: isMe ? '3px solid #FFD700' : '3px solid transparent',
+                borderRight: isMe ? '3px solid #FFD700' : '3px solid transparent',
               }}
             >
               <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 13, width: 28, textAlign: 'center', color: RANK_COLOURS[rank] ?? 'var(--muted)' }}>
@@ -122,7 +146,39 @@ export function LeaderboardScreen() {
         })
       )}
 
-      <p style={{ padding: '12px 20px', fontSize: 11, color: 'var(--muted)', textAlign: 'center' }}>{t('leaderboard.anonymous_note')}</p>
+      <p style={{ padding: '12px 20px 64px', fontSize: 11, color: 'var(--muted)', textAlign: 'center' }}>{t('leaderboard.anonymous_note')}</p>
+
+      {/* T-006 Part 5.3/5.4: pinned "YOUR RANKING" row when the player is outside
+          the fetched top-50 (or has no score yet). Sticks just above the 56px nav. */}
+      {!loading && !playerInList && (
+        <div
+          style={{
+            position: 'sticky',
+            bottom: 56,
+            margin: '4px 12px',
+            padding: '10px 14px',
+            background: 'rgba(255,215,0,0.1)',
+            border: '1px solid rgba(255,215,0,0.4)',
+            borderRadius: 8,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            {/* No exact out-of-top-50 rank is available (read-only Supabase, no
+                rank RPC): show "50+" when the player has a score, else "—". */}
+            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 13, width: 44, textAlign: 'center', color: 'var(--gold)' }}>
+              {playerScore != null ? '50+' : '—'}
+            </span>
+            <span style={{ fontSize: 20 }}>{countryFlag(country)}</span>
+            <span style={{ flex: 1, fontSize: 14, color: 'var(--gold)' }}>{alias || 'Player'}</span>
+            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 14, color: playerScore != null ? 'var(--gold)' : 'var(--muted)' }}>
+              {playerScore != null ? playerScore.toLocaleString() : 'No score yet'}
+            </span>
+          </div>
+          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 7, color: 'var(--muted)', letterSpacing: 1, marginTop: 4 }}>
+            YOUR RANKING
+          </div>
+        </div>
+      )}
     </ScreenShell>
   );
 }
