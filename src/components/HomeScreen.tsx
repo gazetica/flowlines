@@ -8,7 +8,6 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useSettingsStore } from '../store/settingsStore';
 import { useGameStore } from '../store/gameStore';
-import { getTodayUTC } from '../game/DailyChallenge';
 import { ParticleCanvas } from './ParticleCanvas';
 import { BottomNav } from './BottomNav';
 
@@ -45,18 +44,8 @@ export function HomeScreen() {
     navigate('/difficulty', { state: { levelId: levelMap[mode], mode } });
   };
 
-  // Daily Challenge: one attempt per UTC day. If already played today, show the
-  // leaderboard instead of starting a (blocked) second attempt.
-  const handleDaily = () => {
-    const today = getTodayUTC();
-    const { lastPlayedDate } = useSettingsStore.getState();
-    if (lastPlayedDate === today) {
-      navigate('/leaderboard');
-      return;
-    }
-    useGameStore.getState().startDailyChallenge();
-    navigate('/game');
-  };
+  // T-005: Daily card opens the Daily Hub (3 challenges), not a single game.
+  const handleDaily = () => navigate('/daily');
 
   return (
     <div

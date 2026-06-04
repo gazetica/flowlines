@@ -124,3 +124,36 @@ export async function fetchPlayerRank(tab: LeaderboardTab, playerScore: number):
   if (error || count === null) return null;
   return count + 1; // rank = number of higher scores + 1
 }
+
+// —— T-005 leaderboard RPCs ————————————————————————————————————————————
+
+export interface CampaignLeaderRow {
+  alias: string;
+  country: string;
+  total_campaign_score: number;
+}
+export interface AllTimeLeaderRow {
+  alias: string;
+  country: string;
+  alltime_score: number;
+}
+
+/** Campaign leaderboard: per-player sum of best score per level (RPC). */
+export async function fetchCampaignLeaderboard(limit = 50): Promise<CampaignLeaderRow[]> {
+  const { data, error } = await supabase.rpc('get_campaign_leaderboard', { row_limit: limit });
+  if (error || !data) {
+    if (error) console.warn('[Supabase] fetchCampaignLeaderboard:', error.message);
+    return [];
+  }
+  return data as CampaignLeaderRow[];
+}
+
+/** All-Time leaderboard: campaign total + daily totals combined per player (RPC). */
+export async function fetchAllTimeLeaderboard(limit = 50): Promise<AllTimeLeaderRow[]> {
+  const { data, error } = await supabase.rpc('get_alltime_leaderboard', { row_limit: limit });
+  if (error || !data) {
+    if (error) console.warn('[Supabase] fetchAllTimeLeaderboard:', error.message);
+    return [];
+  }
+  return data as AllTimeLeaderRow[];
+}

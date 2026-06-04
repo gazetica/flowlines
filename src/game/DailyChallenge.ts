@@ -1,21 +1,29 @@
 // DailyChallenge.ts
-// Numtap | Gazetica Studio | Sprint 3 Day 7 | Task T-014
+// Numtap | Gazetica Studio | Sprint 3 Day 7 (T-014) · Sprint 4 (T-005 Part 1.2)
 //
-// Deterministic seeded puzzle generator. No Phaser, no React — unit-testable.
-// The seed is derived from the UTC date (YYYY-MM-DD), so every player on the
-// same calendar day gets an identical 5x5 grid. The seed changes at midnight UTC.
+// Deterministic seeded daily generator. The seed comes from the UTC date, so the
+// grid LAYOUT is identical for every player on a given day. T-005: each day has 3
+// challenges over that same layout — C1 ascending (easy), C2 descending (pro),
+// C3 random order (expert). Labels never reveal the difficulty.
 
-export interface DailyChallengeInfo {
-  date: string; // 'YYYY-MM-DD' UTC
-  seed: number; // numeric seed derived from date
-  gridSize: 5; // always 5x5 per VDD spec
-  shuffledNumbers: number[]; // 1–25, deterministically shuffled
+export type DailyChallengeIndex = 1 | 2 | 3;
+export type DailyDifficulty = 'easy' | 'pro' | 'expert';
+
+export interface DailyChallengeConfig {
+  index: DailyChallengeIndex;
+  gridSize: number; // same for all 3 on a given day (5)
+  difficulty: DailyDifficulty; // 1=easy, 2=pro, 3=expert
+  seed: number; // same seed for all 3
+  label: string; // 'CHALLENGE 1' | 'CHALLENGE 2' | 'CHALLENGE 3'
 }
 
-/**
- * Simple deterministic PRNG (mulberry32).
- * Given the same seed, always produces the same sequence.
- */
+const DIFFICULTY_BY_INDEX: Record<DailyChallengeIndex, DailyDifficulty> = {
+  1: 'easy',
+  2: 'pro',
+  3: 'expert',
+};
+
+// Simple deterministic PRNG (mulberry32). Same seed → same sequence.
 function mulberry32(seed: number) {
   return function (): number {
     let t = (seed += 0x6d2b79f5);
@@ -25,9 +33,7 @@ function mulberry32(seed: number) {
   };
 }
 
-/**
- * Fisher-Yates shuffle using a seeded PRNG (seeded, not random).
- */
+// Fisher-Yates shuffle using a seeded PRNG (seeded, not random).
 function seededShuffle(array: number[], rand: () => number): number[] {
   const arr = [...array];
   for (let i = arr.length - 1; i > 0; i--) {
@@ -37,9 +43,7 @@ function seededShuffle(array: number[], rand: () => number): number[] {
   return arr;
 }
 
-/**
- * Derives a numeric seed from a UTC date string 'YYYY-MM-DD'.
- */
+// Derives a numeric seed from a UTC date string 'YYYY-MM-DD'.
 export function dateToSeed(dateStr: string): number {
   const digits = dateStr.replace(/-/g, '');
   let hash = 0;
@@ -49,21 +53,31 @@ export function dateToSeed(dateStr: string): number {
   return Math.abs(hash);
 }
 
-/**
- * Returns today's UTC date as 'YYYY-MM-DD'.
- */
-export function getTodayUTC(): string {
+// Today's UTC date as 'YYYY-MM-DD'. (getTodayUTC kept for back-compat callers.)
+export function getTodayDateString(): string {
   return new Date().toISOString().slice(0, 10);
 }
+export const getTodayUTC = getTodayDateString;
 
-/**
- * Returns the DailyChallengeInfo for a given UTC date (defaults to today).
- */
-export function getDailyChallenge(date?: string): DailyChallengeInfo {
-  const d = date ?? getTodayUTC();
-  const seed = dateToSeed(d);
-  const rand = mulberry32(seed);
-  const numbers = Array.from({ length: 25 }, (_, i) => i + 1); // 1–25
-  const shuffledNumbers = seededShuffle(numbers, rand);
-  return { date: d, seed, gridSize: 5, shuffledNumbers };
+// The seeded 5x5 grid LAYOUT (values 1..25 in seeded positions) — identical for
+// all 3 challenges on a given day. The difficulty only changes the tap order.
+export function getDailyShuffledNumbers(date?: string): number[] {
+  const d = date ?? getTodayDateString();
+  const rand = mulberry32(dateToSeed(d));
+  return seededShuffle(
+    Array.from({ length: 25 }, (_, i) => i + 1),
+    rand
+  );
+}
+
+// Config for a specific challenge (1, 2, or 3) on a given day.
+export function getDailyChallenge(index: DailyChallengeIndex, date?: string): DailyChallengeConfig {
+  const d = date ?? getTodayDateString();
+  return {
+    index,
+    gridSize: 5,
+    difficulty: DIFFICULTY_BY_INDEX[index],
+    seed: dateToSeed(d),
+    label: `CHALLENGE ${index}`,
+  };
 }

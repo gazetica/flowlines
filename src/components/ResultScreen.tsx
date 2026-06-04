@@ -245,7 +245,15 @@ export function ResultScreen() {
           LEVEL primary + dark PLAY AGAIN secondary. All other cases: gold PLAY
           AGAIN. HOME/BOARD live in the standard footer below — no duplication. */}
       <div style={{ padding: '0 20px 12px', position: 'relative', zIndex: 1, marginTop: 'auto' }}>
-        {isComplete && nextLevelId && mode === 'campaign' ? (
+        {mode === 'daily' ? (
+          <button
+            className="btn-gold"
+            onClick={() => navigate('/daily')}
+            style={{ width: '100%', padding: '14px', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase' }}
+          >
+            ▶ BACK TO DAILY
+          </button>
+        ) : isComplete && nextLevelId && mode === 'campaign' ? (
           <>
             <button
               className="btn-gold"

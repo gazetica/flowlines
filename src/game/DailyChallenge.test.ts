@@ -1,8 +1,14 @@
 // DailyChallenge.test.ts
-// Numtap | Gazetica Studio | Sprint 3 Day 7 | Task T-014
+// Numtap | Gazetica Studio | Sprint 3 Day 7 (T-014) · updated T-005 (3-challenge API)
 
 import { describe, it, expect } from 'vitest';
-import { getDailyChallenge, dateToSeed, getTodayUTC } from './DailyChallenge';
+import {
+  getDailyChallenge,
+  getDailyShuffledNumbers,
+  dateToSeed,
+  getTodayUTC,
+  getTodayDateString,
+} from './DailyChallenge';
 
 describe('DailyChallenge', () => {
   describe('dateToSeed', () => {
@@ -17,35 +23,46 @@ describe('DailyChallenge', () => {
     });
   });
 
-  describe('getDailyChallenge', () => {
-    it('returns gridSize 5', () => {
-      expect(getDailyChallenge('2026-06-03').gridSize).toBe(5);
-    });
-    it('shuffledNumbers contains all 1–25, no duplicates', () => {
-      const { shuffledNumbers } = getDailyChallenge('2026-06-03');
-      expect(shuffledNumbers).toHaveLength(25);
-      expect(new Set(shuffledNumbers).size).toBe(25);
-      expect(Math.min(...shuffledNumbers)).toBe(1);
-      expect(Math.max(...shuffledNumbers)).toBe(25);
+  describe('getDailyShuffledNumbers (seeded layout)', () => {
+    it('contains all 1–25, no duplicates', () => {
+      const s = getDailyShuffledNumbers('2026-06-03');
+      expect(s).toHaveLength(25);
+      expect(new Set(s).size).toBe(25);
+      expect(Math.min(...s)).toBe(1);
+      expect(Math.max(...s)).toBe(25);
     });
     it('is deterministic — same date same shuffle', () => {
-      const a = getDailyChallenge('2026-06-03').shuffledNumbers;
-      const b = getDailyChallenge('2026-06-03').shuffledNumbers;
-      expect(a).toEqual(b);
+      expect(getDailyShuffledNumbers('2026-06-03')).toEqual(getDailyShuffledNumbers('2026-06-03'));
     });
     it('different dates give different shuffles', () => {
-      const a = getDailyChallenge('2026-06-03').shuffledNumbers;
-      const b = getDailyChallenge('2026-06-04').shuffledNumbers;
-      expect(a).not.toEqual(b);
-    });
-    it('returns correct date string', () => {
-      expect(getDailyChallenge('2026-06-03').date).toBe('2026-06-03');
+      expect(getDailyShuffledNumbers('2026-06-03')).not.toEqual(getDailyShuffledNumbers('2026-06-04'));
     });
   });
 
-  describe('getTodayUTC', () => {
-    it('returns a string in YYYY-MM-DD format', () => {
-      expect(getTodayUTC()).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  describe('getDailyChallenge (3-challenge config — T-005)', () => {
+    it('C1 = easy', () => expect(getDailyChallenge(1).difficulty).toBe('easy'));
+    it('C2 = pro', () => expect(getDailyChallenge(2).difficulty).toBe('pro'));
+    it('C3 = expert', () => expect(getDailyChallenge(3).difficulty).toBe('expert'));
+    it('label is CHALLENGE N', () => {
+      expect(getDailyChallenge(1).label).toBe('CHALLENGE 1');
+      expect(getDailyChallenge(2).label).toBe('CHALLENGE 2');
+      expect(getDailyChallenge(3).label).toBe('CHALLENGE 3');
+    });
+    it('all 3 share the same seed + gridSize on a given day', () => {
+      const a = getDailyChallenge(1, '2026-06-03');
+      const b = getDailyChallenge(3, '2026-06-03');
+      expect(a.seed).toBe(b.seed);
+      expect(a.gridSize).toBe(5);
+      expect(b.gridSize).toBe(5);
+    });
+  });
+
+  describe('date helpers', () => {
+    it('getTodayDateString is YYYY-MM-DD', () => {
+      expect(getTodayDateString()).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    });
+    it('getTodayUTC aliases getTodayDateString', () => {
+      expect(getTodayUTC()).toBe(getTodayDateString());
     });
   });
 });

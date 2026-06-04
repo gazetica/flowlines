@@ -17,7 +17,9 @@ import { ScoreEngine, DIFFICULTY_MULTIPLIER } from '../game/ScoreEngine';
 import type { ScoreParams } from '../game/ScoreEngine';
 import { submitScore } from '../services/supabase';
 import { useSettingsStore } from './settingsStore';
-import { getDailyChallenge } from '../game/DailyChallenge';
+import { getDailyChallenge, getDailyShuffledNumbers, getTodayDateString } from '../game/DailyChallenge';
+import type { DailyChallengeIndex } from '../game/DailyChallenge';
+import { setLocalDailyScore } from '../services/dailyScores';
 
 export type GameMode = 'campaign' | 'daily' | 'endless' | 'speed' | 'freeplay';
 export type GameStatus = 'idle' | 'playing' | 'paused' | 'complete' | 'failed';
@@ -56,6 +58,8 @@ interface GameState {
 
   // Daily challenge
   dailyDate: string; // 'YYYY-MM-DD' of the active daily challenge
+  // T-005: which of the 3 daily challenges is active (null = not a daily round).
+  currentChallengeIndex: DailyChallengeIndex | null;
 
   // T-004B: selected difficulty for the active round (drives sequence + score mult).
   difficulty: Difficulty;
@@ -65,7 +69,7 @@ interface GameState {
   // Actions. `difficulty` is optional — when omitted, the level's own direction +
   // easy scoring are used (preserves CampaignScreen / play-again behaviour).
   startLevel: (levelId: number, mode: GameMode, difficulty?: Difficulty) => void;
-  startDailyChallenge: () => void;
+  startDailyChallenge: (challengeIndex: DailyChallengeIndex) => void;
   // Free Play: arbitrary grid size + difficulty + optional timer (null = untimed).
   startFreePlay: (config: { gridSize: number; difficulty: Difficulty; timerSecs: number | null }) => void;
   tapCell: (row: number, col: number) => TapResult | null;
@@ -93,6 +97,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   hintUsed: false,
   hintActive: false,
   dailyDate: '',
+  currentChallengeIndex: null,
   difficulty: 'easy',
   timed: true,
 
@@ -124,32 +129,34 @@ export const useGameStore = create<GameState>((set, get) => ({
     });
   },
 
-  startDailyChallenge: () => {
-    const daily = getDailyChallenge();
-    const n = daily.gridSize;
+  startDailyChallenge: (challengeIndex) => {
+    // T-005: 3 challenges over the SAME seeded layout. The difficulty sets the tap
+    // order (C1 ascending / C2 descending / C3 random); the grid positions are the
+    // shared seeded layout for fair comparison.
+    const config = getDailyChallenge(challengeIndex);
+    const shuffled = getDailyShuffledNumbers();
+    const n = config.gridSize;
+    const dir = config.difficulty === 'pro' ? 'descending' : 'ascending';
 
-    // Synthetic LevelConfig for the daily challenge (id 0 — not in levels.json).
     const dailyLevel: LevelConfig = {
       id: 0,
       pack: 1,
-      grid: n,
+      grid: n as LevelConfig['grid'],
       modifier: 'none',
-      direction: 'ascending',
+      direction: dir,
       timeLimit: 90,
       stars: [45, 68, 90],
     };
 
-    // Build a 'none' 5x5 engine, then overwrite its cell values with the seeded
-    // shuffle. GridEngine's private field is `grid` (verified in GridEngine.ts);
-    // generateGrid() already set expectedNext=1 (ascending). We mutate the
-    // engine's internal grid directly so getGrid()/validateTap stay consistent.
-    const engine = new GridEngine(n, 'none', 'ascending');
+    // Build the engine at this difficulty (expert generates its own random tap
+    // sequence over the values), then overwrite cell VALUES with the seeded layout.
+    const engine = new GridEngine(n, 'none', dir, config.difficulty);
     engine.generateGrid();
     const internal = (engine as unknown as { grid: Cell[][] }).grid;
     let idx = 0;
     for (let r = 0; r < n; r++) {
       for (let c = 0; c < n; c++) {
-        const value = daily.shuffledNumbers[idx++];
+        const value = shuffled[idx++];
         internal[r][c].value = value;
         internal[r][c].display = value; // 'none' modifier: display === value
       }
@@ -169,8 +176,9 @@ export const useGameStore = create<GameState>((set, get) => ({
       timeElapsed: 0,
       hintUsed: false,
       hintActive: false,
-      dailyDate: daily.date,
-      difficulty: 'easy', // Daily is always Easy (shared seed must be comparable).
+      dailyDate: getTodayDateString(),
+      currentChallengeIndex: challengeIndex,
+      difficulty: config.difficulty,
       timed: true,
     });
   },
@@ -255,7 +263,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   endGame: (reason) => {
-    const { currentLevel, tapTimestamps, timeElapsed, mode, wrongTaps, difficulty, timed } = get();
+    const { currentLevel, tapTimestamps, timeElapsed, mode, wrongTaps, difficulty, timed, currentChallengeIndex } = get();
     if (!currentLevel) return;
     if (reason === 'complete') {
       const mult = DIFFICULTY_MULTIPLIER[difficulty];
@@ -280,17 +288,22 @@ export const useGameStore = create<GameState>((set, get) => ({
       const finalScore = Math.round((subtotal - wrongTaps * 100) * mult);
       set({ status: 'complete', score: finalScore });
 
-      // Submit to the leaderboard for eligible modes. Fire-and-forget —
-      // a network failure must never block or break the game flow.
-      if (mode === 'daily' || mode === 'endless' || mode === 'speed') {
-        const { alias } = useSettingsStore.getState();
+      // T-005: a daily challenge records its score LOCALLY only — the cumulative
+      // C1+C2+C3 is submitted from the Daily Hub once all 3 are complete. Other
+      // submitting modes (endless/speed) post live. Fire-and-forget throughout.
+      if (mode === 'daily' && currentChallengeIndex) {
+        setLocalDailyScore(currentChallengeIndex, Math.max(0, finalScore)).catch((err) =>
+          console.warn('[gameStore] setLocalDailyScore:', err)
+        );
+      } else if (mode === 'endless' || mode === 'speed') {
+        const { alias, country } = useSettingsStore.getState();
         submitScore({
           alias: alias || 'Player',
           score: Math.max(0, finalScore),
           mode,
           gridSize: currentLevel.grid,
           levelId: currentLevel.id,
-          country: 'XX', // T-014 will detect country from device locale
+          country: country || 'XX',
         }).catch((err) => console.warn('[gameStore] submitScore failed:', err));
       }
     } else {
@@ -309,6 +322,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       timeElapsed: 0,
       difficulty: 'easy',
       timed: true,
+      currentChallengeIndex: null,
       hintUsed: false,
       hintActive: false,
     });
