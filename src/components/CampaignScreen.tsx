@@ -10,6 +10,7 @@ import { useSettingsStore } from '../store/settingsStore';
 import { useGameStore } from '../store/gameStore';
 import { LevelManager } from '../game/LevelManager';
 import { ParticleCanvas } from './ParticleCanvas';
+import { BottomNav } from './BottomNav';
 
 export function CampaignScreen() {
   const navigate = useNavigate();
@@ -108,6 +109,7 @@ export function CampaignScreen() {
           <div style={{ fontSize: 12, color: 'rgba(107,132,168,0.5)' }}>More levels on the way</div>
         </div>
       </div>
+      <BottomNav />
     </div>
   );
 }

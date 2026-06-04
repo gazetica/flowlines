@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Browser } from '@capacitor/browser';
 import { ParticleCanvas } from './ParticleCanvas';
+import { BottomNav } from './BottomNav';
 
 export function AboutScreen() {
   const { t } = useTranslation();
@@ -100,6 +101,7 @@ function ScreenShell({ children, title }: { children: React.ReactNode; title: st
         <h1 style={{ fontFamily: "'Space Mono', monospace", fontSize: 16, color: 'var(--gold)', letterSpacing: 2, flex: 1 }}>{title}</h1>
       </div>
       <div style={{ flex: 1, overflowY: 'auto', position: 'relative', zIndex: 1 }}>{children}</div>
+      <BottomNav active="about" />
     </div>
   );
 }

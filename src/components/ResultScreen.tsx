@@ -15,6 +15,8 @@ import { ScoreEngine } from '../game/ScoreEngine';
 import { LeaderPanel } from './LeaderPanel';
 import { submitCampaignScore } from '../services/campaignScores';
 import { ParticleCanvas } from './ParticleCanvas';
+import { BottomNav } from './BottomNav';
+import { SKIN } from '../styles/skin';
 
 export function ResultScreen() {
   const { t } = useTranslation();
@@ -208,25 +210,51 @@ export function ResultScreen() {
         <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: 'rgba(30,139,195,0.3)', letterSpacing: 1 }}>{t('result.ad_slot')} · SPRINT 4</span>
       </div>
 
-      {/* Action buttons */}
-      <div style={{ padding: '0 20px 40px', position: 'relative', zIndex: 1, marginTop: 'auto' }}>
-        {isComplete && nextLevelId && mode === 'campaign' && (
-          <button className="btn-gold" onClick={handleNextLevel} style={{ width: '100%', padding: '14px', fontSize: 11, letterSpacing: 2, marginBottom: 10 }}>
-            ▶ {t('result.btn_next_level')} ({LevelManager.getLevel(nextLevelId).grid}×{LevelManager.getLevel(nextLevelId).grid})
+      {/* Action card(s) — T-004A Fix 5. Campaign (with a next level): gold NEXT
+          LEVEL primary + dark PLAY AGAIN secondary. All other cases: gold PLAY
+          AGAIN. HOME/BOARD live in the standard footer below — no duplication. */}
+      <div style={{ padding: '0 20px 12px', position: 'relative', zIndex: 1, marginTop: 'auto' }}>
+        {isComplete && nextLevelId && mode === 'campaign' ? (
+          <>
+            <button
+              className="btn-gold"
+              onClick={handleNextLevel}
+              style={{ width: '100%', padding: '14px', fontSize: 11, letterSpacing: 2, marginBottom: 10, textTransform: 'uppercase' }}
+            >
+              ▶ {t('result.btn_next_level')} ({LevelManager.getLevel(nextLevelId).grid}×{LevelManager.getLevel(nextLevelId).grid})
+            </button>
+            <button
+              onClick={handlePlayAgain}
+              style={{
+                width: '100%',
+                padding: '13px',
+                fontFamily: "'Space Mono', monospace",
+                fontSize: 11,
+                letterSpacing: 2,
+                textTransform: 'uppercase',
+                background: SKIN.cardBg,
+                border: '1px solid rgba(255,215,0,0.3)',
+                borderRadius: 8,
+                color: SKIN.gold,
+                cursor: 'pointer',
+              }}
+            >
+              ↺ {t('result.btn_play_again')}
+            </button>
+          </>
+        ) : (
+          <button
+            className="btn-gold"
+            onClick={handlePlayAgain}
+            style={{ width: '100%', padding: '14px', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase' }}
+          >
+            ▶ {t('result.btn_play_again')}
           </button>
         )}
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn-outline" onClick={handlePlayAgain} style={{ flex: 1, padding: '11px 8px', fontSize: 10 }}>
-            ↺ {t('result.btn_play_again')}
-          </button>
-          <button className="btn-outline" onClick={() => navigate('/home')} style={{ flex: 1, padding: '11px 8px', fontSize: 10 }}>
-            🏠 {t('result.btn_home')}
-          </button>
-          <button className="btn-outline" onClick={() => navigate('/leaderboard')} style={{ flex: 1, padding: '11px 8px', fontSize: 10 }}>
-            🏆 {t('result.btn_leaderboard')}
-          </button>
-        </div>
       </div>
+
+      {/* Standard 4-icon footer (T-004A Fix 5/6) */}
+      <BottomNav />
     </div>
   );
 }

@@ -12,6 +12,7 @@ import { ParticleCanvas } from './ParticleCanvas';
 import { useTranslation } from 'react-i18next';
 import { useSettingsStore } from '../store/settingsStore';
 import type { Language } from '../store/settingsStore';
+import { SKIN } from '../styles/skin';
 
 const LANGUAGES: { code: Language; flag: string; name: string; native: string }[] = [
   { code: 'en', flag: '🇺🇸', name: 'English', native: 'English' },
@@ -25,16 +26,22 @@ const LANGUAGES: { code: Language; flag: string; name: string; native: string }[
 export function LanguageScreen() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { language, setLanguage, setLanguageSelected } = useSettingsStore();
+  const { language, setLanguage, setLanguageSelected, setAlias, alias } = useSettingsStore();
   const [selected, setSelected] = useState<Language>(language);
+  // T-004A Fix 4: first-launch player name. Defaults to "Player"; writes to the
+  // same settingsStore.alias the Settings screen uses (store sanitises the value).
+  const [name, setName] = useState(alias || 'Player');
+  const [nameFocused, setNameFocused] = useState(false);
 
   const handleContinue = async () => {
     await setLanguage(selected);
+    await setAlias(name.trim() || 'Player');
     await setLanguageSelected();
     navigate('/how-to-play', { replace: true });
   };
 
   const handleLater = async () => {
+    await setAlias(name.trim() || 'Player');
     await setLanguageSelected();
     navigate('/how-to-play', { replace: true });
   };
@@ -125,6 +132,39 @@ export function LanguageScreen() {
             </button>
           );
         })}
+      </div>
+
+      {/* Player name (T-004A Fix 4) — below the grid, above the CTAs. */}
+      <div style={{ padding: '0 20px 12px', position: 'relative', zIndex: 1 }}>
+        <label
+          htmlFor="player-name"
+          style={{ display: 'block', fontSize: 11, color: SKIN.muted, marginBottom: 6, letterSpacing: 0.5 }}
+        >
+          {t('language.nameLabel')}
+        </label>
+        <input
+          id="player-name"
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          onFocus={() => setNameFocused(true)}
+          onBlur={() => setNameFocused(false)}
+          maxLength={20}
+          placeholder="Player"
+          style={{
+            width: '100%',
+            padding: '12px 14px',
+            background: SKIN.cardBg,
+            border: `1px solid ${nameFocused ? SKIN.gold : SKIN.cardBorder}`,
+            borderRadius: 8,
+            outline: 'none',
+            fontFamily: "'Space Mono', monospace",
+            fontSize: 14,
+            color: SKIN.white,
+            boxShadow: nameFocused ? '0 0 8px rgba(255,215,0,0.2)' : 'none',
+            transition: 'border-color 0.2s, box-shadow 0.2s',
+          }}
+        />
       </div>
 
       {/* CTAs */}

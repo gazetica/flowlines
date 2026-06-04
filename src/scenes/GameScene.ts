@@ -36,6 +36,9 @@ export class GameScene extends Phaser.Scene {
   // There is now NO visual cue on the next tile — the HUD NEXT value is the sole
   // pre-tap cue. The only gold tile is the most-recently tapped one (LAST_TAPPED).
   private tileSize = 0;
+  // T-004A: the grid-container border (blue luminescence, DC-04 carry-forward).
+  // Re-drawn each renderGrid; tracked so the previous one is destroyed.
+  private gridBorderGfx: Phaser.GameObjects.Graphics | null = null;
 
   constructor() {
     super({ key: 'GameScene' });
@@ -184,6 +187,14 @@ export class GameScene extends Phaser.Scene {
     const startX = (screenW - gridPixelSize) / 2;
     const startY = screenH * 0.2; // start 20% from top (HUD above)
 
+    // Grid container: a faint blue luminescent rounded border framing the grid,
+    // drawn behind the tiles (depth -1). Redrawn each layout; drop the previous.
+    if (this.gridBorderGfx) this.gridBorderGfx.destroy();
+    this.gridBorderGfx = this.add.graphics();
+    this.gridBorderGfx.lineStyle(1, 0x1e8bc3, 0.25);
+    this.gridBorderGfx.strokeRoundedRect(startX - 12, startY - 12, gridPixelSize + 24, gridPixelSize + 24, 12);
+    this.gridBorderGfx.setDepth(-1);
+
     for (let r = 0; r < n; r++) {
       this.tileObjects[r] = [];
       for (let c = 0; c < n; c++) {
@@ -257,14 +268,14 @@ export class GameScene extends Phaser.Scene {
     if (cell.tapped) {
       if (this.isLastTapped(cell)) {
         gfx.fillGradientStyle(0xffd700, 0xffd700, 0xc8a800, 0xc8a800, 1, 1, 1, 1);
-        gfx.fillRect(-half, -half, size, size);
+        gfx.fillRoundedRect(-half, -half, size, size, 6);
         gfx.lineStyle(2, 0xffd700, 1);
-        gfx.strokeRect(-half, -half, size, size);
+        gfx.strokeRoundedRect(-half, -half, size, size, 6);
       } else {
         gfx.fillGradientStyle(0x0d2a1a, 0x0d2a1a, 0x091f12, 0x091f12, 1, 1, 1, 1);
-        gfx.fillRect(-half, -half, size, size);
+        gfx.fillRoundedRect(-half, -half, size, size, 6);
         gfx.lineStyle(1, 0x2ecc71, 0.5);
-        gfx.strokeRect(-half, -half, size, size);
+        gfx.strokeRoundedRect(-half, -half, size, size, 6);
       }
       return;
     }
@@ -326,9 +337,9 @@ export class GameScene extends Phaser.Scene {
     const half = this.tileSize / 2;
     bg.clear();
     bg.fillStyle(0x2a0d0d, 1);
-    bg.fillRect(-half, -half, this.tileSize, this.tileSize);
+    bg.fillRoundedRect(-half, -half, this.tileSize, this.tileSize, 6);
     bg.lineStyle(2, 0xe05050, 1);
-    bg.strokeRect(-half, -half, this.tileSize, this.tileSize);
+    bg.strokeRoundedRect(-half, -half, this.tileSize, this.tileSize, 6);
     this.time.delayedCall(400, () => {
       if (!container.active) return;
       const cell = useGameStore.getState().grid[row]?.[col];

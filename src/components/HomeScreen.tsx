@@ -10,6 +10,7 @@ import { useSettingsStore } from '../store/settingsStore';
 import { useGameStore } from '../store/gameStore';
 import { getTodayUTC } from '../game/DailyChallenge';
 import { ParticleCanvas } from './ParticleCanvas';
+import { BottomNav } from './BottomNav';
 
 export function HomeScreen() {
   const { t } = useTranslation();
@@ -34,7 +35,11 @@ export function HomeScreen() {
   };
 
   const handleMode = (mode: 'daily' | 'endless' | 'speed') => {
-    const levelMap = { daily: 63, endless: 63, speed: 9 };
+    // T-004A Fix 3: Speed is 4×4 per the card label (home.mode_speed_sub "4×4 · 2× pts")
+    // and all VDD/design docs. It was incorrectly mapped to level 9 (3×3); level 10 is
+    // the first 4×4 ('none'), so the in-game grid now matches the card. (The "2× pts"/
+    // halved-timer speed scoring is engine work deferred to T-004B.)
+    const levelMap = { daily: 63, endless: 63, speed: 10 };
     startLevel(levelMap[mode], mode);
     navigate('/game');
   };
@@ -164,29 +169,9 @@ export function HomeScreen() {
         </div>
       </div>
 
-      {/* Bottom nav */}
+      {/* Bottom nav (shared component — T-004A Fix 6) */}
       <div style={{ marginTop: 'auto' }}>
-        <div className="glass" style={{ display: 'flex', justifyContent: 'space-around', padding: '10px 8px 24px', borderTop: '1px solid rgba(30,139,195,0.15)' }}>
-          {[
-            { icon: '🏠', label: t('nav.home'), active: true, route: '/home' },
-            { icon: '🏆', label: t('nav.leaderboard'), active: false, route: '/leaderboard' },
-            { icon: '⚙️', label: t('nav.settings'), active: false, route: '/settings' },
-            { icon: 'ℹ️', label: t('nav.about'), active: false, route: '/about' },
-          ].map((item) => (
-            <button
-              key={item.label}
-              onClick={() => navigate(item.route)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'center', padding: '4px 8px' }}
-            >
-              <div style={{ fontSize: 18, marginBottom: 2, filter: item.active ? 'drop-shadow(0 0 4px rgba(255,215,0,0.6))' : 'none' }}>
-                {item.icon}
-              </div>
-              <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: item.active ? 'var(--gold)' : 'var(--muted)', letterSpacing: 0.5 }}>
-                {item.label}
-              </div>
-            </button>
-          ))}
-        </div>
+        <BottomNav active="home" />
       </div>
     </div>
   );

@@ -43,7 +43,7 @@ export function ParticleCanvas() {
       size: 10 + Math.random() * 6, // 10–16px
       speed: 0.18 + Math.random() * 0.22, // 0.18–0.40
       drift: (Math.random() - 0.5) * 0.3, // ±0.15
-      opacity: 0.04 + Math.random() * 0.05, // 0.04–0.09
+      opacity: 0.2 + Math.random() * 0.05, // 0.20–0.25 (T-004A: raised from 0.04–0.09)
     });
 
     // Pre-populate 12 particles at random positions.

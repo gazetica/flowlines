@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { fetchLeaderboard } from '../services/supabase';
 import { ParticleCanvas } from './ParticleCanvas';
+import { BottomNav } from './BottomNav';
 import type { ScoreRow, LeaderboardTab } from '../services/supabase';
 import { useSettingsStore } from '../store/settingsStore';
 
@@ -123,6 +124,7 @@ function ScreenShell({ children, title }: { children: React.ReactNode; title: st
         <h1 style={{ fontFamily: "'Space Mono', monospace", fontSize: 16, color: 'var(--gold)', letterSpacing: 2, flex: 1 }}>{title}</h1>
       </div>
       <div style={{ flex: 1, overflowY: 'auto', position: 'relative', zIndex: 1 }}>{children}</div>
+      <BottomNav active="leaderboard" />
     </div>
   );
 }
