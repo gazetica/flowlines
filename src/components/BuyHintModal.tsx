@@ -1,12 +1,11 @@
-// GetHintModal.tsx
-// Numtap | Gazetica Studio | Sprint 4 | Task T-006 Part 2.4
+// BuyHintModal.tsx
+// Numtap | Gazetica Studio | Sprint 4 | Task T-006 Part 2.4 · renamed T-008 Part 4
 //
-// Shown when the player taps HINT with 0 gems. Offers a rewarded AdMob ad (free)
-// or a trip to the IAP screen. On ad completion: addHints(1) then immediately
-// consumeHint() and apply the hint to the current tile (onApplyHint), then close.
-//
-// Reads the existing admob.ts rewarded flow (showRewarded) — admob.ts is not
-// modified. If no ad is available, surfaces a fallback message.
+// Shown when the player taps USE HINT with 0 gems. Offers a rewarded AdMob ad
+// (free) or a trip to the IAP screen. The game is already paused by the caller
+// (right card tap); this modal resumes it on every close path via onClose.
+// On ad completion: addHints(1) → consumeHint() → apply the hint to the current
+// tile (onApplyHint) → onClose (which resumes). admob.ts is not modified.
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -16,7 +15,7 @@ import { SKIN } from '../styles/skin';
 
 const NO_ADS_MSG = 'No ads available right now. Try buying gems.';
 
-export function GetHintModal({ onClose, onApplyHint }: { onClose: () => void; onApplyHint: () => void }) {
+export function BuyHintModal({ onClose, onApplyHint }: { onClose: () => void; onApplyHint: () => void }) {
   const navigate = useNavigate();
   const hintCount = useSettingsStore((s) => s.hintCount);
   const addHints = useSettingsStore((s) => s.addHints);
@@ -24,6 +23,8 @@ export function GetHintModal({ onClose, onApplyHint }: { onClose: () => void; on
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Game is already paused by the caller. The rewarded ad shows as a native
+  // overlay (GameScreen stays mounted), so a plain pause→ad→resume works.
   const handleWatchAd = async () => {
     setBusy(true);
     setError(null);
@@ -33,7 +34,7 @@ export function GetHintModal({ onClose, onApplyHint }: { onClose: () => void; on
         rewarded = true;
       });
     } catch {
-      setError(NO_ADS_MSG);
+      setError(NO_ADS_MSG); // dismiss/unavailable — Cancel resumes the game
       setBusy(false);
       return;
     }
@@ -41,15 +42,17 @@ export function GetHintModal({ onClose, onApplyHint }: { onClose: () => void; on
       await addHints(1); // grant the earned hint…
       consumeHint(); // …then immediately spend it on the current tile
       onApplyHint();
-      onClose();
+      onClose(); // closes + resumes the game (caller's handler)
       return;
     }
     setError(NO_ADS_MSG);
     setBusy(false);
   };
 
+  // Buy Gems navigates to the IAP screen. We do NOT call onClose here: that
+  // would resume the game; instead GameScreen unmounts while 'paused' and its
+  // resume-on-mount effect picks the game back up when the player returns.
   const handleBuyGems = () => {
-    onClose();
     navigate('/iap');
   };
 
@@ -81,7 +84,7 @@ export function GetHintModal({ onClose, onApplyHint }: { onClose: () => void; on
         }}
       >
         <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 16, color: SKIN.gold, letterSpacing: 1, marginBottom: 14 }}>
-          Get a Hint 💡
+          Buy a Hint 💡
         </div>
 
         <div style={{ fontSize: 13, color: SKIN.white, marginBottom: 18 }}>

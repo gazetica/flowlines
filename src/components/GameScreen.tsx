@@ -19,7 +19,8 @@ import { useSettingsStore } from '../store/settingsStore';
 import { TimerComponent } from './TimerComponent';
 import { GameScene } from '../scenes/GameScene';
 import { LeaderPanel } from './LeaderPanel';
-import { GetHintModal } from './GetHintModal';
+import { BuyHintModal } from './BuyHintModal';
+import { showRewarded } from '../services/admob';
 import { initAppLifecycle, removeAppLifecycle } from '../services/appLifecycle';
 import { SKIN } from '../styles/skin';
 
@@ -30,10 +31,17 @@ export function GameScreen() {
   const { status, currentLevel, mode, score, runId, startLevel, tickTimer, endGame, engine, timed } =
     useGameStore();
 
-  // T-006 Part 2.3: hint inventory + GetHintModal.
+  // T-006 Part 2.3: hint inventory + BuyHintModal (renamed T-008).
   const hintCount = useSettingsStore((s) => s.hintCount);
   const consumeHint = useSettingsStore((s) => s.consumeHint);
+  const addHints = useSettingsStore((s) => s.addHints);
   const [hintModalOpen, setHintModalOpen] = useState(false);
+  // T-008 Part 3.4: brief in-game toast (e.g. ad dismissed / unavailable).
+  const [toast, setToast] = useState<string | null>(null);
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 1900);
+  };
 
   // T-007 Fix 4: left promo card alternates GET MORE HINTS / REMOVE ADS every 5s.
   const [promo, setPromo] = useState<'hints' | 'ads'>('hints');
@@ -64,12 +72,49 @@ export function GameScreen() {
     setTimeout(() => useGameStore.getState().deactivateHint(), 5000);
   };
 
+  // Right card: use a hint if available, else pause the game and open the
+  // BuyHintModal (which resumes on every close path via closeHintModal).
   const handleHintTap = () => {
     if (status !== 'playing') return;
     if (consumeHint()) {
       applyHintToTile();
     } else {
+      useGameStore.getState().pauseGame();
       setHintModalOpen(true);
+    }
+  };
+
+  const closeHintModal = () => {
+    setHintModalOpen(false);
+    useGameStore.getState().resumeGame();
+  };
+
+  // Middle card (T-008 Part 3.4): pause → rewarded ad → on completion award +1
+  // hint, immediately spend it on the current tile, and resume. On dismiss or
+  // when no ad is available, resume with a brief toast. admob.ts has no separate
+  // availability probe, so we pause then attempt; a failed/unavailable ad resumes
+  // immediately (the pause is momentary).
+  const handleWatchAd = async () => {
+    if (status !== 'playing') return;
+    useGameStore.getState().pauseGame();
+    let rewarded = false;
+    try {
+      await showRewarded(() => {
+        rewarded = true;
+      });
+    } catch {
+      useGameStore.getState().resumeGame();
+      showToast('No ads available right now');
+      return;
+    }
+    if (rewarded) {
+      await addHints(1);
+      consumeHint();
+      applyHintToTile();
+      useGameStore.getState().resumeGame();
+    } else {
+      useGameStore.getState().resumeGame();
+      showToast('Watch the full ad to get a hint');
     }
   };
 
@@ -325,9 +370,9 @@ export function GameScreen() {
         </div>
       </div>
 
-      {/* T-007 Fix 4: two hint cards (rotating promo + USE HINT) stacked above the
-          LeaderPanel in the dead space below the grid. Shown for all play modes
-          (GameScreen is never reached during onboarding). */}
+      {/* T-008 Part 3: three hint cards (rotating promo · watch ad · use hint)
+          stacked above the LeaderPanel in the dead space below the grid. Shown
+          for all play modes (GameScreen is never reached during onboarding). */}
       {status === 'playing' && (
         <div
           style={{
@@ -339,8 +384,8 @@ export function GameScreen() {
             zIndex: 10,
           }}
         >
-          {/* Two-card row */}
-          <div style={{ display: 'flex', flexDirection: 'row', gap: 8, margin: '6px 0', width: '100%' }}>
+          {/* Three-card row */}
+          <div style={{ display: 'flex', flexDirection: 'row', gap: 6, margin: '6px 0', width: '100%' }}>
             {/* Left card — rotating promo (GET MORE HINTS / REMOVE ADS) */}
             <button
               onClick={handleBuyNav}
@@ -353,16 +398,26 @@ export function GameScreen() {
             >
               {/* State A — Get More Hints */}
               <div style={{ ...PROMO_CONTENT, opacity: promo === 'hints' ? 1 : 0, transition: 'opacity 0.3s' }}>
-                <span style={{ fontSize: 24, color: '#FFD700' }}>💎</span>
-                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: '#FFD700', letterSpacing: 0.5 }}>GET MORE HINTS</span>
+                <span style={{ fontSize: 20, color: '#FFD700' }}>💎</span>
+                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: '#FFD700', letterSpacing: 0.3 }}>GET MORE HINTS</span>
                 <span style={{ fontSize: 8, color: SKIN.muted }}>Tap to buy gem packs</span>
               </div>
               {/* State B — Remove Ads */}
               <div style={{ ...PROMO_CONTENT, opacity: promo === 'ads' ? 1 : 0, transition: 'opacity 0.3s' }}>
-                <span style={{ fontSize: 24 }}>🚫</span>
-                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: SKIN.white, letterSpacing: 0.5 }}>REMOVE ADS</span>
+                <span style={{ fontSize: 20 }}>🚫</span>
+                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: SKIN.white, letterSpacing: 0.3 }}>REMOVE ADS</span>
                 <span style={{ fontSize: 8, color: SKIN.muted }}>Play without interruptions</span>
               </div>
+            </button>
+
+            {/* Middle card — WATCH AD (rewarded → +1 hint) */}
+            <button
+              onClick={handleWatchAd}
+              style={{ ...HINT_CARD_BASE, border: '1px solid rgba(46,204,113,0.3)' }}
+            >
+              <span style={{ fontSize: 20 }}>📺</span>
+              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: SKIN.white, letterSpacing: 0.3 }}>WATCH AD</span>
+              <span style={{ fontSize: 8, color: SKIN.muted }}>Get 1 hint free</span>
             </button>
 
             {/* Right card — USE HINT */}
@@ -370,25 +425,51 @@ export function GameScreen() {
               onClick={handleHintTap}
               style={{ ...HINT_CARD_BASE, border: '1px solid rgba(0,210,200,0.3)' }}
             >
-              <span style={{ fontSize: 24, color: '#FFD700' }}>💡</span>
-              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: '#FFD700', letterSpacing: 0.5 }}>USE HINT</span>
-              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: SKIN.white }}>💎 ×{hintCount} left</span>
+              <span style={{ fontSize: 20, color: '#FFD700' }}>💡</span>
+              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: '#FFD700', letterSpacing: 0.3 }}>USE HINT</span>
+              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: SKIN.white }}>💎 ×{hintCount} left</span>
             </button>
           </div>
 
           {/* Per-level leader panel (YOU vs LEADER) — campaign only. Daily uses
-              synthetic level id 0 → excluded. Sits directly below the two cards. */}
+              synthetic level id 0 → excluded. Sits directly below the cards. */}
           {mode === 'campaign' && currentLevel && currentLevel.id > 0 && (
             <LeaderPanel levelId={currentLevel.id} compact={true} />
           )}
         </div>
       )}
 
+      {/* Brief toast (ad dismissed / unavailable) */}
+      {toast && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '24%',
+            left: 0,
+            right: 0,
+            textAlign: 'center',
+            zIndex: 20,
+            pointerEvents: 'none',
+          }}
+        >
+          <span
+            style={{
+              fontFamily: "'Space Mono', monospace",
+              fontSize: 12,
+              color: SKIN.white,
+              background: 'rgba(8,18,32,0.92)',
+              border: '1px solid rgba(30,139,195,0.4)',
+              borderRadius: 8,
+              padding: '8px 14px',
+            }}
+          >
+            {toast}
+          </span>
+        </div>
+      )}
+
       {hintModalOpen && (
-        <GetHintModal
-          onClose={() => setHintModalOpen(false)}
-          onApplyHint={applyHintToTile}
-        />
+        <BuyHintModal onClose={closeHintModal} onApplyHint={applyHintToTile} />
       )}
 
     </div>

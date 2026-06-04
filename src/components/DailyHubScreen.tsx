@@ -10,6 +10,7 @@
 import type React from 'react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Preferences } from '@capacitor/preferences';
 import { useGameStore } from '../store/gameStore';
 import { useSettingsStore } from '../store/settingsStore';
 import {
@@ -23,6 +24,33 @@ import type { DailyChallengeIndex } from '../game/DailyChallenge';
 import { ParticleCanvas } from './ParticleCanvas';
 import { BottomNav } from './BottomNav';
 import { SKIN } from '../styles/skin';
+
+// —— Weekly diamond claim (T-008 Part 2) ————————————————————————————
+// One claim per ISO week, keyed 'weekly_diamond_claimed_YYYY-WNN'. Stored via
+// Capacitor Preferences directly (dailyScores.ts — home of the daily equivalent
+// — is locked this task; the key is week-dynamic so it doesn't fit PREF_KEYS).
+
+function getISOWeekKey(date: Date): string {
+  // Standard ISO-8601 week: week belongs to the year of its Thursday.
+  const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+  const dayNum = (d.getUTCDay() + 6) % 7; // Mon=0 … Sun=6
+  d.setUTCDate(d.getUTCDate() - dayNum + 3); // shift to the week's Thursday
+  const firstThursday = new Date(Date.UTC(d.getUTCFullYear(), 0, 4));
+  const firstDayNum = (firstThursday.getUTCDay() + 6) % 7;
+  firstThursday.setUTCDate(firstThursday.getUTCDate() - firstDayNum + 3);
+  const week = 1 + Math.round((d.getTime() - firstThursday.getTime()) / (7 * 86400000));
+  return `${d.getUTCFullYear()}-W${String(week).padStart(2, '0')}`;
+}
+
+const weeklyClaimKey = () => `weekly_diamond_claimed_${getISOWeekKey(new Date())}`;
+
+async function isWeeklyDiamondClaimed(): Promise<boolean> {
+  const { value } = await Preferences.get({ key: weeklyClaimKey() });
+  return value === 'true';
+}
+async function setWeeklyDiamondClaimed(): Promise<void> {
+  await Preferences.set({ key: weeklyClaimKey(), value: 'true' });
+}
 
 type NodeState = 'past' | 'today-done' | 'today-pending' | 'future';
 
@@ -42,18 +70,21 @@ export function DailyHubScreen() {
   const dailyStreak = useSettingsStore((s) => s.dailyStreak);
   const lastDailyCompletionDate = useSettingsStore((s) => s.lastDailyCompletionDate);
   const setLastDailyCompletionDate = useSettingsStore((s) => s.setLastDailyCompletionDate);
+  const setDailyStreak = useSettingsStore((s) => s.setDailyStreak);
   const addHints = useSettingsStore((s) => s.addHints);
 
   const [scores, setScores] = useState<LocalDailyScores | null>(null);
   const [claimed, setClaimed] = useState(false);
+  const [weeklyClaimed, setWeeklyClaimedState] = useState(false);
   const [reward, setReward] = useState<string | null>(null);
 
-  // Reload local scores + today's claim status on mount (covers returning from a
-  // game: React Router remounts this screen, so the effect re-runs and refreshes
-  // every card state, the streak map, and the claim button).
+  // Reload local scores + today's & this-week's claim status on mount (covers
+  // returning from a game: React Router remounts this screen, so the effect
+  // re-runs and refreshes every card state, the streak map, and both buttons).
   useEffect(() => {
     getLocalDailyScores().then(setScores);
     isDailyDiamondClaimed().then(setClaimed);
+    isWeeklyDiamondClaimed().then(setWeeklyClaimedState);
   }, []);
 
   const today = getTodayDateString();
@@ -98,6 +129,17 @@ export function DailyHubScreen() {
     flashReward('+1 💎');
   };
 
+  // T-008 Part 2: weekly diamond — once per ISO week, requires a full 7-day
+  // streak. Awards +3 hints, then resets the streak (map returns to future).
+  const weeklyClaim = async () => {
+    if (weeklyClaimed || dailyStreak < 7) return; // defensive
+    await addHints(3);
+    await setWeeklyDiamondClaimed();
+    setWeeklyClaimedState(true);
+    flashReward('+3 💎');
+    await setDailyStreak(0); // streak resets — nodes derive from dailyStreak
+  };
+
   return (
     <div style={{ position: 'relative', width: '100vw', height: '100vh', background: 'var(--navy)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <style>{KEYFRAMES}</style>
@@ -124,11 +166,13 @@ export function DailyHubScreen() {
 
         {/* —— 7 DAY STREAK section (below the challenge section) —— */}
         <div style={{ marginTop: 24 }}>
-          <Instructions
-            line1="Complete all 3 daily challenges every day."
-            line2="Reach 7 days in a row to claim 3 💎 gems."
-          />
+          {/* T-008 Part 1.5: single yellow instruction line (no duplicate of the
+              challenge line shown above). */}
+          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, fontWeight: 700, color: '#FFD700', marginBottom: 12 }}>
+            Reach 7 days in a row to claim 3 💎 gems.
+          </div>
           <StreakMap nodeState={nodeState} isFilled={isFilled} streakComplete={streakComplete} />
+          <WeeklyClaimButton streakComplete={streakComplete} claimed={weeklyClaimed} onClaim={weeklyClaim} />
         </div>
       </div>
 
@@ -213,29 +257,7 @@ function VConn({ gold, align }: { gold: boolean; align: 'left' | 'right' }) {
   );
 }
 
-// START anchor node — same 52px circle, dark fill + gold DASHED border, "START"
-// inside, "7 DAY STREAK" below. No completion state (T-007 Fix 2, Node A).
-function StartNode() {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, width: NODE }}>
-      <div
-        style={{
-          width: NODE, height: NODE, borderRadius: '50%', flexShrink: 0,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: 'rgba(10,26,46,0.6)', border: '2px dashed rgba(255,215,0,0.6)',
-          fontFamily: "'Space Mono', monospace", fontSize: 7, color: SKIN.muted,
-        }}
-      >
-        START
-      </div>
-      <div style={{ fontSize: 7, lineHeight: 1.1, color: SKIN.muted, fontFamily: "'Space Mono', monospace", marginTop: 4, textAlign: 'center' }}>
-        7 DAY<br />STREAK
-      </div>
-    </div>
-  );
-}
-
-// CLAIM node (Node I) — same 52px circle, 💎 inside, locked grey / claimable gold.
+// CLAIM node — same 52px circle, 💎 inside, locked grey / claimable gold.
 function ClaimNode({ claimable }: { claimable: boolean }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, width: NODE }}>
@@ -257,10 +279,9 @@ function ClaimNode({ claimable }: { claimable: boolean }) {
   );
 }
 
-// True 3×3 S-grid (T-007 Fix 2): 9 nodes in 3 rows of 3.
-//   Row 1 (L→R):        A:START  → B:Day1 → C:Day2
-//   Row 2 (row-reverse): D:Day3  → E:Day4 → F:Day5   (visually Day5, Day4, Day3)
-//   Row 3 (L→R):        G:Day6   → H:Day7 → I:CLAIM
+// 4+4 S-grid (T-008 Part 1): 8 nodes in 2 rows of 4.
+//   Row 1 (L→R):         Day1 → Day2 → Day3 → Day4
+//   Row 2 (row-reverse):  Day5 → Day6 → Day7 → CLAIM  (visual L→R: CLAIM,7,6,5)
 // Day index i (0-based) = Day (i+1). isFilled(i)/nodeState(i) drive colour.
 function StreakMap({
   nodeState,
@@ -273,33 +294,25 @@ function StreakMap({
 }) {
   return (
     <div style={{ marginBottom: 8 }}>
-      {/* Row 1 — START → Day 1 → Day 2 */}
+      {/* Row 1 — Day 1 → Day 2 → Day 3 → Day 4 */}
       <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-        <StartNode />
-        <HConn gold={isFilled(0)} />
         <NodeCell state={nodeState(0)} label="Day 1" />
         <HConn gold={isFilled(1)} />
         <NodeCell state={nodeState(1)} label="Day 2" />
-      </div>
-
-      {/* drop from Day 2 (right column) down to Day 3 */}
-      <VConn gold={isFilled(2)} align="right" />
-
-      {/* Row 2 — flow Day3 → Day4 → Day5, rendered row-reverse so visual L→R is
-          Day 5, Day 4, Day 3 (Day 3 sits under Day 2 on the right). */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', flexDirection: 'row-reverse' }}>
+        <HConn gold={isFilled(2)} />
         <NodeCell state={nodeState(2)} label="Day 3" />
         <HConn gold={isFilled(3)} />
         <NodeCell state={nodeState(3)} label="Day 4" />
-        <HConn gold={isFilled(4)} />
-        <NodeCell state={nodeState(4)} label="Day 5" />
       </div>
 
-      {/* drop from Day 5 (left column) down to Day 6 */}
-      <VConn gold={isFilled(5)} align="left" />
+      {/* drop from Day 4 (right column) down to Day 5 */}
+      <VConn gold={isFilled(4)} align="right" />
 
-      {/* Row 3 — Day 6 → Day 7 → CLAIM */}
-      <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+      {/* Row 2 — flow Day5 → Day6 → Day7 → CLAIM, row-reverse so visual L→R is
+          CLAIM, Day 7, Day 6, Day 5 (Day 5 sits under Day 4 on the right). */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', flexDirection: 'row-reverse' }}>
+        <NodeCell state={nodeState(4)} label="Day 5" />
+        <HConn gold={isFilled(5)} />
         <NodeCell state={nodeState(5)} label="Day 6" />
         <HConn gold={isFilled(6)} />
         <NodeCell state={nodeState(6)} label="Day 7" />
@@ -455,6 +468,54 @@ function ClaimButton({ allDone, claimed, onClaim }: { allDone: boolean; claimed:
       }}
     >
       💎 Complete all challenges to claim
+    </button>
+  );
+}
+
+// —— Weekly claim button — three states (T-008 Part 2) ————————————————
+
+function WeeklyClaimButton({ streakComplete, claimed, onClaim }: { streakComplete: boolean; claimed: boolean; onClaim: () => void }) {
+  // State 3 — already claimed this week
+  if (claimed) {
+    return (
+      <button
+        disabled
+        style={{
+          width: '100%', padding: '14px', marginTop: 4, fontFamily: "'Space Mono', monospace", fontSize: 11,
+          letterSpacing: 2, borderRadius: 8, border: '1px solid rgba(46,204,113,0.4)',
+          background: SKIN.cardBg, color: SKIN.success, cursor: 'default', fontWeight: 700,
+        }}
+      >
+        ✓ WEEKLY 3 💎 CLAIMED
+      </button>
+    );
+  }
+  // State 2 — full 7-day streak, claimable
+  if (streakComplete) {
+    return (
+      <button
+        onClick={onClaim}
+        style={{
+          width: '100%', padding: '14px', marginTop: 4, fontFamily: "'Space Mono', monospace", fontSize: 11,
+          letterSpacing: 2, borderRadius: 8, border: 'none', background: SKIN.btnGold,
+          color: '#07111F', boxShadow: SKIN.btnGoldShadow, cursor: 'pointer', fontWeight: 700,
+        }}
+      >
+        💎 CLAIM YOUR WEEKLY 3 💎
+      </button>
+    );
+  }
+  // State 1 — streak incomplete
+  return (
+    <button
+      disabled
+      style={{
+        width: '100%', padding: '14px', marginTop: 4, fontFamily: "'Space Mono', monospace", fontSize: 11,
+        letterSpacing: 1, borderRadius: 8, border: 'none', background: 'rgba(10,26,46,0.6)',
+        color: SKIN.muted, cursor: 'default',
+      }}
+    >
+      💎 Complete 7 days to claim
     </button>
   );
 }
