@@ -211,8 +211,21 @@ export function HomeScreen() {
         </div>
       </div>
 
-      {/* Tagline filling the dead space below the cards (T-006-FIX Issue 3) */}
-      <div style={{ padding: '20px 24px', textAlign: 'center', position: 'relative', zIndex: 1 }}>
+      {/* Tagline — vertically centred in the space between the 3 cards and the
+          footer (T-007 Fix 1: flex:1 container, content centred). */}
+      <div
+        style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '0 24px',
+          textAlign: 'center',
+          position: 'relative',
+          zIndex: 1,
+        }}
+      >
         <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 16, fontWeight: 700, color: '#E8F0F8', letterSpacing: 0.5 }}>
           Numbers don't wait.
         </div>
@@ -222,9 +235,7 @@ export function HomeScreen() {
       </div>
 
       {/* Bottom nav (shared component — T-004A Fix 6) */}
-      <div style={{ marginTop: 'auto' }}>
-        <BottomNav active="home" />
-      </div>
+      <BottomNav active="home" />
     </div>
   );
 }

@@ -113,31 +113,23 @@ export function DailyHubScreen() {
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '18px 20px 24px', position: 'relative', zIndex: 1 }}>
-        {/* —— Streak instructions (Issue 8) —— */}
+        {/* —— DAILY CHALLENGES section (T-007 Fix 3: now ABOVE the streak map) —— */}
         <Instructions
-          header="HOW THE STREAK WORKS"
           line1="Complete all 3 daily challenges every day."
-          line2="Reach 7 days in a row to claim 3 💎 gems."
-        />
-
-        {/* —— S-shaped 7-day streak map (Issues 4–7) —— */}
-        <StreakMap nodeState={nodeState} isFilled={isFilled} streakComplete={streakComplete} />
-
-        {/* —— Challenge instructions (Issue 9) —— */}
-        <Instructions
-          header="DAILY CHALLENGES"
-          line1="Play all 3 challenges to earn 1 💎 gem."
           line2="Complete in order — each challenge unlocks the next."
         />
-
-        {/* —— 3-challenge connected track (Issues 10, 11) —— */}
         <ChallengeTrack cardScores={cardScores} onPlay={play} />
-
-        {/* —— Large diamond display (Issue 13) —— */}
         <DiamondDisplay claimable={allDone} />
-
-        {/* —— Claim button — three states (Issue 13) —— */}
         <ClaimButton allDone={allDone} claimed={claimed} onClaim={claim} />
+
+        {/* —— 7 DAY STREAK section (below the challenge section) —— */}
+        <div style={{ marginTop: 24 }}>
+          <Instructions
+            line1="Complete all 3 daily challenges every day."
+            line2="Reach 7 days in a row to claim 3 💎 gems."
+          />
+          <StreakMap nodeState={nodeState} isFilled={isFilled} streakComplete={streakComplete} />
+        </div>
       </div>
 
       {reward && (
@@ -157,14 +149,14 @@ export function DailyHubScreen() {
   );
 }
 
-// —— Instruction block (Issues 8 / 9) ————————————————————————————
+// —— Instruction block (T-007 Fix 3) ————————————————————————————
+// The yellow line IS the heading — no separate "HOW THE STREAK WORKS" label.
 
-function Instructions({ header, line1, line2 }: { header: string; line1: string; line2: string }) {
+function Instructions({ line1, line2 }: { line1: string; line2: string }) {
   return (
-    <div style={{ marginBottom: 14 }}>
-      <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, letterSpacing: 2, color: '#FFD700', marginBottom: 6 }}>{header}</div>
-      <div style={{ fontSize: 12, color: '#E8F0F8', lineHeight: 1.6 }}>{line1}</div>
-      <div style={{ fontSize: 11, color: '#5E7A9C', lineHeight: 1.6 }}>{line2}</div>
+    <div>
+      <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, fontWeight: 700, color: '#FFD700', marginBottom: 4 }}>{line1}</div>
+      <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: '#5E7A9C', marginBottom: 12 }}>{line2}</div>
     </div>
   );
 }
@@ -208,6 +200,68 @@ function HConn({ gold }: { gold: boolean }) {
   );
 }
 
+// Vertical drop connector between rows — aligned to the centre of the circle on
+// the given side (left/right column). Sits at the same horizontal centre as the
+// 52px node so the path reads continuously (T-007 Fix 2).
+function VConn({ gold, align }: { gold: boolean; align: 'left' | 'right' }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: align === 'right' ? 'flex-end' : 'flex-start' }}>
+      <div style={{ width: NODE, display: 'flex', justifyContent: 'center' }}>
+        <div style={{ width: 0, height: 20, borderLeft: gold ? '2px solid #FFD700' : '2px dashed rgba(255,255,255,0.15)' }} />
+      </div>
+    </div>
+  );
+}
+
+// START anchor node — same 52px circle, dark fill + gold DASHED border, "START"
+// inside, "7 DAY STREAK" below. No completion state (T-007 Fix 2, Node A).
+function StartNode() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, width: NODE }}>
+      <div
+        style={{
+          width: NODE, height: NODE, borderRadius: '50%', flexShrink: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'rgba(10,26,46,0.6)', border: '2px dashed rgba(255,215,0,0.6)',
+          fontFamily: "'Space Mono', monospace", fontSize: 7, color: SKIN.muted,
+        }}
+      >
+        START
+      </div>
+      <div style={{ fontSize: 7, lineHeight: 1.1, color: SKIN.muted, fontFamily: "'Space Mono', monospace", marginTop: 4, textAlign: 'center' }}>
+        7 DAY<br />STREAK
+      </div>
+    </div>
+  );
+}
+
+// CLAIM node (Node I) — same 52px circle, 💎 inside, locked grey / claimable gold.
+function ClaimNode({ claimable }: { claimable: boolean }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, width: NODE }}>
+      <div
+        style={{
+          width: NODE, height: NODE, borderRadius: '50%', flexShrink: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20,
+          background: claimable ? 'linear-gradient(145deg, #FFD700, #C8A800)' : 'rgba(10,26,46,0.5)',
+          border: claimable ? '2px solid #FFD700' : '2px solid rgba(94,122,156,0.4)',
+          boxShadow: claimable ? '0 0 16px rgba(255,215,0,0.5)' : 'none',
+          filter: claimable ? 'none' : 'grayscale(1) opacity(0.4)',
+          animation: claimable ? 'dh-pulseGlow 2s ease-in-out infinite' : undefined,
+        }}
+      >
+        💎
+      </div>
+      <div style={{ fontSize: 7, color: SKIN.muted, fontFamily: "'Space Mono', monospace", marginTop: 4 }}>CLAIM</div>
+    </div>
+  );
+}
+
+// True 3×3 S-grid (T-007 Fix 2): 9 nodes in 3 rows of 3.
+//   Row 1 (L→R):        A:START  → B:Day1 → C:Day2
+//   Row 2 (row-reverse): D:Day3  → E:Day4 → F:Day5   (visually Day5, Day4, Day3)
+//   Row 3 (L→R):        G:Day6   → H:Day7 → I:CLAIM
+// Day index i (0-based) = Day (i+1). isFilled(i)/nodeState(i) drive colour.
 function StreakMap({
   nodeState,
   isFilled,
@@ -217,68 +271,40 @@ function StreakMap({
   isFilled: (i: number) => boolean;
   streakComplete: boolean;
 }) {
-  // Vertical drop connector, aligned to the centre of a circle on the given side.
-  const VConn = ({ gold, align }: { gold: boolean; align: 'left' | 'right' }) => (
-    <div style={{ display: 'flex', justifyContent: align === 'right' ? 'flex-end' : 'flex-start' }}>
-      <div style={{ width: NODE, display: 'flex', justifyContent: 'center' }}>
-        <div style={{ width: 0, height: 20, borderLeft: gold ? '2px solid #FFD700' : '2px dashed rgba(255,255,255,0.15)' }} />
-      </div>
-    </div>
-  );
-
-  const startState: NodeState = 'future'; // anchor — never "completed"
   return (
-    <div style={{ marginBottom: 20 }}>
-      {/* Row 1 — START → Day1 → Day2 → Day3 (Day1 is the 2nd item = centre-left) */}
+    <div style={{ marginBottom: 8 }}>
+      {/* Row 1 — START → Day 1 → Day 2 */}
       <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-        <NodeCell state={startState} label="START">
-          <div style={{ fontSize: 7, lineHeight: 1.1, color: SKIN.muted, textAlign: 'center', fontFamily: "'Space Mono', monospace" }}>
-            7 DAY<br />STREAK
-          </div>
-        </NodeCell>
+        <StartNode />
         <HConn gold={isFilled(0)} />
         <NodeCell state={nodeState(0)} label="Day 1" />
         <HConn gold={isFilled(1)} />
         <NodeCell state={nodeState(1)} label="Day 2" />
-        <HConn gold={isFilled(2)} />
+      </div>
+
+      {/* drop from Day 2 (right column) down to Day 3 */}
+      <VConn gold={isFilled(2)} align="right" />
+
+      {/* Row 2 — flow Day3 → Day4 → Day5, rendered row-reverse so visual L→R is
+          Day 5, Day 4, Day 3 (Day 3 sits under Day 2 on the right). */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', flexDirection: 'row-reverse' }}>
         <NodeCell state={nodeState(2)} label="Day 3" />
-      </div>
-
-      {/* drop from Day3 (right) down to Day4 */}
-      <VConn gold={isFilled(3)} align="right" />
-
-      {/* Row 2 — Day6 ← Day5 ← Day4 (Day4 sits under Day3 on the right) */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end' }}>
-        <NodeCell state={nodeState(5)} label="Day 6" />
-        <HConn gold={isFilled(5)} />
-        <NodeCell state={nodeState(4)} label="Day 5" />
-        <HConn gold={isFilled(4)} />
+        <HConn gold={isFilled(3)} />
         <NodeCell state={nodeState(3)} label="Day 4" />
+        <HConn gold={isFilled(4)} />
+        <NodeCell state={nodeState(4)} label="Day 5" />
       </div>
 
-      {/* drop from Day6 (left) down to Day7 */}
-      <VConn gold={isFilled(6)} align="left" />
+      {/* drop from Day 5 (left column) down to Day 6 */}
+      <VConn gold={isFilled(5)} align="left" />
 
-      {/* Row 3 — Day7 → CLAIM circle */}
+      {/* Row 3 — Day 6 → Day 7 → CLAIM */}
       <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+        <NodeCell state={nodeState(5)} label="Day 6" />
+        <HConn gold={isFilled(6)} />
         <NodeCell state={nodeState(6)} label="Day 7" />
         <HConn gold={streakComplete} />
-        {/* CLAIM node — same 52px circle as the day nodes (Issue 6), visual only */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, width: NODE }}>
-          <div
-            style={{
-              width: NODE, height: NODE, borderRadius: '50%', flexShrink: 0,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
-              background: streakComplete ? 'linear-gradient(145deg, #FFD700, #C8A800)' : 'rgba(10,26,46,0.5)',
-              border: streakComplete ? '2px solid #FFD700' : '2px solid rgba(94,122,156,0.4)',
-              boxShadow: streakComplete ? '0 0 16px rgba(255,215,0,0.5)' : 'none',
-              filter: streakComplete ? 'none' : 'grayscale(1) opacity(0.5)',
-            }}
-          >
-            💎
-          </div>
-          <div style={{ fontSize: 8, color: SKIN.muted, fontFamily: "'Space Mono', monospace", marginTop: 4 }}>CLAIM</div>
-        </div>
+        <ClaimNode claimable={streakComplete} />
       </div>
     </div>
   );

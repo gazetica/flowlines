@@ -10,6 +10,7 @@
 // alert. That dead block is removed here. Unused store selectors (grid, pauseGame,
 // resumeGame) are also dropped to satisfy noUnusedLocals.
 
+import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Phaser from 'phaser';
@@ -34,6 +35,24 @@ export function GameScreen() {
   const consumeHint = useSettingsStore((s) => s.consumeHint);
   const [hintModalOpen, setHintModalOpen] = useState(false);
 
+  // T-007 Fix 4: left promo card alternates GET MORE HINTS / REMOVE ADS every 5s.
+  const [promo, setPromo] = useState<'hints' | 'ads'>('hints');
+  useEffect(() => {
+    const id = setInterval(() => setPromo((p) => (p === 'hints' ? 'ads' : 'hints')), 5000);
+    return () => clearInterval(id);
+  }, []);
+
+  // T-007 Fix 4: the timer resumes from where it was paused after a trip to the
+  // IAP screen. Navigating to /iap unmounts GameScreen, so the TimerComponent
+  // would otherwise restart at the full limit. We capture the remaining time ONCE
+  // at mount (timeLimit − elapsed-so-far) and feed it as the countdown duration —
+  // a fresh game has elapsed 0 (= full limit); a resume picks up mid-countdown.
+  const [resumeDuration] = useState(() => {
+    const st = useGameStore.getState();
+    const limit = st.currentLevel?.timeLimit ?? 30;
+    return Math.max(1, Math.round(limit - st.timeElapsed));
+  });
+
   // Highlight the current target tile (gold) for ~5s via the existing
   // GameScene.showHint tween, marking the hint active so the next tap clears it.
   const applyHintToTile = () => {
@@ -52,6 +71,15 @@ export function GameScreen() {
     } else {
       setHintModalOpen(true);
     }
+  };
+
+  // T-007 Fix 4: left card → pause the timer, then go to the IAP screen. The
+  // pause keeps timeElapsed frozen in the store; on return the screen remounts
+  // 'paused' and the resume-on-mount effect below picks the game back up, with
+  // the timer continuing from where it left off (see resumeDuration).
+  const handleBuyNav = () => {
+    useGameStore.getState().pauseGame();
+    navigate('/iap');
   };
 
   // Background: drifting faint gold numbers on a canvas behind the grid.
@@ -130,8 +158,10 @@ export function GameScreen() {
     initAppLifecycle(phaserRef.current);
     // The level/mode is normally chosen by HomeScreen (startLevel before
     // navigating here). Only start a fallback level if we arrived at /game with
-    // no active game (e.g. a direct navigation / reload).
-    if (useGameStore.getState().status !== 'playing') {
+    // truly no active game (status 'idle' — a direct navigation / reload). A
+    // 'paused' status means we are returning from the IAP screen mid-game (T-007
+    // Fix 4): keep the existing game and resume it (handled in the effect below).
+    if (useGameStore.getState().status === 'idle') {
       startLevel(1, 'campaign');
     }
     return () => {
@@ -139,6 +169,21 @@ export function GameScreen() {
       phaserRef.current?.destroy(true);
       phaserRef.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // T-007 Fix 4: returning from the IAP screen remounts this screen with the game
+  // still 'paused'. Resume it once on mount so the timer continues counting and
+  // the grid re-renders (give Phaser a moment to boot before renderGrid).
+  useEffect(() => {
+    if (useGameStore.getState().status === 'paused') {
+      useGameStore.getState().resumeGame();
+      const id = setTimeout(() => {
+        const scene = phaserRef.current?.scene.getScene('GameScene') as GameScene | null;
+        scene?.renderGrid();
+      }, 80);
+      return () => clearTimeout(id);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -220,7 +265,7 @@ export function GameScreen() {
           {timed ? (
             <TimerComponent
               key={runId}
-              durationSeconds={timeLimit}
+              durationSeconds={resumeDuration}
               paused={isPaused || status !== 'playing'}
               onTick={(remaining) => {
                 tickTimer(timeLimit - remaining);
@@ -280,41 +325,62 @@ export function GameScreen() {
         </div>
       </div>
 
-      {/* T-006 Part 2.3: HINT bar in the dead space below the grid, above the
-          LeaderPanel. Left = 💡 tap button, right = 💎 gem count. Shown for all
-          play modes (GameScreen is never reached during onboarding). */}
+      {/* T-007 Fix 4: two hint cards (rotating promo + USE HINT) stacked above the
+          LeaderPanel in the dead space below the grid. Shown for all play modes
+          (GameScreen is never reached during onboarding). */}
       {status === 'playing' && (
         <div
           style={{
             position: 'absolute',
-            bottom: mode === 'campaign' && currentLevel && currentLevel.id > 0 ? '15%' : '8%',
+            bottom: '5%',
             left: 0,
             right: 0,
             padding: '0 16px',
             zIndex: 10,
           }}
         >
-          <button
-            onClick={handleHintTap}
-            style={{
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              background: SKIN.cardBg,
-              border: '1px solid rgba(0,210,200,0.4)',
-              borderRadius: 8,
-              padding: '10px 16px',
-              cursor: 'pointer',
-            }}
-          >
-            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, color: '#00D2C8', letterSpacing: 1 }}>
-              💡 HINT
-            </span>
-            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, color: SKIN.white }}>
-              💎 ×{hintCount}
-            </span>
-          </button>
+          {/* Two-card row */}
+          <div style={{ display: 'flex', flexDirection: 'row', gap: 8, margin: '6px 0', width: '100%' }}>
+            {/* Left card — rotating promo (GET MORE HINTS / REMOVE ADS) */}
+            <button
+              onClick={handleBuyNav}
+              style={{
+                ...HINT_CARD_BASE,
+                border: `1px solid ${promo === 'hints' ? 'rgba(255,215,0,0.3)' : 'rgba(30,139,195,0.3)'}`,
+                position: 'relative',
+                transition: 'border-color 0.3s',
+              }}
+            >
+              {/* State A — Get More Hints */}
+              <div style={{ ...PROMO_CONTENT, opacity: promo === 'hints' ? 1 : 0, transition: 'opacity 0.3s' }}>
+                <span style={{ fontSize: 24, color: '#FFD700' }}>💎</span>
+                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: '#FFD700', letterSpacing: 0.5 }}>GET MORE HINTS</span>
+                <span style={{ fontSize: 8, color: SKIN.muted }}>Tap to buy gem packs</span>
+              </div>
+              {/* State B — Remove Ads */}
+              <div style={{ ...PROMO_CONTENT, opacity: promo === 'ads' ? 1 : 0, transition: 'opacity 0.3s' }}>
+                <span style={{ fontSize: 24 }}>🚫</span>
+                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: SKIN.white, letterSpacing: 0.5 }}>REMOVE ADS</span>
+                <span style={{ fontSize: 8, color: SKIN.muted }}>Play without interruptions</span>
+              </div>
+            </button>
+
+            {/* Right card — USE HINT */}
+            <button
+              onClick={handleHintTap}
+              style={{ ...HINT_CARD_BASE, border: '1px solid rgba(0,210,200,0.3)' }}
+            >
+              <span style={{ fontSize: 24, color: '#FFD700' }}>💡</span>
+              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: '#FFD700', letterSpacing: 0.5 }}>USE HINT</span>
+              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: SKIN.white }}>💎 ×{hintCount} left</span>
+            </button>
+          </div>
+
+          {/* Per-level leader panel (YOU vs LEADER) — campaign only. Daily uses
+              synthetic level id 0 → excluded. Sits directly below the two cards. */}
+          {mode === 'campaign' && currentLevel && currentLevel.id > 0 && (
+            <LeaderPanel levelId={currentLevel.id} compact={true} />
+          )}
         </div>
       )}
 
@@ -325,23 +391,33 @@ export function GameScreen() {
         />
       )}
 
-      {/* Per-level leader panel (YOU vs LEADER) — campaign only, in the dead
-          space below the grid. Daily uses synthetic level id 0 → excluded. */}
-      {mode === 'campaign' && currentLevel && currentLevel.id > 0 && (
-        <div
-          style={{
-            position: 'absolute',
-            bottom: '8%',
-            left: 0,
-            right: 0,
-            padding: '0 16px',
-            zIndex: 10,
-          }}
-        >
-          <LeaderPanel levelId={currentLevel.id} compact={true} />
-        </div>
-      )}
-
     </div>
   );
 }
+
+// Shared base for the two hint cards (T-007 Fix 4) — equal-width halves.
+const HINT_CARD_BASE: React.CSSProperties = {
+  flex: 1,
+  minHeight: 72,
+  background: 'linear-gradient(145deg, #0F2A48 0%, #0A1E38 100%)',
+  borderRadius: 8,
+  padding: '10px 12px',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 4,
+  textAlign: 'center',
+  cursor: 'pointer',
+};
+
+// Absolutely-stacked promo states so they cross-fade in place.
+const PROMO_CONTENT: React.CSSProperties = {
+  position: 'absolute',
+  inset: 0,
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 4,
+};
