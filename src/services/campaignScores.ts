@@ -35,7 +35,7 @@ export async function submitCampaignScore(params: {
   timeSecs: number;
   gridSize: number;
 }): Promise<void> {
-  const { alias } = useSettingsStore.getState();
+  const { alias, country } = useSettingsStore.getState();
   const { levelId, score, timeSecs, gridSize } = params;
 
   const { error } = await supabase.from('campaign_scores').insert({
@@ -44,7 +44,7 @@ export async function submitCampaignScore(params: {
     score: Math.max(0, score), // floor at 0
     time_secs: timeSecs,
     grid_size: gridSize,
-    country: 'XX', // T-002: detect from device locale
+    country: country || 'XX', // T-005: from settingsStore
   });
 
   if (error) {

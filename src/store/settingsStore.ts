@@ -40,6 +40,7 @@ interface SettingsState {
   musicEnabled: boolean;
   hapticsEnabled: boolean;
   alias: string;
+  country: string; // T-005: ISO 3166-1 alpha-2 (or 'XX' = prefer not to say)
 
   // IAP
   removeAdsPurchased: boolean;
@@ -62,6 +63,7 @@ interface SettingsState {
   setMusicEnabled: (v: boolean) => Promise<void>;
   setHapticsEnabled: (v: boolean) => Promise<void>;
   setAlias: (alias: string) => Promise<void>;
+  setCountry: (c: string) => Promise<void>;
 
   setLanguageSelected: () => Promise<void>;
   setOnboardingShown: () => Promise<void>;
@@ -74,6 +76,27 @@ interface SettingsState {
   updateDailyStreak: () => Promise<void>;
 }
 
+// T-005: best-effort country guess from the device timezone (covers the brief's
+// priority countries). Falls back to 'XX' (prefer not to say) when unknown.
+function detectCountry(): string {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    const map: Record<string, string> = {
+      'Asia/Kolkata': 'IN', 'Asia/Calcutta': 'IN', 'America/New_York': 'US',
+      'America/Chicago': 'US', 'America/Denver': 'US', 'America/Los_Angeles': 'US',
+      'Europe/London': 'GB', 'Europe/Berlin': 'DE', 'Europe/Paris': 'FR',
+      'Europe/Madrid': 'ES', 'Asia/Seoul': 'KR', 'Asia/Tokyo': 'JP',
+      'Asia/Shanghai': 'CN', 'America/Sao_Paulo': 'BR', 'Europe/Moscow': 'RU',
+      'Asia/Jakarta': 'ID', 'Asia/Manila': 'PH', 'Asia/Ho_Chi_Minh': 'VN',
+      'Africa/Lagos': 'NG', 'Africa/Cairo': 'EG', 'Asia/Riyadh': 'SA',
+      'Europe/Istanbul': 'TR', 'America/Mexico_City': 'MX',
+    };
+    return map[tz] ?? 'XX';
+  } catch {
+    return 'XX';
+  }
+}
+
 export const useSettingsStore = create<SettingsState>((set, get) => ({
   // Defaults (used before hydration)
   languageSelected: false,
@@ -83,6 +106,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   musicEnabled: false,
   hapticsEnabled: true,
   alias: '',
+  country: 'XX',
   removeAdsPurchased: false,
   hintPackCount: 0,
   dailyStreak: 0,
@@ -107,6 +131,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       lastPlayedDate,
       completedLevels,
       bestScores,
+      country,
     ] = await Promise.all([
       prefGetBool(PREF_KEYS.LANGUAGE_SELECTED, false),
       prefGetBool(PREF_KEYS.ONBOARDING_SHOWN, false),
@@ -121,6 +146,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       prefGet(PREF_KEYS.LAST_PLAYED_DATE),
       prefGetJSON<CompletedLevels>(PREF_KEYS.COMPLETED_LEVELS, {}),
       prefGetJSON<BestScores>(PREF_KEYS.BEST_SCORES, {}),
+      prefGet(PREF_KEYS.COUNTRY),
     ]);
 
     set({
@@ -137,6 +163,8 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       lastPlayedDate: lastPlayedDate ?? '',
       completedLevels,
       bestScores,
+      // T-005: stored country, else a best-effort guess from the device timezone.
+      country: country ?? detectCountry(),
       hydrated: true,
     });
 
@@ -168,6 +196,10 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     const clean = alias.replace(/[^a-zA-Z0-9_]/g, '').slice(0, 16);
     set({ alias: clean });
     await prefSet(PREF_KEYS.ALIAS, clean);
+  },
+  setCountry: async (c) => {
+    set({ country: c });
+    await prefSet(PREF_KEYS.COUNTRY, c);
   },
 
   // —— Onboarding flags ——

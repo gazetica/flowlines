@@ -131,6 +131,7 @@
 
   "language": {
     "nameLabel": "Comment devons-nous t'appeler ?",
+    "countryLabel": "D'où viens-tu ?",
     "title": "Choisissez votre langue",
     "sub": "Vous pouvez modifier ce choix à tout moment dans les Paramètres",
     "detected": "Détectée : {{language}}",

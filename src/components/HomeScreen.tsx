@@ -29,8 +29,10 @@ export function HomeScreen() {
     // First incomplete level, or replay level 1
     const allLevels = Array.from({ length: 100 }, (_, i) => i + 1);
     const nextLevel = allLevels.find((id) => !(completedLevels[id] >= 1)) ?? 1;
-    // T-004B: route through the difficulty pre-screen instead of starting directly.
-    navigate('/difficulty', { state: { levelId: nextLevel, mode: 'campaign' } });
+    // T-005: Campaign routes DIRECTLY to the game — the difficulty pre-screen is
+    // Speed/Endless only now (it defines campaign via the level config).
+    useGameStore.getState().startLevel(nextLevel, 'campaign');
+    navigate('/game');
   };
 
   const handleMode = (mode: 'daily' | 'endless' | 'speed') => {

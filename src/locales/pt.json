@@ -131,6 +131,7 @@
 
   "language": {
     "nameLabel": "Como devemos te chamar?",
+    "countryLabel": "De onde você é?",
     "title": "Escolha seu idioma",
     "sub": "Você pode mudar isso a qualquer momento nas Configurações",
     "detected": "Detectado: {{language}}",

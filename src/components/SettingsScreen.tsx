@@ -7,9 +7,12 @@
 // inject the React namespace).
 
 import type React from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ParticleCanvas } from './ParticleCanvas';
 import { BottomNav } from './BottomNav';
+import { CountrySelector, countryName } from './CountrySelector';
+import { countryFlag } from '../utils/countryFlag';
 import { useTranslation } from 'react-i18next';
 import { useSettingsStore } from '../store/settingsStore';
 import type { Language } from '../store/settingsStore';
@@ -37,10 +40,17 @@ export function SettingsScreen() {
     setLanguage,
     alias,
     setAlias,
+    country,
+    setCountry,
     removeAdsPurchased,
   } = useSettingsStore();
+  const [countryOpen, setCountryOpen] = useState(false);
 
   return (
+    <>
+    {countryOpen && (
+      <CountrySelector value={country} onSelect={setCountry} onClose={() => setCountryOpen(false)} />
+    )}
     <ScreenShell title={t('settings.title')}>
       {/* AUDIO */}
       <Section label={t('settings.section_audio')}>
@@ -100,6 +110,18 @@ export function SettingsScreen() {
             }}
           />
         </div>
+        {/* Country (T-005 Part 3.5) */}
+        <div style={rowStyle}>
+          <span style={labelStyle}>Country</span>
+          <button
+            onClick={() => setCountryOpen(true)}
+            style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--navy-card)', border: '1px solid var(--navy-border)', borderRadius: 4, padding: '6px 10px', cursor: 'pointer', color: 'var(--white)', fontFamily: "'Space Mono', monospace", fontSize: 11 }}
+          >
+            <span style={{ fontSize: 16 }}>{countryFlag(country)}</span>
+            <span>{countryName(country)}</span>
+            <span style={{ color: 'var(--muted)' }}>▼</span>
+          </button>
+        </div>
       </Section>
 
       {/* PURCHASES */}
@@ -125,6 +147,7 @@ export function SettingsScreen() {
         </div>
       </Section>
     </ScreenShell>
+    </>
   );
 }
 

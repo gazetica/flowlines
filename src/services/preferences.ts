@@ -21,6 +21,7 @@ export const PREF_KEYS = {
   MUSIC_ENABLED:       'musicEnabled',
   HAPTICS_ENABLED:     'hapticsEnabled',
   ALIAS:               'alias',
+  COUNTRY:             'country',          // T-005: ISO 3166-1 alpha-2 (or 'XX')
 
   // IAP flags
   REMOVE_ADS:          'removeAdsPurchased',

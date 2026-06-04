@@ -13,6 +13,8 @@ import { useTranslation } from 'react-i18next';
 import { useSettingsStore } from '../store/settingsStore';
 import type { Language } from '../store/settingsStore';
 import { SKIN } from '../styles/skin';
+import { CountrySelector, countryName } from './CountrySelector';
+import { countryFlag } from '../utils/countryFlag';
 
 const LANGUAGES: { code: Language; flag: string; name: string; native: string }[] = [
   { code: 'en', flag: '🇺🇸', name: 'English', native: 'English' },
@@ -26,8 +28,9 @@ const LANGUAGES: { code: Language; flag: string; name: string; native: string }[
 export function LanguageScreen() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { language, setLanguage, setLanguageSelected, setAlias, alias } = useSettingsStore();
+  const { language, setLanguage, setLanguageSelected, setAlias, alias, country, setCountry } = useSettingsStore();
   const [selected, setSelected] = useState<Language>(language);
+  const [countryOpen, setCountryOpen] = useState(false);
   // T-004A Fix 4: first-launch player name. Defaults to "Player"; writes to the
   // same settingsStore.alias the Settings screen uses (store sanitises the value).
   const [name, setName] = useState(alias || 'Player');
@@ -103,7 +106,9 @@ export function LanguageScreen() {
                 boxShadow: isSelected ? '0 0 12px rgba(255,215,0,0.15)' : 'none',
               }}
             >
-              <span style={{ fontSize: 24 }}>{lang.flag}</span>
+              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 20, fontWeight: 700, color: SKIN.gold, minWidth: 34, textAlign: 'center' }}>
+                {lang.code.toUpperCase()}
+              </span>
               <div style={{ flex: 1, textAlign: 'left' }}>
                 <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: 'var(--white)' }}>
                   {lang.name}
@@ -167,6 +172,21 @@ export function LanguageScreen() {
         />
       </div>
 
+      {/* Country (T-005 Part 3.4) */}
+      <div style={{ padding: '0 20px 12px', position: 'relative', zIndex: 1 }}>
+        <label style={{ display: 'block', fontSize: 11, color: SKIN.muted, marginBottom: 6, letterSpacing: 0.5 }}>
+          {t('language.countryLabel')}
+        </label>
+        <button
+          onClick={() => setCountryOpen(true)}
+          style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', background: SKIN.cardBg, border: `1px solid ${SKIN.cardBorder}`, borderRadius: 8, cursor: 'pointer' }}
+        >
+          <span style={{ fontSize: 20 }}>{countryFlag(country)}</span>
+          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 13, color: SKIN.white, flex: 1, textAlign: 'left' }}>{countryName(country)}</span>
+          <span style={{ color: SKIN.muted }}>▼</span>
+        </button>
+      </div>
+
       {/* CTAs */}
       <div style={{ padding: '0 20px 40px', position: 'relative', zIndex: 1 }}>
         <button
@@ -180,6 +200,10 @@ export function LanguageScreen() {
           {t('language.btn_later')}
         </button>
       </div>
+
+      {countryOpen && (
+        <CountrySelector value={country} onSelect={setCountry} onClose={() => setCountryOpen(false)} />
+      )}
     </div>
   );
 }
