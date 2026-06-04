@@ -242,17 +242,15 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  // Is this tapped cell the most-recently tapped one (LAST_TAPPED)? Taps happen
-  // in strict sequence, so the last tapped value is always one step behind
-  // expectedNext — `expectedNext - 1` ascending, `expectedNext + 1` descending.
-  // Once the level is complete there is no last tile (all render green).
+  // Is this tapped cell the most-recently tapped one (LAST_TAPPED)? The engine
+  // tracks this (T-004B) — the ±1-from-expectedNext shortcut does NOT hold for
+  // Expert (random sequence), so we ask the engine directly. Returns null before
+  // the first tap / once complete, so no tile renders gold then.
   private isLastTapped(cell: Cell): boolean {
     if (!cell.tapped) return false;
-    const { engine, currentLevel } = useGameStore.getState();
-    if (!engine || !currentLevel || engine.isComplete()) return false;
-    const expected = engine.getExpectedNext();
-    const lastValue = currentLevel.direction === 'descending' ? expected + 1 : expected - 1;
-    return cell.value === lastValue;
+    const { engine } = useGameStore.getState();
+    if (!engine || engine.isComplete()) return false;
+    return cell.value === engine.getLastTappedValue();
   }
 
   // Draw a tile's gradient background + border based on its state.

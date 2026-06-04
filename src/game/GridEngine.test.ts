@@ -427,4 +427,33 @@ describe('GridEngine', () => {
       expect(desc.getExpectedNext()).toBe(16);
     });
   });
+
+  describe('difficulty sequence (T-004B)', () => {
+    it('easy → ascending [1..9]', () => {
+      const e = new GridEngine(3, 'none', 'ascending', 'easy');
+      expect(e.getSequence()).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    });
+    it('pro → descending [9..1]', () => {
+      const e = new GridEngine(3, 'none', 'descending', 'pro');
+      expect(e.getSequence()).toEqual([9, 8, 7, 6, 5, 4, 3, 2, 1]);
+    });
+    it('expert → permutation of 1..9 (each exactly once)', () => {
+      const seq = new GridEngine(3, 'none', 'ascending', 'expert').getSequence();
+      expect(seq).toHaveLength(9);
+      expect([...seq].sort((a, b) => a - b)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    });
+    it('expert → two grids differ (shuffle active)', () => {
+      const a = new GridEngine(7, 'none', 'ascending', 'expert').getSequence();
+      const b = new GridEngine(7, 'none', 'ascending', 'expert').getSequence();
+      expect(a).not.toEqual(b);
+    });
+    it('expert → getLastTappedValue tracks the previously tapped value', () => {
+      const e = new GridEngine(3, 'none', 'ascending', 'expert');
+      const seq = e.getSequence();
+      expect(e.getLastTappedValue()).toBeNull();
+      const cell = e.getGrid().flat().find((c) => c.value === seq[0])!;
+      e.validateTap(cell.row, cell.col);
+      expect(e.getLastTappedValue()).toBe(seq[0]);
+    });
+  });
 });

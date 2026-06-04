@@ -10,7 +10,7 @@
 
 import { create } from 'zustand';
 import { GridEngine } from '../game/GridEngine';
-import type { Cell, TapResult } from '../game/GridEngine';
+import type { Cell, TapResult, Difficulty } from '../game/GridEngine';
 import { LevelManager } from '../game/LevelManager';
 import type { LevelConfig } from '../game/LevelManager';
 import { ScoreEngine } from '../game/ScoreEngine';
@@ -57,8 +57,12 @@ interface GameState {
   // Daily challenge
   dailyDate: string; // 'YYYY-MM-DD' of the active daily challenge
 
-  // Actions
-  startLevel: (levelId: number, mode: GameMode) => void;
+  // T-004B: selected difficulty for the active round (drives sequence + score mult).
+  difficulty: Difficulty;
+
+  // Actions. `difficulty` is optional — when omitted, the level's own direction +
+  // easy scoring are used (preserves CampaignScreen / play-again behaviour).
+  startLevel: (levelId: number, mode: GameMode, difficulty?: Difficulty) => void;
   startDailyChallenge: () => void;
   tapCell: (row: number, col: number) => TapResult | null;
   tickTimer: (elapsed: number) => void;
@@ -85,10 +89,16 @@ export const useGameStore = create<GameState>((set, get) => ({
   hintUsed: false,
   hintActive: false,
   dailyDate: '',
+  difficulty: 'easy',
 
-  startLevel: (levelId, mode) => {
+  startLevel: (levelId, mode, difficulty) => {
     const level = LevelManager.getLevel(levelId);
-    const engine = new GridEngine(level.grid, level.modifier, level.direction);
+    // A chosen difficulty overrides the level's configured direction
+    // (easy=ascending, pro=descending, expert=random sequence). With no difficulty
+    // passed (CampaignScreen taps, play-again), keep the level's own direction.
+    const effectiveDir = difficulty === undefined ? level.direction : difficulty === 'pro' ? 'descending' : 'ascending';
+    const diff: Difficulty = difficulty ?? 'easy';
+    const engine = new GridEngine(level.grid, level.modifier, effectiveDir, diff);
     const grid = engine.generateGrid();
     set({
       currentLevelId: levelId,
@@ -104,6 +114,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       timeElapsed: 0,
       hintUsed: false,
       hintActive: false,
+      difficulty: diff,
     });
   },
 
@@ -153,6 +164,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       hintUsed: false,
       hintActive: false,
       dailyDate: daily.date,
+      difficulty: 'easy', // Daily is always Easy (shared seed must be comparable).
     });
   },
 
@@ -202,7 +214,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   endGame: (reason) => {
-    const { currentLevel, tapTimestamps, timeElapsed, mode, wrongTaps } = get();
+    const { currentLevel, tapTimestamps, timeElapsed, mode, wrongTaps, difficulty } = get();
     if (!currentLevel) return;
     if (reason === 'complete') {
       const params: ScoreParams = {
@@ -212,11 +224,13 @@ export const useGameStore = create<GameState>((set, get) => ({
         timeElapsed,
         tapTimestamps,
         dailyStreak: 0,
+        difficulty,
       };
       const result = ScoreEngine.calculate(params);
-      // T-000: carry the wrong-tap penalty into the final score. May be negative
-      // here (ResultScreen floors the displayed/recorded value at 0).
-      const finalScore = result.totalScore - wrongTaps * 100;
+      // T-000 penalty THEN T-004B difficulty multiplier (the last operation, per
+      // spec). May be negative (ResultScreen floors the displayed/recorded value).
+      const penalized = result.totalScore - wrongTaps * 100;
+      const finalScore = Math.round(penalized * result.difficultyMultiplier);
       set({ status: 'complete', score: finalScore });
 
       // Submit to the leaderboard for eligible modes. Fire-and-forget —
@@ -246,6 +260,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       tapTimestamps: [],
       wrongTaps: 0,
       timeElapsed: 0,
+      difficulty: 'easy',
       hintUsed: false,
       hintActive: false,
     });

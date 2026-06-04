@@ -5,6 +5,17 @@
 // ZERO Phaser imports. ZERO React imports. ZERO browser APIs. ZERO side effects.
 // All methods are static pure functions — input in, result out. No instance state.
 
+import type { Difficulty } from './GridEngine';
+
+// T-004B: final score multiplier by difficulty. Applied LAST (after the
+// wrong-tap penalty) by the caller (gameStore.endGame), so `totalScore` below
+// stays the pre-difficulty subtotal and existing tests are unaffected.
+export const DIFFICULTY_MULTIPLIER: Record<Difficulty, number> = {
+  easy: 1.0,
+  pro: 1.5,
+  expert: 2.0,
+};
+
 export interface ScoreParams {
   gridSize: number;          // N — the grid was NxN (3, 4, 5, 6, or 7)
   tapCount: number;          // number of correct taps completed = N²
@@ -12,6 +23,7 @@ export interface ScoreParams {
   timeElapsed: number;       // actual seconds used by player
   tapTimestamps: number[];   // ms timestamps of each correct tap (length = N²)
   dailyStreak: number;       // consecutive daily challenge days (0 = no streak bonus)
+  difficulty?: Difficulty;   // T-004B: easy/pro/expert (defaults to easy)
 }
 
 export interface ScoreResult {
@@ -20,7 +32,8 @@ export interface ScoreResult {
   speedBonus: number;
   streakMultiplier: number;
   gridMultiplier: number;
-  totalScore: number;
+  totalScore: number;            // pre-difficulty subtotal (× streak × grid)
+  difficultyMultiplier: number;  // T-004B: 1.0 / 1.5 / 2.0 — apply after penalty
   breakdown: string;
 }
 
@@ -50,6 +63,7 @@ export class ScoreEngine {
       streakMultiplier: streakMult,
       gridMultiplier: gridMult,
       totalScore,
+      difficultyMultiplier: DIFFICULTY_MULTIPLIER[params.difficulty ?? 'easy'],
       breakdown,
     };
   }

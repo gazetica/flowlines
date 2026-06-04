@@ -176,4 +176,31 @@ describe('ScoreEngine', () => {
       expect(r.breakdown).toContain('= 8850');
     });
   });
+
+  describe('difficulty multiplier (T-004B)', () => {
+    const base: ScoreParams = {
+      gridSize: 3,
+      tapCount: 9,
+      timeLimit: 45,
+      timeElapsed: 20,
+      tapTimestamps: timestamps(9, 1000),
+      dailyStreak: 0,
+    };
+    it('easy → difficultyMultiplier 1.0', () => {
+      expect(ScoreEngine.calculate({ ...base, difficulty: 'easy' }).difficultyMultiplier).toBe(1.0);
+    });
+    it('pro → difficultyMultiplier 1.5', () => {
+      expect(ScoreEngine.calculate({ ...base, difficulty: 'pro' }).difficultyMultiplier).toBe(1.5);
+    });
+    it('expert → difficultyMultiplier 2.0', () => {
+      expect(ScoreEngine.calculate({ ...base, difficulty: 'expert' }).difficultyMultiplier).toBe(2.0);
+    });
+    it('omitted difficulty → 1.0 and totalScore unchanged (back-compat)', () => {
+      const r = ScoreEngine.calculate(base);
+      expect(r.difficultyMultiplier).toBe(1.0);
+      // Applying expert (2.0×) to the same subtotal doubles it (multiplier works end-to-end).
+      const expert = ScoreEngine.calculate({ ...base, difficulty: 'expert' });
+      expect(Math.round(r.totalScore * expert.difficultyMultiplier)).toBe(r.totalScore * 2);
+    });
+  });
 });

@@ -18,6 +18,10 @@
 export type Modifier = 'none' | 'shuffle' | 'fog' | 'mirror' | 'countdown';
 export type Direction = 'ascending' | 'descending';
 export type TapResult = 'CORRECT' | 'WRONG' | 'ALREADY_TAPPED';
+// T-004B: tap-sequence difficulty. easy = ascending 1→N², pro = descending N²→1
+// (both already expressible via `direction`), expert = a random permutation the
+// player can't predict (HUD NEXT is the only cue).
+export type Difficulty = 'easy' | 'pro' | 'expert';
 
 export interface Cell {
   row: number;
@@ -33,18 +37,27 @@ export class GridEngine {
   private n: number;
   private modifier: Modifier;
   private direction: Direction;
+  private difficulty: Difficulty;
   private grid: Cell[][];
   private expectedNext: number;
+  // Expert only: the random tap order + how far the player has progressed.
+  // Unused for easy/pro (which keep the direction-driven expectedNext logic).
+  private sequence: number[];
+  private seqIndex: number;
   private shuffleAccumulator: number; // ms since last shuffle
   private readonly SHUFFLE_INTERVAL = 8000; // 8 seconds in ms
   private readonly COUNTDOWN_LIFETIME = 3000; // 3 seconds in ms
 
-  constructor(n: number, modifier: Modifier, direction: Direction) {
+  // `difficulty` defaults to 'easy' so existing 3-arg callers/tests are unchanged.
+  constructor(n: number, modifier: Modifier, direction: Direction, difficulty: Difficulty = 'easy') {
     this.n = n;
     this.modifier = modifier;
     this.direction = direction;
+    this.difficulty = difficulty;
     this.shuffleAccumulator = 0;
     this.expectedNext = 0;
+    this.sequence = [];
+    this.seqIndex = 0;
     this.grid = [];
     this.generateGrid();
   }
@@ -105,8 +118,17 @@ export class GridEngine {
       this.grid.push(rowCells);
     }
 
-    // 4. Set expectedNext based on direction.
-    this.expectedNext = this.direction === 'ascending' ? 1 : total;
+    // 4. Set up the tap sequence.
+    //    - expert: a random permutation of 1..N² (the player can't predict it)
+    //    - easy/pro: driven by `direction` via expectedNext (unchanged logic)
+    this.seqIndex = 0;
+    if (this.difficulty === 'expert') {
+      this.sequence = this.shuffle(Array.from({ length: total }, (_, i) => i + 1));
+      this.expectedNext = this.sequence[0];
+    } else {
+      this.sequence = [];
+      this.expectedNext = this.direction === 'ascending' ? 1 : total;
+    }
 
     return this.grid;
   }
@@ -132,21 +154,48 @@ export class GridEngine {
       return 'ALREADY_TAPPED';
     }
 
-    // 3/4. Effective value is cell.value for both directions
-    //      (expectedNext counts down for descending).
-    if (cell.value !== this.expectedNext) {
+    // 3/4. The current target is sequence[seqIndex] for expert, else expectedNext
+    //      (which counts up/down by direction).
+    const target = this.difficulty === 'expert' ? this.sequence[this.seqIndex] : this.expectedNext;
+    if (cell.value !== target) {
       return 'WRONG';
     }
 
     // 5. Correct tap.
     cell.tapped = true;
     cell.revealed = true; // tapped cells always show (fog)
-    if (this.direction === 'ascending') {
+    if (this.difficulty === 'expert') {
+      this.seqIndex += 1;
+      this.expectedNext = this.seqIndex < this.sequence.length ? this.sequence[this.seqIndex] : -1;
+    } else if (this.direction === 'ascending') {
       this.expectedNext += 1;
     } else {
       this.expectedNext -= 1;
     }
     return 'CORRECT';
+  }
+
+  // The full intended tap order (length N²). easy = [1..N²], pro = [N²..1],
+  // expert = the random permutation generated for this grid.
+  getSequence(): number[] {
+    const total = this.n * this.n;
+    if (this.difficulty === 'expert') return [...this.sequence];
+    if (this.direction === 'ascending') return Array.from({ length: total }, (_, i) => i + 1);
+    return Array.from({ length: total }, (_, i) => total - i);
+  }
+
+  // The value of the most-recently tapped tile (for the gold LAST_TAPPED render),
+  // or null if nothing has been tapped yet. Handles all three difficulties — the
+  // ±1 relationship to expectedNext does NOT hold for expert.
+  getLastTappedValue(): number | null {
+    if (this.difficulty === 'expert') {
+      return this.seqIndex > 0 ? this.sequence[this.seqIndex - 1] : null;
+    }
+    const total = this.n * this.n;
+    if (this.direction === 'ascending') {
+      return this.expectedNext > 1 ? this.expectedNext - 1 : null;
+    }
+    return this.expectedNext < total ? this.expectedNext + 1 : null;
   }
 
   // SHUFFLE modifier: call every frame with the frame delta (ms).

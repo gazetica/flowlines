@@ -16,7 +16,6 @@ export function HomeScreen() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { completedLevels, bestScores, dailyStreak } = useSettingsStore();
-  const { startLevel } = useGameStore();
 
   // Best score across all campaign levels
   const campaignBest = Math.max(
@@ -30,8 +29,8 @@ export function HomeScreen() {
     // First incomplete level, or replay level 1
     const allLevels = Array.from({ length: 100 }, (_, i) => i + 1);
     const nextLevel = allLevels.find((id) => !(completedLevels[id] >= 1)) ?? 1;
-    startLevel(nextLevel, 'campaign');
-    navigate('/game');
+    // T-004B: route through the difficulty pre-screen instead of starting directly.
+    navigate('/difficulty', { state: { levelId: nextLevel, mode: 'campaign' } });
   };
 
   const handleMode = (mode: 'daily' | 'endless' | 'speed') => {
@@ -40,8 +39,8 @@ export function HomeScreen() {
     // the first 4×4 ('none'), so the in-game grid now matches the card. (The "2× pts"/
     // halved-timer speed scoring is engine work deferred to T-004B.)
     const levelMap = { daily: 63, endless: 63, speed: 10 };
-    startLevel(levelMap[mode], mode);
-    navigate('/game');
+    // T-004B: Speed/Endless go through the difficulty pre-screen first.
+    navigate('/difficulty', { state: { levelId: levelMap[mode], mode } });
   };
 
   // Daily Challenge: one attempt per UTC day. If already played today, show the

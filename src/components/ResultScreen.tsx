@@ -21,7 +21,7 @@ import { SKIN } from '../styles/skin';
 export function ResultScreen() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { status, currentLevel, score, timeElapsed, tapTimestamps, mode, startLevel } = useGameStore();
+  const { status, currentLevel, score, timeElapsed, tapTimestamps, mode, startLevel, difficulty } = useGameStore();
   const { dailyStreak, recordLevelComplete, updateDailyStreak } = useSettingsStore();
 
   const [stars, setStars] = useState<0 | 1 | 2 | 3>(0);
@@ -31,6 +31,7 @@ export function ResultScreen() {
     speedBonus: number;
     streakMult: number;
     gridMult: number;
+    difficultyMult: number;
   } | null>(null);
   const [isPB, setIsPB] = useState(false);
 
@@ -45,6 +46,7 @@ export function ResultScreen() {
         timeElapsed,
         tapTimestamps,
         dailyStreak: mode === 'daily' ? dailyStreak : 0,
+        difficulty,
       };
       const result = ScoreEngine.calculate(params);
       const earnedStars = LevelManager.getStars(currentLevel, timeElapsed);
@@ -56,6 +58,7 @@ export function ResultScreen() {
         speedBonus: result.speedBonus,
         streakMult: result.streakMultiplier,
         gridMult: result.gridMultiplier,
+        difficultyMult: result.difficultyMultiplier,
       });
 
       // T-000: the live/final score in the store already carries the wrong-tap
@@ -184,6 +187,7 @@ export function ResultScreen() {
             [t('result.base_score'), breakdown.base],
             [t('result.time_bonus'), breakdown.timeBonus],
             [t('result.speed_bonus'), breakdown.speedBonus],
+            ['Difficulty', `${breakdown.difficultyMult}×`],
             [t('result.accuracy'), accuracy],
           ].map(([label, value]) => (
             <div key={String(label)} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 16px', borderBottom: '1px solid rgba(30,139,195,0.08)', fontSize: 13, color: 'var(--muted)' }}>
