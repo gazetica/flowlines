@@ -89,3 +89,39 @@ export async function setLocalDailyScore(index: DailyChallengeIndex, score: numb
   await Preferences.set({ key: 'daily_date', value: getTodayDateString() });
   await Preferences.set({ key: `daily_c${index}_score`, value: String(Math.max(0, score)) });
 }
+
+// —— Daily diamond claim (T-006-FIX Issue 13) ———————————————————————
+// One claim per day, keyed by date so a new day resets it automatically.
+
+function diamondKey(date: string): string {
+  return `daily_diamond_claimed_${date}`;
+}
+
+/** True if the daily diamond has already been claimed for `date` (default today). */
+export async function isDailyDiamondClaimed(date?: string): Promise<boolean> {
+  const d = date ?? getTodayDateString();
+  const { value } = await Preferences.get({ key: diamondKey(d) });
+  return value === 'true';
+}
+
+/** Mark the daily diamond claimed for `date` (default today). */
+export async function setDailyDiamondClaimed(date?: string): Promise<void> {
+  const d = date ?? getTodayDateString();
+  await Preferences.set({ key: diamondKey(d), value: 'true' });
+}
+
+/**
+ * Submit the full 3-challenge daily score to the leaderboard. Called automatically
+ * from ResultScreen when Challenge 3 completes (T-006-FIX Issue 13 — replaces the
+ * removed manual SUBMIT button). Fire-and-forget; reads the current local scores.
+ */
+export async function autoSubmitDailyIfComplete(): Promise<void> {
+  const local = await getLocalDailyScores();
+  if (local.c1 == null || local.c2 == null || local.c3 == null) return; // not all 3 done
+  await submitDailyScore({
+    dailyDate: getTodayDateString(),
+    scoreC1: local.c1,
+    scoreC2: local.c2,
+    scoreC3: local.c3,
+  });
+}

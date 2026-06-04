@@ -147,10 +147,10 @@ export function HomeScreen() {
             display: 'flex',
             alignItems: 'center',
             gap: 12,
-            background: 'linear-gradient(135deg, #0D3D4F 0%, #0A2A38 100%)',
-            border: '1px solid rgba(0,210,200,0.4)',
+            background: 'linear-gradient(145deg, #0F2A48 0%, #0A1E38 100%)',
+            border: '1px solid rgba(239,68,68,0.6)',
             borderRadius: 10,
-            boxShadow: '0 0 16px rgba(0,210,200,0.12), 0 4px 12px rgba(0,0,0,0.4)',
+            boxShadow: '0 0 16px rgba(239,68,68,0.1), 0 4px 12px rgba(0,0,0,0.4)',
             padding: '14px 16px',
             textAlign: 'left',
             cursor: 'pointer',
@@ -186,7 +186,9 @@ export function HomeScreen() {
                 }}
                 style={{
                   background: 'linear-gradient(145deg, #0F2A48 0%, #0A1E38 100%)',
-                  border: `1px solid ${isFlashing ? 'var(--gold)' : card.accent}`,
+                  // Issue 2: all 3 mode cards use gold borders; tap flashes brighter gold.
+                  border: `1px solid ${isFlashing ? 'var(--gold)' : 'rgba(255,215,0,0.4)'}`,
+                  boxShadow: '0 0 12px rgba(255,215,0,0.08)',
                   borderRadius: 10,
                   aspectRatio: '1 / 1',
                   display: 'flex',
@@ -206,6 +208,16 @@ export function HomeScreen() {
               </button>
             );
           })}
+        </div>
+      </div>
+
+      {/* Tagline filling the dead space below the cards (T-006-FIX Issue 3) */}
+      <div style={{ padding: '20px 24px', textAlign: 'center', position: 'relative', zIndex: 1 }}>
+        <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 16, fontWeight: 700, color: '#E8F0F8', letterSpacing: 0.5 }}>
+          Numbers don't wait.
+        </div>
+        <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, color: '#5E7A9C', marginTop: 4 }}>
+          How fast can you find them?
         </div>
       </div>
 

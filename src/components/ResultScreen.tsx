@@ -14,6 +14,7 @@ import { LevelManager } from '../game/LevelManager';
 import { ScoreEngine } from '../game/ScoreEngine';
 import { LeaderPanel } from './LeaderPanel';
 import { submitCampaignScore } from '../services/campaignScores';
+import { autoSubmitDailyIfComplete } from '../services/dailyScores';
 import { ParticleCanvas } from './ParticleCanvas';
 import { BottomNav } from './BottomNav';
 import { SKIN } from '../styles/skin';
@@ -22,7 +23,7 @@ import { getFreePlayPB, setFreePlayPB } from '../services/freePlayPB';
 export function ResultScreen() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { status, currentLevel, score, timeElapsed, tapTimestamps, mode, startLevel, startFreePlay, difficulty, timed } = useGameStore();
+  const { status, currentLevel, score, timeElapsed, tapTimestamps, mode, startLevel, startFreePlay, difficulty, timed, currentChallengeIndex } = useGameStore();
   const { dailyStreak, recordLevelComplete, updateDailyStreak } = useSettingsStore();
 
   const [stars, setStars] = useState<0 | 1 | 2 | 3>(0);
@@ -99,6 +100,13 @@ export function ResultScreen() {
         // Daily challenge: bump the consecutive-day streak (also marks today played).
         if (mode === 'daily') {
           updateDailyStreak();
+          // T-006-FIX Issue 13: auto-submit the full 3-challenge total to the daily
+          // leaderboard when Challenge 3 completes (replaces the removed manual hub
+          // SUBMIT button). gameStore.endGame has already written C3's local score,
+          // so all 3 are present. Fire-and-forget; leaderboard keeps the best total.
+          if (currentChallengeIndex === 3) {
+            autoSubmitDailyIfComplete().catch((err) => console.warn('[Result] autoSubmitDaily:', err));
+          }
         }
       }
     }

@@ -342,61 +342,6 @@ export function GameScreen() {
         </div>
       )}
 
-      {/* DEV-only level selector for modifier testing. Removed in Sprint 3.
-          Gated on DEV (true under `vite dev`) OR an explicit build-time flag
-          VITE_DEV_TOOLS=true. Rationale: `import.meta.env.DEV` is always false
-          for ANY `vite build` (incl. Capacitor APKs), and a `--mode development`
-          build can't be used either — React StrictMode double-invokes effects in
-          dev, which double-mounts/breaks the Phaser boot. So the test APK is
-          built in PRODUCTION mode with VITE_DEV_TOOLS=true (selector visible, no
-          StrictMode double-mount). Plain `npm run build` leaves the flag unset,
-          so the shipped app hides it. */}
-      {(import.meta.env.DEV || import.meta.env.VITE_DEV_TOOLS === 'true') && (
-        <div
-          style={{
-            position: 'absolute',
-            bottom: 20,
-            left: 0,
-            right: 0,
-            display: 'flex',
-            justifyContent: 'center',
-            gap: 8,
-            zIndex: 20,
-          }}
-        >
-          {[
-            { label: 'L1 none', id: 1 },
-            { label: 'L9 shuffle', id: 9 },
-            { label: 'L27 mirror', id: 27 },
-            { label: 'L63 fog', id: 63 },
-            { label: 'L69 countdown', id: 69 },
-          ].map(({ label, id }) => (
-            <button
-              key={id}
-              onClick={() => {
-                startLevel(id, 'campaign');
-                setTimeout(() => {
-                  const scene = phaserRef.current?.scene.getScene('GameScene') as GameScene | null;
-                  scene?.renderGrid();
-                }, 50);
-              }}
-              style={{
-                fontFamily: "'Space Mono', monospace",
-                fontSize: '9px',
-                background: 'rgba(10,26,46,0.9)',
-                border: '1px solid rgba(30,139,195,0.4)',
-                color: '#4FAEE0',
-                padding: '6px 10px',
-                borderRadius: '5px',
-                cursor: 'pointer',
-                letterSpacing: '0.5px',
-              }}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
