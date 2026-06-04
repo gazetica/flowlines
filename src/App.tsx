@@ -19,6 +19,7 @@ import { IAPScreen } from './components/IAPScreen';
 import { ResultScreen } from './components/ResultScreen';
 import { CampaignScreen } from './components/CampaignScreen';
 import { DifficultyScreen } from './components/DifficultyScreen';
+import { FreePlayScreen } from './components/FreePlayScreen';
 
 /**
  * Decides the first screen to show based on onboarding flags.
@@ -60,6 +61,7 @@ export function App() {
         <Route path="/result" element={<ResultScreen />} />
         <Route path="/campaign" element={<CampaignScreen />} />
         <Route path="/difficulty" element={<DifficultyScreen />} />
+        <Route path="/free-play-config" element={<FreePlayScreen />} />
         {/* Fallback — anything unknown (incl. not-yet-built /leaderboard, /settings,
             /about from the bottom nav — those arrive in T-012b) goes to root, which
             re-routes to /home once onboarding is complete. */}

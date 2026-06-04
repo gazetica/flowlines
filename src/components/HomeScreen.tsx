@@ -168,6 +168,27 @@ export function HomeScreen() {
         </div>
       </div>
 
+      {/* Free Play (T-004B P2) — your grid, your rules, no leaderboard. */}
+      <div style={{ padding: '10px 24px 0', position: 'relative', zIndex: 1 }}>
+        <button
+          onClick={() => navigate('/free-play-config')}
+          style={{
+            width: '100%',
+            background: 'rgba(10,26,46,0.75)',
+            border: '1px solid rgba(30,139,195,0.2)',
+            borderRadius: 7,
+            padding: '10px 14px',
+            textAlign: 'left',
+            cursor: 'pointer',
+          }}
+        >
+          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: 'var(--blue-light)', letterSpacing: 0.5, marginBottom: 2 }}>
+            {t('home.freePlayLabel')}
+          </div>
+          <div style={{ fontSize: 10, color: 'var(--muted)' }}>{t('home.freePlaySub')}</div>
+        </button>
+      </div>
+
       {/* Bottom nav (shared component — T-004A Fix 6) */}
       <div style={{ marginTop: 'auto' }}>
         <BottomNav active="home" />

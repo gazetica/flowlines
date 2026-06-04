@@ -13,6 +13,8 @@
   },
 
   "home": {
+    "freePlayLabel": "FREE PLAY",
+    "freePlaySub": "Your grid. Your rules.",
     "play_now": "PLAY NOW",
     "classic_mode": "Classic Mode",
     "modes_label": "GAME MODES",

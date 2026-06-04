@@ -17,11 +17,12 @@ import { submitCampaignScore } from '../services/campaignScores';
 import { ParticleCanvas } from './ParticleCanvas';
 import { BottomNav } from './BottomNav';
 import { SKIN } from '../styles/skin';
+import { getFreePlayPB, setFreePlayPB } from '../services/freePlayPB';
 
 export function ResultScreen() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { status, currentLevel, score, timeElapsed, tapTimestamps, mode, startLevel, difficulty } = useGameStore();
+  const { status, currentLevel, score, timeElapsed, tapTimestamps, mode, startLevel, startFreePlay, difficulty, timed } = useGameStore();
   const { dailyStreak, recordLevelComplete, updateDailyStreak } = useSettingsStore();
 
   const [stars, setStars] = useState<0 | 1 | 2 | 3>(0);
@@ -34,6 +35,7 @@ export function ResultScreen() {
     difficultyMult: number;
   } | null>(null);
   const [isPB, setIsPB] = useState(false);
+  const [fpBest, setFpBest] = useState<number | null>(null); // Free Play local PB
 
   useEffect(() => {
     if (!currentLevel) return;
@@ -49,9 +51,6 @@ export function ResultScreen() {
         difficulty,
       };
       const result = ScoreEngine.calculate(params);
-      const earnedStars = LevelManager.getStars(currentLevel, timeElapsed);
-
-      setStars(earnedStars);
       setBreakdown({
         base: result.baseScore,
         timeBonus: result.timeBonus,
@@ -65,29 +64,42 @@ export function ResultScreen() {
       // penalty (endGame). Floor it at 0 for PB comparison and for what we record.
       const finalScore = Math.max(0, useGameStore.getState().score);
 
-      // Personal best check (against the previously stored best)
-      const storeKey = `${mode}_${currentLevel.id}`;
-      const { bestScores } = useSettingsStore.getState();
-      const prevBest = bestScores[storeKey] ?? 0;
-      setIsPB(finalScore > prevBest);
+      if (mode === 'freeplay') {
+        // Free Play (T-004B P2): local per-config PB only. No stars, no leaderboard,
+        // no campaign progress, no submit.
+        const timerSecs = timed ? currentLevel.timeLimit : null;
+        getFreePlayPB(currentLevel.grid, difficulty, timerSecs).then((prev) => {
+          setIsPB(finalScore > prev);
+          setFpBest(Math.max(prev, finalScore));
+          setFreePlayPB(currentLevel.grid, difficulty, timerSecs, finalScore);
+        });
+      } else {
+        const earnedStars = LevelManager.getStars(currentLevel, timeElapsed);
+        setStars(earnedStars);
 
-      // Record (idempotent — only improves)
-      recordLevelComplete(currentLevel.id, earnedStars, finalScore, mode);
+        // Personal best check (against the previously stored best)
+        const storeKey = `${mode}_${currentLevel.id}`;
+        const { bestScores } = useSettingsStore.getState();
+        const prevBest = bestScores[storeKey] ?? 0;
+        setIsPB(finalScore > prevBest);
 
-      // Campaign: submit this level's score for the YOU vs LEADER panel (T-001).
-      // Fire-and-forget — never blocks the result flow. Daily (id 0) excluded.
-      if (mode === 'campaign' && currentLevel.id > 0) {
-        submitCampaignScore({
-          levelId: currentLevel.id,
-          score: finalScore,
-          timeSecs: Math.round(timeElapsed * 10) / 10,
-          gridSize: currentLevel.grid,
-        }).catch((err) => console.warn('[Result] submitCampaignScore:', err));
-      }
+        // Record (idempotent — only improves)
+        recordLevelComplete(currentLevel.id, earnedStars, finalScore, mode);
 
-      // Daily challenge: bump the consecutive-day streak (also marks today played).
-      if (mode === 'daily') {
-        updateDailyStreak();
+        // Campaign: submit this level's score for the YOU vs LEADER panel (T-001).
+        if (mode === 'campaign' && currentLevel.id > 0) {
+          submitCampaignScore({
+            levelId: currentLevel.id,
+            score: finalScore,
+            timeSecs: Math.round(timeElapsed * 10) / 10,
+            gridSize: currentLevel.grid,
+          }).catch((err) => console.warn('[Result] submitCampaignScore:', err));
+        }
+
+        // Daily challenge: bump the consecutive-day streak (also marks today played).
+        if (mode === 'daily') {
+          updateDailyStreak();
+        }
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -116,7 +128,12 @@ export function ResultScreen() {
   };
 
   const handlePlayAgain = () => {
-    startLevel(currentLevel.id, mode);
+    // Free Play has no level id — restart with the same config.
+    if (mode === 'freeplay') {
+      startFreePlay({ gridSize: currentLevel.grid, difficulty, timerSecs: timed ? currentLevel.timeLimit : null });
+    } else {
+      startLevel(currentLevel.id, mode);
+    }
     navigate('/game');
   };
 
@@ -144,8 +161,8 @@ export function ResultScreen() {
         </p>
       </div>
 
-      {/* Stars */}
-      {isComplete && (
+      {/* Stars (not for Free Play — it has no star thresholds) */}
+      {isComplete && mode !== 'freeplay' && (
         <div style={{ textAlign: 'center', padding: '20px 0 8px', position: 'relative', zIndex: 1 }}>
           {[1, 2, 3].map((i) => (
             <span
@@ -178,6 +195,11 @@ export function ResultScreen() {
             🔥 {t('home.day_streak')}: {dailyStreak}
           </div>
         )}
+        {isComplete && mode === 'freeplay' && fpBest !== null && (
+          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, color: 'var(--gold)', letterSpacing: 1, marginTop: 6 }}>
+            ★ Best (this config): {fpBest.toLocaleString()}
+          </div>
+        )}
       </div>
 
       {/* Breakdown */}
@@ -185,8 +207,13 @@ export function ResultScreen() {
         <div style={{ margin: '12px 20px', background: 'rgba(10,26,46,0.75)', border: '1px solid rgba(30,139,195,0.2)', borderRadius: 10, overflow: 'hidden', position: 'relative', zIndex: 1 }}>
           {[
             [t('result.base_score'), breakdown.base],
-            [t('result.time_bonus'), breakdown.timeBonus],
-            [t('result.speed_bonus'), breakdown.speedBonus],
+            // Untimed Free Play has no time/speed bonus — hide those rows.
+            ...(mode === 'freeplay' && !timed
+              ? []
+              : [
+                  [t('result.time_bonus'), breakdown.timeBonus],
+                  [t('result.speed_bonus'), breakdown.speedBonus],
+                ]),
             ['Difficulty', `${breakdown.difficultyMult}×`],
             [t('result.accuracy'), accuracy],
           ].map(([label, value]) => (

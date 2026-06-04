@@ -13,6 +13,8 @@
   },
 
   "home": {
+    "freePlayLabel": "JOGO LIVRE",
+    "freePlaySub": "Sua grade. Suas regras.",
     "play_now": "JOGAR AGORA",
     "classic_mode": "Modo Clássico",
     "modes_label": "MODOS DE JOGO",

@@ -13,6 +13,8 @@
   },
 
   "home": {
+    "freePlayLabel": "자유 플레이",
+    "freePlaySub": "당신의 격자, 당신의 규칙.",
     "play_now": "지금 플레이",
     "classic_mode": "클래식 모드",
     "modes_label": "게임 모드",

@@ -13,6 +13,8 @@
   },
 
   "home": {
+    "freePlayLabel": "JEU LIBRE",
+    "freePlaySub": "Ta grille. Tes règles.",
     "play_now": "JOUER",
     "classic_mode": "Mode Classique",
     "modes_label": "MODES DE JEU",

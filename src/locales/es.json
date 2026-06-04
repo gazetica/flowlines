@@ -13,6 +13,8 @@
   },
 
   "home": {
+    "freePlayLabel": "JUEGO LIBRE",
+    "freePlaySub": "Tu cuadrícula. Tus reglas.",
     "play_now": "JUGAR AHORA",
     "classic_mode": "Modo Clásico",
     "modes_label": "MODOS DE JUEGO",

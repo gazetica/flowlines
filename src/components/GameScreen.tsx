@@ -23,7 +23,7 @@ export function GameScreen() {
   const navigate = useNavigate();
   const phaserRef = useRef<Phaser.Game | null>(null);
   const particleCanvasRef = useRef<HTMLCanvasElement>(null);
-  const { status, currentLevel, mode, score, runId, startLevel, tickTimer, endGame, engine } =
+  const { status, currentLevel, mode, score, runId, startLevel, tickTimer, endGame, engine, timed } =
     useGameStore();
 
   // Background: drifting faint gold numbers on a canvas behind the grid.
@@ -188,15 +188,20 @@ export function GameScreen() {
           >
             TIMER
           </div>
-          <TimerComponent
-            key={runId}
-            durationSeconds={timeLimit}
-            paused={isPaused || status !== 'playing'}
-            onTick={(remaining) => {
-              tickTimer(timeLimit - remaining);
-            }}
-            onExpire={() => endGame('expired')}
-          />
+          {/* T-004B P2: untimed Free Play shows ∞ and never expires. */}
+          {timed ? (
+            <TimerComponent
+              key={runId}
+              durationSeconds={timeLimit}
+              paused={isPaused || status !== 'playing'}
+              onTick={(remaining) => {
+                tickTimer(timeLimit - remaining);
+              }}
+              onExpire={() => endGame('expired')}
+            />
+          ) : (
+            <div style={{ fontFamily: "'Space Mono',monospace", fontSize: '28px', color: '#EEF4FF' }}>∞</div>
+          )}
         </div>
 
         {/* Next target */}

@@ -13,13 +13,13 @@ import { GridEngine } from '../game/GridEngine';
 import type { Cell, TapResult, Difficulty } from '../game/GridEngine';
 import { LevelManager } from '../game/LevelManager';
 import type { LevelConfig } from '../game/LevelManager';
-import { ScoreEngine } from '../game/ScoreEngine';
+import { ScoreEngine, DIFFICULTY_MULTIPLIER } from '../game/ScoreEngine';
 import type { ScoreParams } from '../game/ScoreEngine';
 import { submitScore } from '../services/supabase';
 import { useSettingsStore } from './settingsStore';
 import { getDailyChallenge } from '../game/DailyChallenge';
 
-export type GameMode = 'campaign' | 'daily' | 'endless' | 'speed';
+export type GameMode = 'campaign' | 'daily' | 'endless' | 'speed' | 'freeplay';
 export type GameStatus = 'idle' | 'playing' | 'paused' | 'complete' | 'failed';
 
 interface GameState {
@@ -59,11 +59,15 @@ interface GameState {
 
   // T-004B: selected difficulty for the active round (drives sequence + score mult).
   difficulty: Difficulty;
+  // T-004B P2: false = untimed Free Play (no timer HUD, base-taps-only scoring).
+  timed: boolean;
 
   // Actions. `difficulty` is optional — when omitted, the level's own direction +
   // easy scoring are used (preserves CampaignScreen / play-again behaviour).
   startLevel: (levelId: number, mode: GameMode, difficulty?: Difficulty) => void;
   startDailyChallenge: () => void;
+  // Free Play: arbitrary grid size + difficulty + optional timer (null = untimed).
+  startFreePlay: (config: { gridSize: number; difficulty: Difficulty; timerSecs: number | null }) => void;
   tapCell: (row: number, col: number) => TapResult | null;
   tickTimer: (elapsed: number) => void;
   pauseGame: () => void;
@@ -90,6 +94,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   hintActive: false,
   dailyDate: '',
   difficulty: 'easy',
+  timed: true,
 
   startLevel: (levelId, mode, difficulty) => {
     const level = LevelManager.getLevel(levelId);
@@ -115,6 +120,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       hintUsed: false,
       hintActive: false,
       difficulty: diff,
+      timed: true,
     });
   },
 
@@ -165,6 +171,41 @@ export const useGameStore = create<GameState>((set, get) => ({
       hintActive: false,
       dailyDate: daily.date,
       difficulty: 'easy', // Daily is always Easy (shared seed must be comparable).
+      timed: true,
+    });
+  },
+
+  startFreePlay: ({ gridSize, difficulty, timerSecs }) => {
+    const dir = difficulty === 'pro' ? 'descending' : 'ascending';
+    const engine = new GridEngine(gridSize, 'none', dir, difficulty);
+    const grid = engine.generateGrid();
+    // Synthetic level config (id -1 — not in levels.json). timeLimit is the chosen
+    // duration, or 0 when untimed (the timer HUD is hidden either way for untimed).
+    const synthLevel: LevelConfig = {
+      id: -1,
+      pack: 1,
+      grid: gridSize as LevelConfig['grid'],
+      modifier: 'none',
+      direction: dir,
+      timeLimit: timerSecs ?? 0,
+      stars: [0, 0, 0],
+    };
+    set({
+      currentLevelId: -1,
+      currentLevel: synthLevel,
+      mode: 'freeplay',
+      status: 'playing',
+      runId: get().runId + 1,
+      engine,
+      grid,
+      score: 0,
+      tapTimestamps: [],
+      wrongTaps: 0,
+      timeElapsed: 0,
+      hintUsed: false,
+      hintActive: false,
+      difficulty,
+      timed: timerSecs !== null,
     });
   },
 
@@ -214,23 +255,29 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   endGame: (reason) => {
-    const { currentLevel, tapTimestamps, timeElapsed, mode, wrongTaps, difficulty } = get();
+    const { currentLevel, tapTimestamps, timeElapsed, mode, wrongTaps, difficulty, timed } = get();
     if (!currentLevel) return;
     if (reason === 'complete') {
-      const params: ScoreParams = {
-        gridSize: currentLevel.grid,
-        tapCount: currentLevel.grid * currentLevel.grid,
-        timeLimit: currentLevel.timeLimit,
-        timeElapsed,
-        tapTimestamps,
-        dailyStreak: 0,
-        difficulty,
-      };
-      const result = ScoreEngine.calculate(params);
+      const mult = DIFFICULTY_MULTIPLIER[difficulty];
+      let subtotal: number;
+      if (mode === 'freeplay' && !timed) {
+        // Untimed Free Play: base taps only (no time / speed bonus). 100 per tap.
+        subtotal = currentLevel.grid * currentLevel.grid * 100;
+      } else {
+        const params: ScoreParams = {
+          gridSize: currentLevel.grid,
+          tapCount: currentLevel.grid * currentLevel.grid,
+          timeLimit: currentLevel.timeLimit,
+          timeElapsed,
+          tapTimestamps,
+          dailyStreak: 0,
+          difficulty,
+        };
+        subtotal = ScoreEngine.calculate(params).totalScore;
+      }
       // T-000 penalty THEN T-004B difficulty multiplier (the last operation, per
       // spec). May be negative (ResultScreen floors the displayed/recorded value).
-      const penalized = result.totalScore - wrongTaps * 100;
-      const finalScore = Math.round(penalized * result.difficultyMultiplier);
+      const finalScore = Math.round((subtotal - wrongTaps * 100) * mult);
       set({ status: 'complete', score: finalScore });
 
       // Submit to the leaderboard for eligible modes. Fire-and-forget —
@@ -261,6 +308,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       wrongTaps: 0,
       timeElapsed: 0,
       difficulty: 'easy',
+      timed: true,
       hintUsed: false,
       hintActive: false,
     });

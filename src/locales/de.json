@@ -13,6 +13,8 @@
   },
 
   "home": {
+    "freePlayLabel": "FREIES SPIEL",
+    "freePlaySub": "Dein Raster. Deine Regeln.",
     "play_now": "JETZT SPIELEN",
     "classic_mode": "Klassischer Modus",
     "modes_label": "SPIELMODI",
