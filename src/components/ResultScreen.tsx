@@ -162,8 +162,16 @@ export function ResultScreen() {
             textShadow: isComplete ? '0 0 16px rgba(255,215,0,0.4)' : '0 0 16px rgba(224,80,80,0.4)',
           }}
         >
-          {isComplete ? t('result.level_complete') : t('result.times_up')}
+          {/* T-009b Fix 2: failed (timer expired) shows a distinct "LEVEL FAILED"
+              heading in danger red; win keeps "LEVEL COMPLETE". (Locale files are
+              not in scope this task, so the failed strings are literals.) */}
+          {isComplete ? t('result.level_complete') : 'LEVEL FAILED'}
         </h1>
+        {!isComplete && (
+          <p style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: '#6B84A8', letterSpacing: 1, marginBottom: 4 }}>
+            TIME OUT
+          </p>
+        )}
         <p style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: 'var(--muted)', letterSpacing: 1 }}>
           {/* T-009: Classic/Campaign play prefixes the level number (e.g.
               "Level 3 · 4×4 Grid · 65s"). Other modes keep the grid·time line. */}

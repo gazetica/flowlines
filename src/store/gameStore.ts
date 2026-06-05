@@ -20,6 +20,7 @@ import { useSettingsStore } from './settingsStore';
 import { getDailyChallenge, getDailyShuffledNumbers, getTodayDateString } from '../game/DailyChallenge';
 import type { DailyChallengeIndex } from '../game/DailyChallenge';
 import { setLocalDailyScore } from '../services/dailyScores';
+import { padTileLabel } from '../utils/tileFormat';
 
 export type GameMode = 'campaign' | 'daily' | 'endless' | 'speed' | 'freeplay';
 export type GameStatus = 'idle' | 'playing' | 'paused' | 'complete' | 'failed';
@@ -110,6 +111,16 @@ export const useGameStore = create<GameState>((set, get) => ({
     const diff: Difficulty = difficulty ?? 'easy';
     const engine = new GridEngine(level.grid, level.modifier, effectiveDir, diff);
     const grid = engine.generateGrid();
+    // T-009b Fix 1: on mirror levels, render every tile as a fixed 2-char string
+    // so the horizontal flip is symmetric. Tile text is drawn entirely in the
+    // (locked) GameScene via String(engine.getDisplayValue(cell)), and getDisplayValue
+    // lives on the (locked) GridEngine — so the only seam is to wrap this engine
+    // instance's method here. Display-only: tap validation uses cell.value, untouched.
+    if (level.modifier === 'mirror') {
+      const baseDisplay = engine.getDisplayValue.bind(engine);
+      (engine as unknown as { getDisplayValue: (c: Cell) => unknown }).getDisplayValue = (cell: Cell) =>
+        padTileLabel(baseDisplay(cell));
+    }
     set({
       currentLevelId: levelId,
       currentLevel: level,

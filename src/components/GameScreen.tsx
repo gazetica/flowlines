@@ -294,32 +294,6 @@ export function GameScreen() {
           zIndex: 10,
         }}
       >
-        {/* Level (T-009) — Classic/Campaign play only; sourced from currentLevel.id,
-            never hardcoded. Absent in Daily / Endless / Speed / Free Play. */}
-        {mode === 'campaign' && currentLevel && (
-          <div style={{ textAlign: 'center' }}>
-            <div
-              style={{
-                fontFamily: "'Space Mono',monospace",
-                fontSize: '10px',
-                color: '#5E7A9C',
-                letterSpacing: '1px',
-              }}
-            >
-              LEVEL
-            </div>
-            <div
-              style={{
-                fontFamily: "'Space Mono',monospace",
-                fontSize: '18px',
-                color: '#FFD700',
-              }}
-            >
-              L{currentLevel.id}
-            </div>
-          </div>
-        )}
-
         {/* Timer */}
         <div style={{ textAlign: 'center' }}>
           <div
@@ -395,6 +369,29 @@ export function GameScreen() {
           </div>
         </div>
       </div>
+
+      {/* Level badge (T-009b Fix 3) — moved out of the 4-column HUD bar to sit
+          just below it, above the grid. Classic/Campaign only; sourced from
+          currentLevel.id, never hardcoded. Absent in Daily/Endless/Speed/Free Play.
+          Absolutely positioned so it never shifts the Phaser grid. */}
+      {mode === 'campaign' && currentLevel && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '14.5%',
+            left: 0,
+            right: 0,
+            padding: '0 22px',
+            zIndex: 10,
+            fontFamily: "'Space Mono', monospace",
+            fontSize: '11px',
+            letterSpacing: '1px',
+          }}
+        >
+          <span style={{ color: '#6B84A8' }}>LEVEL </span>
+          <span style={{ color: '#F0F4FF' }}>{currentLevel.id}</span>
+        </div>
+      )}
 
       {/* T-008 Part 3: three hint cards (rotating promo · watch ad · use hint)
           stacked above the LeaderPanel in the dead space below the grid. Shown
