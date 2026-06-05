@@ -10,6 +10,12 @@ import { Browser } from '@capacitor/browser';
 import { ParticleCanvas } from './ParticleCanvas';
 import { BottomNav } from './BottomNav';
 import { reopenForm } from '../services/consentService';
+import { testCrash } from '../services/crashlytics';
+
+// T-021: dev/test builds only (same gate as the UMP debug geography). Statically
+// false in `npm run build` (no VITE_DEV_TOOLS) → the button + its testCrash usage
+// are eliminated from the production bundle.
+const DEV_TOOLS = import.meta.env.DEV || import.meta.env.VITE_DEV_TOOLS === 'true';
 
 export function AboutScreen() {
   const { t } = useTranslation();
@@ -78,6 +84,29 @@ export function AboutScreen() {
           <span style={{ fontSize: 14, color: 'var(--muted)' }}>›</span>
         </button>
       ))}
+
+      {/* T-021: dev-only Crashlytics test crash (absent in production builds). */}
+      {DEV_TOOLS && (
+        <button
+          onClick={() => void testCrash()}
+          style={{
+            display: 'block',
+            margin: '12px 20px',
+            padding: '12px',
+            width: 'calc(100% - 40px)',
+            background: 'rgba(224,80,80,0.12)',
+            border: '1px solid rgba(224,80,80,0.5)',
+            borderRadius: 8,
+            color: 'var(--danger)',
+            fontFamily: "'Space Mono', monospace",
+            fontSize: 11,
+            letterSpacing: 1,
+            cursor: 'pointer',
+          }}
+        >
+          ⚠ TEST CRASH (DEV)
+        </button>
+      )}
 
       {/* Footer */}
       <div style={{ padding: '20px', textAlign: 'center' }}>
