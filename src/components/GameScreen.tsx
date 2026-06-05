@@ -278,7 +278,11 @@ export function GameScreen() {
       {/* Phaser canvas container (z-index 1, above background, below HUD) */}
       <div id="phaser-container" style={{ position: 'absolute', inset: 0, zIndex: 1 }} />
 
-      {/* HUD overlay — glassmorphism bar rendered over the Phaser canvas */}
+      {/* HUD overlay — glassmorphism bar (T-009c: 2-row grid so the three labels
+          align on one line and the three values share a baseline). The TIMER value
+          is rendered by TimerComponent (own inline 36px); a scoped !important rule
+          below resizes it to 22px without touching that component. */}
+      <style>{`.hud-timer-value > span { font-size: 22px !important; line-height: 1 !important; }`}</style>
       <div
         className="glass"
         style={{
@@ -287,25 +291,24 @@ export function GameScreen() {
           left: 0,
           right: 0,
           height: '14%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr 1fr',
+          gridTemplateRows: 'auto auto',
+          alignContent: 'center',
+          alignItems: 'baseline',
+          justifyItems: 'center',
+          rowGap: '3px',
           padding: '0 20px',
           zIndex: 10,
         }}
       >
-        {/* Timer */}
-        <div style={{ textAlign: 'center' }}>
-          <div
-            style={{
-              fontFamily: "'Space Mono',monospace",
-              fontSize: '10px',
-              color: '#5E7A9C',
-              letterSpacing: '1px',
-            }}
-          >
-            TIMER
-          </div>
+        {/* Labels row — same size / colour / line for all three */}
+        <div style={HUD_LABEL}>TIMER</div>
+        <div style={HUD_LABEL}>NEXT</div>
+        <div style={HUD_LABEL}>SCORE</div>
+
+        {/* Values row — baseline-aligned. TIMER & SCORE 22px white; NEXT 28px gold. */}
+        <div className="hud-timer-value" style={{ fontFamily: "'Space Mono',monospace", fontSize: '22px', lineHeight: 1, color: '#F0F4FF' }}>
           {/* T-004B P2: untimed Free Play shows ∞ and never expires. */}
           {timed ? (
             <TimerComponent
@@ -318,55 +321,17 @@ export function GameScreen() {
               onExpire={() => endGame('expired')}
             />
           ) : (
-            <div style={{ fontFamily: "'Space Mono',monospace", fontSize: '28px', color: '#EEF4FF' }}>∞</div>
+            <span>∞</span>
           )}
         </div>
-
-        {/* Next target */}
-        <div style={{ textAlign: 'center' }}>
-          <div
-            style={{
-              fontFamily: "'Space Mono',monospace",
-              fontSize: '10px',
-              color: '#5E7A9C',
-              letterSpacing: '1px',
-            }}
-          >
-            NEXT
-          </div>
-          <div
-            className="text-gold-glow"
-            style={{
-              fontFamily: "'Space Mono',monospace",
-              fontSize: '32px',
-              fontWeight: 700,
-            }}
-          >
-            {String(expectedNext).padStart(2, '0')}
-          </div>
+        <div
+          className="text-gold-glow"
+          style={{ fontFamily: "'Space Mono',monospace", fontSize: '28px', fontWeight: 700, lineHeight: 1, color: '#FFD700' }}
+        >
+          {String(expectedNext).padStart(2, '0')}
         </div>
-
-        {/* Score */}
-        <div style={{ textAlign: 'center' }}>
-          <div
-            style={{
-              fontFamily: "'Space Mono',monospace",
-              fontSize: '10px',
-              color: '#5E7A9C',
-              letterSpacing: '1px',
-            }}
-          >
-            SCORE
-          </div>
-          <div
-            style={{
-              fontFamily: "'Space Mono',monospace",
-              fontSize: '18px',
-              color: '#EEF4FF',
-            }}
-          >
-            {score.toLocaleString()}
-          </div>
+        <div style={{ fontFamily: "'Space Mono',monospace", fontSize: '22px', lineHeight: 1, color: '#F0F4FF' }}>
+          {score.toLocaleString()}
         </div>
       </div>
 
@@ -498,6 +463,14 @@ export function GameScreen() {
     </div>
   );
 }
+
+// HUD label style (T-009c) — TIMER / NEXT / SCORE, all identical.
+const HUD_LABEL: React.CSSProperties = {
+  fontFamily: "'Space Mono', monospace",
+  fontSize: '9px',
+  color: '#6B84A8',
+  letterSpacing: '1px',
+};
 
 // Shared base for the two hint cards (T-007 Fix 4) — equal-width halves.
 const HINT_CARD_BASE: React.CSSProperties = {
