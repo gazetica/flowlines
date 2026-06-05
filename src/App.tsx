@@ -7,7 +7,10 @@
 
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
 import { useSettingsStore } from './store/settingsStore';
+import { requestAndResolve } from './services/consentService';
+import { initAdmob } from './services/admob';
 import { LanguageScreen } from './components/LanguageScreen';
 import { HowToPlayScreen } from './components/HowToPlayScreen';
 import { HomeScreen } from './components/HomeScreen';
@@ -47,6 +50,17 @@ function RedirectHandler() {
 }
 
 export function App() {
+  // T-016: GDPR/UMP consent must resolve BEFORE AdMob initialises. The UMP SDK
+  // shows its native dialog for EU/EEA/UK users and stays silent elsewhere; we
+  // only init AdMob once that completes. Native-only (UMP/AdMob have no web impl).
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    (async () => {
+      await requestAndResolve(); // UMP consent (form for EU; NOT_REQUIRED otherwise)
+      await initAdmob(); // AdMob.initialize — strictly after consent resolves
+    })();
+  }, []);
+
   return (
     <BrowserRouter>
       <Routes>

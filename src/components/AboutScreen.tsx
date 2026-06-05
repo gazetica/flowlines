@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { Browser } from '@capacitor/browser';
 import { ParticleCanvas } from './ParticleCanvas';
 import { BottomNav } from './BottomNav';
+import { reopenForm } from '../services/consentService';
 
 export function AboutScreen() {
   const { t } = useTranslation();
@@ -17,10 +18,11 @@ export function AboutScreen() {
     await Browser.open({ url });
   };
 
-  const LINKS = [
+  // T-016: rows are either a URL (opened in the in-app browser) or an action.
+  const LINKS: { label: string; url?: string; action?: () => Promise<void> }[] = [
     { label: t('about.privacy_policy'), url: 'https://gazetica.com/privacy' },
     { label: t('about.terms'), url: 'https://gazetica.com/terms' },
-    { label: t('about.ad_preferences'), url: '' }, // T-014: GDPR UMP
+    { label: t('about.ad_preferences'), action: reopenForm }, // T-016: GDPR UMP — reopen consent form
     { label: t('about.rate_app'), url: 'https://play.google.com/store/apps/details?id=com.gazetica.numtap' },
     { label: t('about.contact'), url: 'mailto:support@gazetica.com' },
     { label: t('about.more_games'), url: 'https://gazetica.com' },
@@ -59,14 +61,14 @@ export function AboutScreen() {
       {LINKS.map((link) => (
         <button
           key={link.label}
-          onClick={() => link.url && openUrl(link.url)}
+          onClick={() => (link.action ? link.action() : link.url ? openUrl(link.url) : undefined)}
           style={{
             width: '100%',
             background: 'none',
             border: 'none',
             borderBottom: '1px solid rgba(30,139,195,0.1)',
             padding: '14px 20px',
-            cursor: link.url ? 'pointer' : 'default',
+            cursor: link.url || link.action ? 'pointer' : 'default',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
