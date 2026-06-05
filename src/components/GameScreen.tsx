@@ -20,7 +20,8 @@ import { TimerComponent } from './TimerComponent';
 import { GameScene } from '../scenes/GameScene';
 import { LeaderPanel } from './LeaderPanel';
 import { BuyHintModal } from './BuyHintModal';
-import { showRewarded } from '../services/admob';
+import { Capacitor } from '@capacitor/core';
+import { loadRewarded, showRewarded } from '../services/rewardedAdService';
 import { initAppLifecycle, removeAppLifecycle } from '../services/appLifecycle';
 import { SKIN } from '../styles/skin';
 
@@ -34,10 +35,13 @@ export function GameScreen() {
   // T-006 Part 2.3: hint inventory + BuyHintModal (renamed T-008).
   const hintCount = useSettingsStore((s) => s.hintCount);
   const consumeHint = useSettingsStore((s) => s.consumeHint);
-  const addHints = useSettingsStore((s) => s.addHints);
+  const removeAdsPurchased = useSettingsStore((s) => s.removeAdsPurchased); // T-017 AC6
   const [hintModalOpen, setHintModalOpen] = useState(false);
   // T-008 Part 3.4: brief in-game toast (e.g. ad dismissed / unavailable).
   const [toast, setToast] = useState<string | null>(null);
+  // T-017 AC7: max 3 rewarded hints per game session (resets each new level/run).
+  const MAX_SESSION_HINTS = 3;
+  const [sessionHints, setSessionHints] = useState(0);
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 1900);
@@ -60,6 +64,18 @@ export function GameScreen() {
     const limit = st.currentLevel?.timeLimit ?? 30;
     return Math.max(1, Math.round(limit - st.timeElapsed));
   });
+
+  // T-017 AC2: preload the rewarded ad on mount so it is ready when Hint is tapped
+  // (native only — AdMob has no web implementation). The service reloads itself
+  // after each show.
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) void loadRewarded();
+  }, []);
+
+  // T-017 AC7: reset the per-session hint count whenever a new level/run starts.
+  useEffect(() => {
+    setSessionHints(0);
+  }, [runId]);
 
   // Highlight the current target tile (gold) for ~5s via the existing
   // GameScene.showHint tween, marking the hint active so the next tap clears it.
@@ -89,33 +105,38 @@ export function GameScreen() {
     useGameStore.getState().resumeGame();
   };
 
-  // Middle card (T-008 Part 3.4): pause → rewarded ad → on completion award +1
-  // hint, immediately spend it on the current tile, and resume. On dismiss or
-  // when no ad is available, resume with a brief toast. admob.ts has no separate
-  // availability probe, so we pause then attempt; a failed/unavailable ad resumes
-  // immediately (the pause is momentary).
+  // Middle "WATCH AD" card = the T-017 rewarded-hint button. Tap → (cap check) →
+  // if Remove Ads is owned, grant the highlight instantly (AC6); otherwise pause
+  // and play the preloaded rewarded ad. Highlight the next tile only when the ad
+  // is watched to completion (AC4); a skip/dismiss grants nothing and applies no
+  // penalty (AC5); no fill shows a "No ad available" toast (no crash). The gem
+  // "USE HINT" card and inventory are unaffected.
   const handleWatchAd = async () => {
     if (status !== 'playing') return;
-    useGameStore.getState().pauseGame();
-    let rewarded = false;
-    try {
-      await showRewarded(() => {
-        rewarded = true;
-      });
-    } catch {
-      useGameStore.getState().resumeGame();
-      showToast('No ads available right now');
+    if (sessionHints >= MAX_SESSION_HINTS) {
+      showToast('No more hints this session');
       return;
     }
-    if (rewarded) {
-      await addHints(1);
-      consumeHint();
+
+    // AC6: Remove Ads purchased → grant the hint directly, no ad shown.
+    if (removeAdsPurchased) {
       applyHintToTile();
-      useGameStore.getState().resumeGame();
-    } else {
-      useGameStore.getState().resumeGame();
-      showToast('Watch the full ad to get a hint');
+      setSessionHints((n) => n + 1);
+      return;
     }
+
+    // AC3/AC4/AC5: play the preloaded rewarded ad (timer paused while it shows).
+    useGameStore.getState().pauseGame();
+    const outcome = await showRewarded();
+    useGameStore.getState().resumeGame();
+
+    if (outcome === 'rewarded') {
+      applyHintToTile();
+      setSessionHints((n) => n + 1);
+    } else if (outcome === 'unavailable') {
+      showToast('No ad available');
+    }
+    // 'dismissed' → no highlight, no penalty, no toast (AC5)
   };
 
   // T-007 Fix 4: left card → pause the timer, then go to the IAP screen. The
