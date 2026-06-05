@@ -11,6 +11,7 @@ import { Capacitor } from '@capacitor/core';
 import { useSettingsStore } from './store/settingsStore';
 import { requestAndResolve } from './services/consentService';
 import { initAdmob } from './services/admob';
+import * as analytics from './services/analytics';
 import { LanguageScreen } from './components/LanguageScreen';
 import { HowToPlayScreen } from './components/HowToPlayScreen';
 import { HomeScreen } from './components/HomeScreen';
@@ -55,6 +56,7 @@ export function App() {
   // only init AdMob once that completes. Native-only (UMP/AdMob have no web impl).
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
+    analytics.sessionStart(); // T-020: once per launch
     (async () => {
       await requestAndResolve(); // UMP consent (form for EU; NOT_REQUIRED otherwise)
       await initAdmob(); // AdMob.initialize — strictly after consent resolves

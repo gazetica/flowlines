@@ -17,6 +17,7 @@ import { LeaderPanel } from './LeaderPanel';
 import { submitCampaignScore } from '../services/campaignScores';
 import { autoSubmitDailyIfComplete } from '../services/dailyScores';
 import { loadInterstitial, isCapElapsed, showInterstitial } from '../services/interstitialAdService';
+import * as analytics from '../services/analytics';
 import { ParticleCanvas } from './ParticleCanvas';
 import { BottomNav } from './BottomNav';
 import { SKIN } from '../styles/skin';
@@ -92,6 +93,8 @@ export function ResultScreen() {
           setFpBest(Math.max(prev, finalScore));
           setFreePlayPB(currentLevel.grid, difficulty, timerSecs, finalScore);
         });
+        // T-020: Free Play has no stars/leaderboard → report stars 0.
+        analytics.levelComplete({ levelId: currentLevel.id, gridSize: currentLevel.grid, stars: 0, score: finalScore, timeElapsed });
       } else {
         const earnedStars = LevelManager.getStars(currentLevel, timeElapsed);
         setStars(earnedStars);
@@ -126,7 +129,13 @@ export function ResultScreen() {
             autoSubmitDailyIfComplete().catch((err) => console.warn('[Result] autoSubmitDaily:', err));
           }
         }
+
+        // T-020: level_complete with all 5 params.
+        analytics.levelComplete({ levelId: currentLevel.id, gridSize: currentLevel.grid, stars: earnedStars, score: finalScore, timeElapsed });
       }
+    } else if (status === 'failed') {
+      // T-020: timer expired / game over.
+      analytics.levelFail({ levelId: currentLevel.id, gridSize: currentLevel.grid });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, currentLevel]);

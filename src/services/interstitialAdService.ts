@@ -10,6 +10,7 @@ import { AdMob } from '@capacitor-community/admob';
 import type { AdOptions } from '@capacitor-community/admob';
 import { Preferences } from '@capacitor/preferences';
 import { AD_UNITS } from './admob';
+import * as analytics from './analytics';
 
 const CAP_KEY = 'last_interstitial_shown';
 const CAP_MS = 3 * 60 * 1000; // 3 minutes between shows
@@ -63,6 +64,7 @@ export async function showInterstitial(): Promise<void> {
       if (!prepared) return; // no fill — degrade silently
     }
     await AdMob.showInterstitial();
+    analytics.adImpression('interstitial'); // T-020 (AC6)
     await Preferences.set({ key: CAP_KEY, value: String(Date.now()) });
   } catch (err) {
     console.warn('[interstitialAdService] show failed:', err);

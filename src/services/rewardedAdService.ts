@@ -9,6 +9,7 @@
 import { AdMob } from '@capacitor-community/admob';
 import type { RewardAdOptions } from '@capacitor-community/admob';
 import { AD_UNITS } from './admob';
+import * as analytics from './analytics';
 
 export type RewardedOutcome = 'rewarded' | 'dismissed' | 'unavailable';
 
@@ -49,6 +50,7 @@ export async function showRewarded(): Promise<RewardedOutcome> {
   try {
     const result = await AdMob.showRewardVideoAd();
     outcome = result ? 'rewarded' : 'dismissed';
+    if (outcome === 'rewarded') analytics.adImpression('rewarded'); // T-020 (AC6)
   } catch (err) {
     console.warn('[rewardedAdService] show failed:', err);
     outcome = 'unavailable';

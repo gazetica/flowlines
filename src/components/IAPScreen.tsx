@@ -61,6 +61,10 @@ export function IAPScreen() {
             <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 18, color: 'var(--gold)' }}>
               {product.key === 'remove_ads' && removeAdsPurchased ? t('settings.remove_ads_purchased') : product.price}
             </span>
+            {/* T-020: iap_purchase analytics stub. Billing is display-only until
+                T-019, which will fire (in the Play Billing purchase-completion
+                callback) — analytics.iapPurchase({ productId: product.key,
+                value: <price parsed from the store product> }). */}
             <button
               className="btn-gold"
               disabled={product.key === 'remove_ads' && removeAdsPurchased}

@@ -21,6 +21,7 @@ import { getDailyChallenge, getDailyShuffledNumbers, getTodayDateString } from '
 import type { DailyChallengeIndex } from '../game/DailyChallenge';
 import { setLocalDailyScore } from '../services/dailyScores';
 import { padTileLabel } from '../utils/tileFormat';
+import * as analytics from '../services/analytics';
 
 export type GameMode = 'campaign' | 'daily' | 'endless' | 'speed' | 'freeplay';
 export type GameStatus = 'idle' | 'playing' | 'paused' | 'complete' | 'failed';
@@ -238,6 +239,9 @@ export const useGameStore = create<GameState>((set, get) => ({
       // Live score preview: 100 per correct tap, less 100 per wrong tap so far.
       const newScore = newTimestamps.length * 100 - wrongTaps * 100;
       set({ grid: newGrid, tapTimestamps: newTimestamps, score: newScore });
+      // T-020: tap originates in the (read-only) GameScene → tapCell; this store
+      // action is the existing scene→state bridge, so the tap events fire here.
+      analytics.tapCorrect({ levelId: get().currentLevelId, tapCount: newTimestamps.length });
       // Check completion
       if (engine.isComplete()) {
         get().endGame('complete');
@@ -247,6 +251,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       // may go negative). Score is floored at 0 for display on the ResultScreen.
       const newWrong = wrongTaps + 1;
       set({ wrongTaps: newWrong, score: tapTimestamps.length * 100 - newWrong * 100 });
+      analytics.tapWrong({ levelId: get().currentLevelId });
     }
     return result;
   },
