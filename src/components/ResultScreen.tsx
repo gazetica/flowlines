@@ -8,6 +8,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Capacitor } from '@capacitor/core';
 import { useGameStore } from '../store/gameStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { LevelManager } from '../game/LevelManager';
@@ -15,6 +16,7 @@ import { ScoreEngine } from '../game/ScoreEngine';
 import { LeaderPanel } from './LeaderPanel';
 import { submitCampaignScore } from '../services/campaignScores';
 import { autoSubmitDailyIfComplete } from '../services/dailyScores';
+import { loadInterstitial, isCapElapsed, showInterstitial } from '../services/interstitialAdService';
 import { ParticleCanvas } from './ParticleCanvas';
 import { BottomNav } from './BottomNav';
 import { SKIN } from '../styles/skin';
@@ -24,7 +26,23 @@ export function ResultScreen() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { status, currentLevel, score, timeElapsed, tapTimestamps, mode, startLevel, startFreePlay, difficulty, timed, currentChallengeIndex } = useGameStore();
-  const { dailyStreak, recordLevelComplete, updateDailyStreak } = useSettingsStore();
+  const { dailyStreak, recordLevelComplete, updateDailyStreak, removeAdsPurchased } = useSettingsStore();
+
+  // T-018: interstitial on Result mount — the only trigger (never mid-gameplay).
+  // Preload, then show if Remove Ads is not owned AND the 3-minute cap has
+  // elapsed. Fire-and-forget: never blocks the Result screen from rendering, and
+  // fails silently on no-fill (native-only — AdMob has no web implementation).
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    if (removeAdsPurchased) return; // AC5: no load, no show
+    (async () => {
+      await loadInterstitial(); // AC2: preload on mount
+      if (await isCapElapsed()) {
+        void showInterstitial(); // AC3/AC4: show if cap clear; persists timestamp + reloads
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [stars, setStars] = useState<0 | 1 | 2 | 3>(0);
   const [breakdown, setBreakdown] = useState<{
