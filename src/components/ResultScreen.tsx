@@ -165,6 +165,9 @@ export function ResultScreen() {
           {isComplete ? t('result.level_complete') : t('result.times_up')}
         </h1>
         <p style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: 'var(--muted)', letterSpacing: 1 }}>
+          {/* T-009: Classic/Campaign play prefixes the level number (e.g.
+              "Level 3 · 4×4 Grid · 65s"). Other modes keep the grid·time line. */}
+          {mode === 'campaign' ? `Level ${currentLevel.id} · ` : ''}
           {currentLevel.grid}×{currentLevel.grid} Grid · {Math.round(timeElapsed)}s
         </p>
       </div>

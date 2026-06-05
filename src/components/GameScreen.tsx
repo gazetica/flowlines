@@ -294,6 +294,32 @@ export function GameScreen() {
           zIndex: 10,
         }}
       >
+        {/* Level (T-009) — Classic/Campaign play only; sourced from currentLevel.id,
+            never hardcoded. Absent in Daily / Endless / Speed / Free Play. */}
+        {mode === 'campaign' && currentLevel && (
+          <div style={{ textAlign: 'center' }}>
+            <div
+              style={{
+                fontFamily: "'Space Mono',monospace",
+                fontSize: '10px',
+                color: '#5E7A9C',
+                letterSpacing: '1px',
+              }}
+            >
+              LEVEL
+            </div>
+            <div
+              style={{
+                fontFamily: "'Space Mono',monospace",
+                fontSize: '18px',
+                color: '#FFD700',
+              }}
+            >
+              L{currentLevel.id}
+            </div>
+          </div>
+        )}
+
         {/* Timer */}
         <div style={{ textAlign: 'center' }}>
           <div
