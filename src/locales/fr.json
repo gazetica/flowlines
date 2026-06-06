@@ -29,8 +29,8 @@
     "rank": "RANG",
     "games": "PARTIES",
     "avg": "MOY",
-    "campaign_progress": "CAMPAIGN PROGRESS",
-    "daily_sub": "Complete all 3 challenges"
+    "campaign_progress": "PROGRESSION CAMPAGNE",
+    "daily_sub": "Terminez les 3 défis"
   },
 
   "game": {
@@ -44,17 +44,17 @@
     "btn_resume": "REPRENDRE",
     "btn_restart": "RECOMMENCER",
     "btn_home": "ACCUEIL",
-    "level_prefix": "LEVEL",
-    "remove_ads": "REMOVE ADS",
-    "remove_ads_sub": "Play without interruptions",
-    "watch_ad": "WATCH AD",
-    "watch_ad_sub": "Get 1 hint free",
-    "use_hint": "USE HINT",
-    "hints_left": "×{{count}} left",
-    "get_more_hints": "GET MORE HINTS",
-    "get_more_hints_sub": "Tap to buy gem packs",
-    "toast_no_hints": "No more hints this session",
-    "toast_no_ad": "No ad available"
+    "level_prefix": "NIVEAU",
+    "remove_ads": "SUPPRIMER LES PUBS",
+    "remove_ads_sub": "Jouez sans interruptions",
+    "watch_ad": "REGARDER UNE PUB",
+    "watch_ad_sub": "1 indice gratuit",
+    "use_hint": "UTILISER INDICE",
+    "hints_left": "×{{count}} restants",
+    "get_more_hints": "PLUS D'INDICES",
+    "get_more_hints_sub": "Touchez pour des packs de gemmes",
+    "toast_no_hints": "Plus d'indices pour cette session",
+    "toast_no_ad": "Aucune pub disponible"
   },
 
   "result": {
@@ -72,11 +72,11 @@
     "btn_home": "ACCUEIL",
     "btn_leaderboard": "CLASSEMENT",
     "ad_slot": "Pub",
-    "level_failed": "LEVEL FAILED",
-    "time_out": "TIME OUT",
-    "grid_label": "{{size}}×{{size}} Grid",
+    "level_failed": "NIVEAU ÉCHOUÉ",
+    "time_out": "TEMPS ÉCOULÉ",
+    "grid_label": "{{size}}×{{size}} Grille",
     "time_label": "{{seconds}}s",
-    "best_config": "★ Best (this config):"
+    "best_config": "★ Meilleur (cette config.) :"
   },
 
   "leaderboard": {
@@ -88,8 +88,8 @@
     "anonymous_note": "Anonyme · Aucune connexion requise · Définissez un alias dans les Paramètres",
     "loading": "Chargement...",
     "empty": "Aucun score pour l'instant. Soyez le premier !",
-    "your_ranking": "YOUR RANKING",
-    "no_score": "No score yet"
+    "your_ranking": "VOTRE CLASSEMENT",
+    "no_score": "Aucun score"
   },
 
   "settings": {
@@ -109,7 +109,7 @@
     "remove_ads_sub": "Achat unique",
     "remove_ads_purchased": "Acheté ✓",
     "restore_purchases": "Restaurer les achats",
-    "country": "Country"
+    "country": "Pays"
   },
 
   "iap": {
@@ -125,7 +125,7 @@
     "restore": "RESTAURER LES ACHATS PRÉCÉDENTS",
     "payment_note": "Paiement traité par Google Play.",
     "terms_note": "En achetant, vous acceptez nos Conditions générales.",
-    "billing_notice": "BILLING ACTIVE IN FULL RELEASE"
+    "billing_notice": "PAIEMENT ACTIF DANS LA VERSION COMPLÈTE"
   },
 
   "consent": {
@@ -149,17 +149,17 @@
     "demo_hint": "Case dorée = à toucher · ✓ = déjà touché",
     "btn_play": "JOUONS !",
     "btn_skip": "PASSER LE TUTORIEL",
-    "hud_title": "THE HUD TELLS YOU WHAT'S NEXT",
+    "hud_title": "LE HUD VOUS INDIQUE LA SUITE",
     "normal": "Normal",
-    "danger": "Danger!",
-    "mode_campaign": "CAMPAIGN",
-    "mode_campaign_sub": "100 levels · 3×3 to 7×7 · 3-star rating",
-    "mode_daily": "DAILY",
-    "mode_daily_sub": "1 puzzle per day · Global leaderboard",
-    "mode_endless": "ENDLESS",
-    "mode_endless_sub": "How many rounds in 3 minutes?",
-    "mode_speed": "SPEED",
-    "mode_speed_sub": "4×4 · Halved timer · 2× score"
+    "danger": "Danger !",
+    "mode_campaign": "CAMPAGNE",
+    "mode_campaign_sub": "100 niveaux · 3×3 à 7×7 · notation 3 étoiles",
+    "mode_daily": "QUOTIDIEN",
+    "mode_daily_sub": "1 puzzle par jour · Classement mondial",
+    "mode_endless": "INFINI",
+    "mode_endless_sub": "Combien de manches en 3 minutes ?",
+    "mode_speed": "VITESSE",
+    "mode_speed_sub": "4×4 · Minuteur réduit de moitié · score ×2"
   },
 
   "language": {
@@ -221,48 +221,48 @@
   },
 
   "daily": {
-    "title": "DAILY CHALLENGE",
-    "instruction_1": "Complete all 3 daily challenges every day.",
-    "instruction_2": "Complete in order — each challenge unlocks the next.",
-    "streak_goal": "Reach 7 days in a row to claim 3 💎 gems.",
-    "day": "Day {{n}}",
-    "claim": "CLAIM",
-    "claimed": "CLAIMED",
-    "challenge": "CHALLENGE {{n}}",
+    "title": "DÉFI QUOTIDIEN",
+    "instruction_1": "Terminez les 3 défis quotidiens chaque jour.",
+    "instruction_2": "Terminez dans l'ordre — chaque défi débloque le suivant.",
+    "streak_goal": "Atteignez 7 jours d'affilée pour réclamer 3 💎 gemmes.",
+    "day": "Jour {{n}}",
+    "claim": "RÉCLAMER",
+    "claimed": "RÉCLAMÉ",
+    "challenge": "DÉFI {{n}}",
     "reward_gem_1": "+1 💎",
     "reward_gem_3": "+3 💎",
-    "complete_to_claim": "Complete all challenges to claim",
-    "complete_7": "Complete 7 days to claim"
+    "complete_to_claim": "Terminez tous les défis pour réclamer",
+    "complete_7": "Terminez 7 jours pour réclamer"
   },
 
   "difficulty": {
-    "easy": "EASY",
-    "easy_sub": "Ascending 1 → N²",
+    "easy": "FACILE",
+    "easy_sub": "Croissant 1 → N²",
     "pro": "PRO",
-    "pro_sub": "Descending N² → 1",
+    "pro_sub": "Décroissant N² → 1",
     "expert": "EXPERT",
-    "expert_sub": "Random order"
+    "expert_sub": "Ordre aléatoire"
   },
 
   "freeplay": {
-    "title": "FREE PLAY",
-    "grid_size": "Grid Size",
-    "difficulty": "Difficulty",
-    "timer": "Timer",
+    "title": "JEU LIBRE",
+    "grid_size": "Taille de la grille",
+    "difficulty": "Difficulté",
+    "timer": "Minuteur",
     "off": "OFF"
   },
 
   "campaign": {
-    "title": "CAMPAIGN",
-    "coming_soon": "COMING SOON",
-    "coming_soon_sub": "More levels on the way"
+    "title": "CAMPAGNE",
+    "coming_soon": "BIENTÔT DISPONIBLE",
+    "coming_soon_sub": "D'autres niveaux arrivent"
   },
 
   "hints": {
-    "no_ads": "No ads available right now. Try buying gems."
+    "no_ads": "Aucune pub disponible pour le moment. Essayez d'acheter des gemmes."
   },
 
   "country": {
-    "prefer_not": "Prefer not to say"
+    "prefer_not": "Préfère ne pas préciser"
   }
 }
