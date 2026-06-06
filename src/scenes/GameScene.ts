@@ -16,6 +16,7 @@
 import Phaser from 'phaser';
 import type { Cell } from '../game/GridEngine';
 import { useGameStore } from '../store/gameStore';
+import * as soundService from '../services/soundService';
 
 export class GameScene extends Phaser.Scene {
   private tileObjects: Phaser.GameObjects.Container[][] = [];
@@ -30,6 +31,13 @@ export class GameScene extends Phaser.Scene {
   private countdownFirstSeen = new Map<string, number>();
   private countdownHidden = new Set<string>();
   private lastRunId = -1;
+
+  // B-002e: tracks the last status we saw so the win/fail SFX fires exactly once
+  // on the playing -> complete/failed transition (AC8/AC9). The 600ms board-pause
+  // before GameScreen navigates to /result keeps this scene alive long enough to
+  // catch the transition; the sound coincides with the completion, not the screen
+  // change.
+  private lastStatusForSound = '';
 
   // T-008 skin: current tile size (for refreshTileLabels' gradient redraw).
   // T-000: the pre-tap next-target highlight (gold fill + scale pulse) was REMOVED.
@@ -87,6 +95,16 @@ export class GameScene extends Phaser.Scene {
 
   update(_time: number, delta: number) {
     const { status, engine, grid, currentLevel, runId } = useGameStore.getState();
+
+    // B-002e: win/fail SFX on the status transition (fires once). Must run BEFORE
+    // the `status !== 'playing'` early-return below, since the transition is INTO
+    // complete/failed. playWin/playFail are native-only and Sound-toggle gated.
+    if (status !== this.lastStatusForSound) {
+      if (status === 'complete') soundService.playWin();
+      else if (status === 'failed') soundService.playFail();
+      this.lastStatusForSound = status;
+    }
+
     if (status !== 'playing' || !engine) return;
 
     // Reset view-layer countdown state on a NEW level only. runId increments in
@@ -287,6 +305,7 @@ export class GameScene extends Phaser.Scene {
   private handleTap(row: number, col: number) {
     const result = useGameStore.getState().tapCell(row, col);
     if (result === 'CORRECT') {
+      soundService.playCorrect(); // B-002e AC6 — immediate
       this.playCorrectAnimation(row, col);
       this.refreshTileLabels();
       // Check if hint was active on this tile
@@ -298,6 +317,7 @@ export class GameScene extends Phaser.Scene {
         }
       }
     } else if (result === 'WRONG') {
+      soundService.playWrong(); // B-002e AC7 — immediate
       this.playWrongAnimation(row, col);
     }
   }

@@ -22,6 +22,7 @@ import { ParticleCanvas } from './ParticleCanvas';
 import { BottomNav } from './BottomNav';
 import { SKIN } from '../styles/skin';
 import { getFreePlayPB, setFreePlayPB } from '../services/freePlayPB';
+import * as musicService from '../services/musicService';
 
 export function ResultScreen() {
   const { t } = useTranslation();
@@ -43,6 +44,14 @@ export function ResultScreen() {
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // B-002e AC3: the menu water-drip was paused on game start (GameScreen). Resume
+  // it on the Result screen — but only if the Music toggle is on (independent of
+  // the Sound toggle that gates SFX, AC11). The win/fail SFX itself fires in
+  // GameScene on completion, not here.
+  useEffect(() => {
+    if (useSettingsStore.getState().musicEnabled) musicService.play();
   }, []);
 
   const [stars, setStars] = useState<0 | 1 | 2 | 3>(0);

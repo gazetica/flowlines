@@ -23,6 +23,8 @@ import { BuyHintModal } from './BuyHintModal';
 import { Capacitor } from '@capacitor/core';
 import { loadRewarded, showRewarded } from '../services/rewardedAdService';
 import { initAppLifecycle, removeAppLifecycle } from '../services/appLifecycle';
+import * as soundService from '../services/soundService';
+import * as musicService from '../services/musicService';
 import { SKIN } from '../styles/skin';
 
 export function GameScreen() {
@@ -64,6 +66,20 @@ export function GameScreen() {
     const limit = st.currentLevel?.timeLimit ?? 30;
     return Math.max(1, Math.round(limit - st.timeElapsed));
   });
+
+  // B-002e: gameplay audio lifecycle. Stop the menu water-drip while playing
+  // (AC3) and preload the SFX for near-zero-latency taps (AC6/AC7). On exit,
+  // unload the SFX and resume the drip — but only if the Music toggle is on, so
+  // SFX (Sound toggle) and drip (Music toggle) stay independent (AC11). The
+  // Result screen also resumes the drip on its own mount (AC3).
+  useEffect(() => {
+    musicService.pause();
+    soundService.preload();
+    return () => {
+      soundService.unload();
+      if (useSettingsStore.getState().musicEnabled) musicService.play();
+    };
+  }, []);
 
   // T-017 AC2: preload the rewarded ad on mount so it is ready when Hint is tapped
   // (native only — AdMob has no web implementation). The service reloads itself
@@ -338,6 +354,11 @@ export function GameScreen() {
               paused={isPaused || status !== 'playing'}
               onTick={(remaining) => {
                 tickTimer(timeLimit - remaining);
+                // B-002e AC4/AC5: clock tick every second; the same asset at rate
+                // 1.5 when <=10s left (matches the timer's existing danger / red-
+                // pulse threshold). onTick is the existing per-second callback —
+                // no new timer created.
+                soundService.playTick(remaining <= 10);
               }}
               onExpire={() => endGame('expired')}
             />
