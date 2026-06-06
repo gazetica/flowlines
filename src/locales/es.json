@@ -32,7 +32,11 @@
     "campaign_progress": "PROGRESO DE CAMPAÑA",
     "daily_sub": "Completa los 3 desafíos",
     "tagline_1": "Los números no esperan.",
-    "tagline_2": "¿Qué tan rápido puedes encontrarlos?"
+    "tagline_2": "¿Qué tan rápido puedes encontrarlos?",
+    "win_pro_tag": "GANAR ETIQUETA PRO",
+    "win_pro_sub": "Completa el nivel 100 de la campaña",
+    "win_expert_tag": "GANAR ETIQUETA EXPERTO",
+    "win_expert_sub": "Completa el nivel 200 de la campaña"
   },
 
   "game": {
@@ -279,8 +283,8 @@
     "unlock_pro": "DESBLOQUEAR POR $3.99",
     "unlock_expert": "DESBLOQUEAR POR $4.99",
     "placeholder_toast": "Disponible en la versión completa",
-    "pro_gate_sub": "Gratis — La Campaña Pro se abre cuando 1.000 jugadores completen la Campaña 1",
-    "expert_gate_sub": "Gratis — La Campaña Experto se abre cuando 1.000 jugadores completen la Campaña 2",
+    "pro_gate_sub": "La Campaña Pro se abre cuando 1.000 jugadores completen la Campaña 100",
+    "expert_gate_sub": "La Campaña Experto se abre cuando 1.000 jugadores completen la Campaña 200",
     "gate_counter": "{{count}} / {{total}}"
   },
 

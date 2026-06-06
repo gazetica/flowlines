@@ -32,7 +32,11 @@
     "campaign_progress": "KAMPAGNENFORTSCHRITT",
     "daily_sub": "Schließe alle 3 Challenges ab",
     "tagline_1": "Zahlen warten nicht.",
-    "tagline_2": "Wie schnell findest du sie?"
+    "tagline_2": "Wie schnell findest du sie?",
+    "win_pro_tag": "PRO-TAG GEWINNEN",
+    "win_pro_sub": "Schließe Kampagnen-Level 100 ab",
+    "win_expert_tag": "EXPERTEN-TAG GEWINNEN",
+    "win_expert_sub": "Schließe Kampagnen-Level 200 ab"
   },
 
   "game": {
@@ -279,8 +283,8 @@
     "unlock_pro": "FÜR $3.99 FREISCHALTEN",
     "unlock_expert": "FÜR $4.99 FREISCHALTEN",
     "placeholder_toast": "In der Vollversion verfügbar",
-    "pro_gate_sub": "Kostenlos — Die Pro-Kampagne öffnet, wenn 1.000 Spieler Kampagne 1 abschließen",
-    "expert_gate_sub": "Kostenlos — Die Experten-Kampagne öffnet, wenn 1.000 Spieler Kampagne 2 abschließen",
+    "pro_gate_sub": "Das Pro-Kampagnentor öffnet, wenn 1.000 Spieler Kampagne 100 abschließen",
+    "expert_gate_sub": "Das Experten-Kampagnentor öffnet, wenn 1.000 Spieler Kampagne 200 abschließen",
     "gate_counter": "{{count}} / {{total}}"
   },
 

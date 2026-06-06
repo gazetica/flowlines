@@ -41,6 +41,10 @@ export function GameScreen() {
   const consumeHint = useSettingsStore((s) => s.consumeHint);
   const removeAdsPurchased = useSettingsStore((s) => s.removeAdsPurchased); // T-017 AC6
   const [hintModalOpen, setHintModalOpen] = useState(false);
+  // F-001c (corr.3): cyan hint overlay — stays on the target tile until the
+  // player taps it correctly (then removed instantly). `value` is the hinted
+  // target; clearing is driven by expectedNext advancing past it (see effect).
+  const [hint, setHint] = useState<{ left: number; top: number; size: number; value: number } | null>(null);
   // T-008 Part 3.4: brief in-game toast (e.g. ad dismissed / unavailable).
   const [toast, setToast] = useState<string | null>(null);
   // T-017 AC7: max 3 rewarded hints per game session (resets each new level/run).
@@ -98,12 +102,36 @@ export function GameScreen() {
   // Highlight the current target tile (gold) for ~5s via the existing
   // GameScene.showHint tween, marking the hint active so the next tap clears it.
   const applyHintToTile = () => {
-    const scene = phaserRef.current?.scene.getScene('GameScene') as GameScene | null;
     const next = useGameStore.getState().engine?.getExpectedNext() ?? 1;
     useGameStore.getState().useHint();
-    scene?.showHint(next);
-    // Safety: clear the active flag after the 5s highlight if no tap cleared it.
-    setTimeout(() => useGameStore.getState().deactivateHint(), 5000);
+    // F-001c Change 4: cyan overlay on the target tile (replaces the GameScene
+    // scale-pulse — showHint is intentionally NOT called, so GameScene.ts stays
+    // untouched). It persists until the correct tile is tapped (no 5s timer); the
+    // expectedNext effect below clears it instantly on that correct tap.
+    showHintOverlay(next);
+  };
+
+  // F-001c: compute the next-target tile's on-screen rect and highlight it cyan.
+  // Same grid geometry the scene's renderGrid() uses (window dims + grid size).
+  const showHintOverlay = (value: number) => {
+    const st = useGameStore.getState();
+    const grid = st.grid;
+    const n = st.currentLevel?.grid ?? 0;
+    let target: { r: number; c: number } | null = null;
+    for (let r = 0; r < grid.length; r++)
+      for (let c = 0; c < (grid[r]?.length ?? 0); c++)
+        if (grid[r][c].value === value && !grid[r][c].tapped) target = { r, c };
+    if (!target || !n) return;
+    const screenW = window.innerWidth;
+    const screenH = window.innerHeight;
+    const tileSize = Math.floor(Math.min(screenW - 48, screenH * 0.65) / n) - 4;
+    const gap = 4;
+    const gridPixelSize = n * (tileSize + gap) - gap;
+    const startX = (screenW - gridPixelSize) / 2;
+    const startY = screenH * 0.2;
+    const left = startX + target.c * (tileSize + gap);
+    const top = startY + target.r * (tileSize + gap);
+    setHint({ left, top, size: tileSize, value });
   };
 
   // Right card: use a hint if available, else pause the game and open the
@@ -301,6 +329,13 @@ export function GameScreen() {
     : null;
   const tierColor = campaignTier === 'expert' ? '#00f5ff' : campaignTier === 'pro' ? '#9B59B6' : undefined;
 
+  // F-001c (corr.3): clear the hint overlay the instant the hinted tile is tapped
+  // correctly — expectedNext advances past the hinted value. A wrong tap leaves
+  // expectedNext unchanged, so the overlay stays.
+  useEffect(() => {
+    if (hint && hint.value !== expectedNext) setHint(null);
+  }, [expectedNext, hint]);
+
   return (
     <div
       style={{
@@ -324,6 +359,26 @@ export function GameScreen() {
       {/* Phaser canvas container (z-index 1, above background, below HUD) */}
       {/* F-001b: tier-coloured play-area border (Pro purple / Expert cyan); none for C1. */}
       <div id="phaser-container" style={{ position: 'absolute', inset: 0, zIndex: 1, border: tierColor ? `2px solid ${tierColor}` : 'none', boxShadow: tierColor ? `inset 0 0 24px ${tierColor}33` : 'none' }} />
+
+      {/* F-001c (corr.3): cyan hint highlight — stays on the target tile until the
+          correct tap, then removed instantly (no fade). */}
+      {hint && (
+        <div
+          style={{
+            position: 'absolute',
+            left: hint.left,
+            top: hint.top,
+            width: hint.size,
+            height: hint.size,
+            background: '#00f5ff',
+            borderRadius: 6,
+            zIndex: 5,
+            pointerEvents: 'none',
+            opacity: 0.55,
+            boxShadow: '0 0 18px rgba(0,245,255,0.7)',
+          }}
+        />
+      )}
 
       {/* HUD overlay — glassmorphism bar (T-009c: 2-row grid so the three labels
           align on one line and the three values share a baseline). The TIMER value

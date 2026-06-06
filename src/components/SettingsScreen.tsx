@@ -51,6 +51,12 @@ export function SettingsScreen() {
   // F-001b: local player tier tag (PRO/EXPERT) shown next to the alias.
   const [tier, setTier] = useState<Tier | null>(null);
   useEffect(() => { loadLocalTier().then(setTier); }, []);
+  // F-001c (corr.4): brief toast for the placeholder purchase actions.
+  const [toast, setToast] = useState<string | null>(null);
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 1900);
+  };
 
   // B-002: persist the toggle AND drive the music service so it starts/stops
   // immediately (AC4/AC5). play()/pause() are idempotent and safe to call before
@@ -102,35 +108,37 @@ export function SettingsScreen() {
 
       {/* PROFILE */}
       <Section label={t('settings.section_profile')}>
+        {/* F-001c: tier tag row ABOVE the alias input — hidden entirely if none. */}
+        {tier && (
+          <div style={rowStyle}>
+            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 14 }}>
+              <span style={{ color: 'var(--white)' }}>{alias || 'Player'}</span>
+              <span style={{ color: TIER_COLORS[tier], fontWeight: 700 }}> {t(tier === 'expert' ? 'tier.expert_tag' : 'tier.pro_tag')}</span>
+            </span>
+          </div>
+        )}
         <div style={rowStyle}>
           <div>
             <div style={labelStyle}>{t('settings.alias_label')}</div>
             <div style={{ fontSize: 11, color: 'var(--muted)' }}>{t('settings.alias_sub')}</div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <input
-              type="text"
-              value={alias}
-              onChange={(e) => setAlias(e.target.value)}
-              placeholder={t('settings.alias_placeholder')}
-              maxLength={16}
-              style={{
-                background: 'var(--navy-card)',
-                border: '1px solid var(--navy-border)',
-                color: 'var(--white)',
-                borderRadius: 4,
-                padding: '6px 10px',
-                width: 120,
-                fontFamily: "'Space Mono', monospace",
-                fontSize: 11,
-              }}
-            />
-            {tier && (
-              <span style={{ color: TIER_COLORS[tier], fontFamily: "'Space Mono', monospace", fontSize: 11, fontWeight: 700 }}>
-                {t(tier === 'expert' ? 'tier.expert_tag' : 'tier.pro_tag')}
-              </span>
-            )}
-          </div>
+          <input
+            type="text"
+            value={alias}
+            onChange={(e) => setAlias(e.target.value)}
+            placeholder={t('settings.alias_placeholder')}
+            maxLength={16}
+            style={{
+              background: 'var(--navy-card)',
+              border: '1px solid var(--navy-border)',
+              color: 'var(--white)',
+              borderRadius: 4,
+              padding: '6px 10px',
+              width: 120,
+              fontFamily: "'Space Mono', monospace",
+              fontSize: 11,
+            }}
+          />
         </div>
         {/* Country (T-005 Part 3.5) */}
         <div style={rowStyle}>
@@ -148,7 +156,8 @@ export function SettingsScreen() {
 
       {/* PURCHASES */}
       <Section label={t('settings.section_purchases')}>
-        <div style={rowStyle}>
+        {/* F-001c (corr.4): the whole row is tappable → IAP screen. */}
+        <div style={{ ...rowStyle, cursor: 'pointer' }} onClick={() => navigate('/iap')}>
           <div>
             <div style={labelStyle}>{t('settings.remove_ads')}</div>
             <div style={{ fontSize: 11, color: 'var(--muted)' }}>{t('settings.remove_ads_sub')}</div>
@@ -158,16 +167,28 @@ export function SettingsScreen() {
               {t('settings.remove_ads_purchased')}
             </span>
           ) : (
-            <button className="btn-outline" onClick={() => navigate('/iap')} style={{ padding: '6px 12px', fontSize: 10 }}>
+            <span className="btn-outline" style={{ padding: '6px 12px', fontSize: 10 }}>
               {t('common.ok')}
-            </button>
+            </span>
           )}
         </div>
-        <div style={{ ...rowStyle, justifyContent: 'space-between' }}>
+        {/* F-001c (corr.4): Restore → placeholder toast (real flow in T-019). */}
+        <div
+          style={{ ...rowStyle, justifyContent: 'space-between', cursor: 'pointer' }}
+          onClick={() => showToast(t('campaign.placeholder_toast'))}
+        >
           <span style={labelStyle}>{t('settings.restore_purchases')}</span>
           <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: 'var(--muted)' }}>›</span>
         </div>
       </Section>
+
+      {toast && (
+        <div style={{ position: 'fixed', bottom: '12%', left: 0, right: 0, textAlign: 'center', zIndex: 50, pointerEvents: 'none' }}>
+          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, color: 'var(--white)', background: 'rgba(8,18,32,0.92)', border: '1px solid rgba(30,139,195,0.4)', borderRadius: 8, padding: '8px 14px' }}>
+            {toast}
+          </span>
+        </div>
+      )}
     </ScreenShell>
     </>
   );

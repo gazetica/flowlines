@@ -259,21 +259,22 @@ function GatedCampaign({
   const completedInCampaign = levels.filter((l) => (completedLevels[l.id] ?? 0) >= 1).length;
 
   return (
-    <div style={{ marginBottom: 28 }}>
-      {/* Header: title · subtitle · gate progress */}
+    // F-001c: gate section card — centred content (Title → Subtitle → Counter → Unlock).
+    <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 12, padding: 16, margin: '12px 0', textAlign: 'center' }}>
+      {/* Header: title · subtitle · centred counter */}
       <div style={{ marginBottom: 12 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
           <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 13, color: accessible ? 'var(--gold)' : 'var(--muted)', letterSpacing: 1 }}>{t(titleKey)}</div>
           {!accessible && <span style={{ fontSize: 11 }}>🔒</span>}
           {gate.purchased && <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 8, color: 'var(--success)', border: '1px solid rgba(46,204,113,0.4)', borderRadius: 4, padding: '1px 5px' }}>{t('campaign.early_access_badge')}</span>}
         </div>
         <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 3 }}>{t(subKey)}</div>
-        {/* F-001b: large right-aligned live gate counter (cyan). */}
-        <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 26, fontWeight: 700, color: '#00f5ff', textAlign: 'right', marginTop: 6, textShadow: '0 0 10px rgba(0,245,255,0.3)' }}>
+        {/* F-001c (corr.1): large centred live gate counter, below the subtitle. */}
+        <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 26, fontWeight: 700, color: '#00f5ff', textAlign: 'center', marginTop: 8, textShadow: '0 0 10px rgba(0,245,255,0.3)' }}>
           {t('campaign.gate_counter', { count: gate.count.toLocaleString(), total: gate.total.toLocaleString() })}
         </div>
         {accessible && (
-          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: 'var(--muted)', marginTop: 2 }}>
+          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: 'var(--muted)', marginTop: 4 }}>
             {completedInCampaign}/{levels.length}
           </div>
         )}

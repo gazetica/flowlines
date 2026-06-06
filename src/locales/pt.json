@@ -32,7 +32,11 @@
     "campaign_progress": "PROGRESSO DA CAMPANHA",
     "daily_sub": "Complete os 3 desafios",
     "tagline_1": "Os números não esperam.",
-    "tagline_2": "Quão rápido você os encontra?"
+    "tagline_2": "Quão rápido você os encontra?",
+    "win_pro_tag": "GANHAR TAG PRO",
+    "win_pro_sub": "Complete o nível 100 da campanha",
+    "win_expert_tag": "GANHAR TAG ESPECIALISTA",
+    "win_expert_sub": "Complete o nível 200 da campanha"
   },
 
   "game": {
@@ -279,8 +283,8 @@
     "unlock_pro": "DESBLOQUEAR POR $3.99",
     "unlock_expert": "DESBLOQUEAR POR $4.99",
     "placeholder_toast": "Disponível na versão completa",
-    "pro_gate_sub": "Grátis — A Campanha Pro abre quando 1.000 jogadores completarem a Campanha 1",
-    "expert_gate_sub": "Grátis — A Campanha Especialista abre quando 1.000 jogadores completarem a Campanha 2",
+    "pro_gate_sub": "A Campanha Pro abre quando 1.000 jogadores completarem a Campanha 100",
+    "expert_gate_sub": "A Campanha Especialista abre quando 1.000 jogadores completarem a Campanha 200",
     "gate_counter": "{{count}} / {{total}}"
   },
 

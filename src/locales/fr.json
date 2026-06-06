@@ -32,7 +32,11 @@
     "campaign_progress": "PROGRESSION CAMPAGNE",
     "daily_sub": "Terminez les 3 défis",
     "tagline_1": "Les chiffres n'attendent pas.",
-    "tagline_2": "À quelle vitesse les trouvez-vous?"
+    "tagline_2": "À quelle vitesse les trouvez-vous?",
+    "win_pro_tag": "GAGNER LE TAG PRO",
+    "win_pro_sub": "Terminez le niveau 100 de la campagne",
+    "win_expert_tag": "GAGNER LE TAG EXPERT",
+    "win_expert_sub": "Terminez le niveau 200 de la campagne"
   },
 
   "game": {
@@ -279,8 +283,8 @@
     "unlock_pro": "DÉBLOQUER POUR $3.99",
     "unlock_expert": "DÉBLOQUER POUR $4.99",
     "placeholder_toast": "Disponible dans la version complète",
-    "pro_gate_sub": "Gratuit — La Campagne Pro s'ouvre quand 1 000 joueurs terminent la Campagne 1",
-    "expert_gate_sub": "Gratuit — La Campagne Expert s'ouvre quand 1 000 joueurs terminent la Campagne 2",
+    "pro_gate_sub": "La Campagne Pro s’ouvre quand 1 000 joueurs terminent la Campagne 100",
+    "expert_gate_sub": "La Campagne Expert s’ouvre quand 1 000 joueurs terminent la Campagne 200",
     "gate_counter": "{{count}} / {{total}}"
   },
 

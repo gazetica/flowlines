@@ -32,7 +32,11 @@
     "campaign_progress": "캠페인 진행도",
     "daily_sub": "3개 챌린지 모두 완료",
     "tagline_1": "숫자는 기다리지 않는다.",
-    "tagline_2": "얼마나 빨리 찾을 수 있나요?"
+    "tagline_2": "얼마나 빨리 찾을 수 있나요?",
+    "win_pro_tag": "프로 태그 획득",
+    "win_pro_sub": "캠페인 레벨 100 완료",
+    "win_expert_tag": "전문가 태그 획득",
+    "win_expert_sub": "캠페인 레벨 200 완료"
   },
 
   "game": {
@@ -279,8 +283,8 @@
     "unlock_pro": "$3.99에 잠금 해제",
     "unlock_expert": "$4.99에 잠금 해제",
     "placeholder_toast": "정식 출시 버전에서 사용 가능",
-    "pro_gate_sub": "무료 — 1,000명의 플레이어가 캠페인 1을 완료하면 프로 캠페인이 열립니다",
-    "expert_gate_sub": "무료 — 1,000명의 플레이어가 캠페인 2를 완료하면 전문가 캠페인이 열립니다",
+    "pro_gate_sub": "1,000명의 플레이어가 캠페인 100을 완료하면 프로 캠페인이 열립니다",
+    "expert_gate_sub": "1,000명의 플레이어가 캠페인 200을 완료하면 전문가 캠페인이 열립니다",
     "gate_counter": "{{count}} / {{total}}"
   },
 

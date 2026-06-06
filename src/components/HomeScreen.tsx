@@ -4,13 +4,15 @@
 // Main menu: gold title, best-score / streak stats, PLAY NOW (campaign),
 // mode buttons (daily/speed/endless), and the bottom nav bar.
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useSettingsStore } from '../store/settingsStore';
 import { useGameStore } from '../store/gameStore';
 import { ParticleCanvas } from './ParticleCanvas';
 import { BottomNav } from './BottomNav';
+import { loadLocalTier } from '../services/tierService';
+import type { Tier } from '../services/tierService';
 
 // T-006 Part 1.3: three equal SQUARE mode cards (replaces the old small
 // rectangular row). Endless/Speed go through the difficulty pre-screen; Free
@@ -29,6 +31,11 @@ export function HomeScreen() {
   const { completedLevels, bestScores, dailyStreak } = useSettingsStore();
   // Gold border flash on tap before navigating (T-006 Part 1.3).
   const [flashCard, setFlashCard] = useState<ModeCardKey | null>(null);
+  // F-001c: tier-achievement cards (local tier from Preferences).
+  const [tier, setTier] = useState<Tier | null>(null);
+  useEffect(() => { loadLocalTier().then(setTier); }, []);
+  const proCompleted = tier === 'pro' || tier === 'expert';
+  const expertCompleted = tier === 'expert';
 
   // Best score across all campaign levels
   const campaignBest = Math.max(
@@ -212,31 +219,87 @@ export function HomeScreen() {
         </div>
       </div>
 
-      {/* Tagline — vertically centred in the space between the 3 cards and the
-          footer (T-007 Fix 1: flex:1 container, content centred). */}
-      <div
-        style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '0 24px',
-          textAlign: 'center',
-          position: 'relative',
-          zIndex: 1,
-        }}
-      >
-        <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 16, fontWeight: 700, color: '#E8F0F8', letterSpacing: 0.5 }}>
-          {t('home.tagline_1')}
-        </div>
-        <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, color: '#5E7A9C', marginTop: 4 }}>
-          {t('home.tagline_2')}
-        </div>
+      {/* F-001c: tier achievement cards (taglines removed). Expert first, Pro below.
+          flex:1 container fills the space between the mode cards and the footer. */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '16px 16px 0', position: 'relative', zIndex: 1 }}>
+        <AchievementCard
+          accent="#00f5ff"
+          bg="rgba(0,245,255,0.06)"
+          subColor="rgba(0,245,255,0.7)"
+          checkColor="#07111F"
+          title={t('home.win_expert_tag')}
+          sub={t('home.win_expert_sub')}
+          completed={expertCompleted}
+        />
+        <AchievementCard
+          accent="#9B59B6"
+          bg="rgba(155,89,182,0.08)"
+          subColor="rgba(155,89,182,0.7)"
+          checkColor="#FFFFFF"
+          title={t('home.win_pro_tag')}
+          sub={t('home.win_pro_sub')}
+          completed={proCompleted}
+        />
       </div>
 
       {/* Bottom nav (shared component — T-004A Fix 6) */}
       <BottomNav active="home" />
+    </div>
+  );
+}
+
+// —— F-001c: tier achievement pill card ————————————————————————————————
+function AchievementCard({ accent, bg, subColor, checkColor, title, sub, completed }: {
+  accent: string;
+  bg: string;
+  subColor: string;
+  checkColor: string;
+  title: string;
+  sub: string;
+  completed: boolean;
+}) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 14,
+        width: '80%', // F-001c (corr.2): narrower pill…
+        alignSelf: 'center', // …centred on screen
+        minHeight: 80,
+        borderRadius: 999, // full pill — half-circle ends
+        border: `2px solid ${accent}`,
+        background: bg,
+        padding: '12px 22px',
+        marginBottom: 12,
+      }}
+    >
+      {/* round checkbox */}
+      <div
+        style={{
+          width: 28,
+          height: 28,
+          borderRadius: '50%',
+          flexShrink: 0,
+          border: `2px solid ${accent}`,
+          background: completed ? accent : 'transparent',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: completed ? `0 0 10px ${accent}` : 'inset 0 1px 4px rgba(0,0,0,0.5)',
+        }}
+      >
+        {completed && <span style={{ color: checkColor, fontSize: 15, fontWeight: 700, lineHeight: 1 }}>✓</span>}
+      </div>
+
+      {/* title + subtitle */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 13, fontWeight: 700, color: accent, letterSpacing: 1 }}>{title}</div>
+        <div style={{ fontSize: 11, color: subColor, marginTop: 2 }}>{sub}</div>
+      </div>
+
+      {/* decorative tier accent */}
+      <div style={{ width: 10, height: 10, borderRadius: '50%', background: accent, flexShrink: 0, boxShadow: `0 0 8px ${accent}` }} />
     </div>
   );
 }

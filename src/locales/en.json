@@ -32,7 +32,11 @@
     "campaign_progress": "CAMPAIGN PROGRESS",
     "daily_sub": "Complete all 3 challenges",
     "tagline_1": "Numbers don't wait.",
-    "tagline_2": "How fast can you find them?"
+    "tagline_2": "How fast can you find them?",
+    "win_pro_tag": "WIN PRO TAG",
+    "win_pro_sub": "Complete Campaign Level 100",
+    "win_expert_tag": "WIN EXPERT TAG",
+    "win_expert_sub": "Complete Campaign Level 200"
   },
 
   "game": {
@@ -279,8 +283,8 @@
     "unlock_pro": "UNLOCK FOR $3.99",
     "unlock_expert": "UNLOCK FOR $4.99",
     "placeholder_toast": "Available in full release",
-    "pro_gate_sub": "Free — Pro Campaign Gate opens on 1,000 Players Completing Campaign 1",
-    "expert_gate_sub": "Free — Expert Campaign Gate opens on 1,000 Players Completing Campaign 2",
+    "pro_gate_sub": "Pro Campaign Gate opens on 1,000 Players Completing Campaign 100",
+    "expert_gate_sub": "Expert Campaign Gate opens on 1,000 Players Completing Campaign 200",
     "gate_counter": "{{count}} / {{total}}"
   },
 
