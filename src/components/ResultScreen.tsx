@@ -16,7 +16,7 @@ import { ScoreEngine } from '../game/ScoreEngine';
 import { LeaderPanel } from './LeaderPanel';
 import { submitCampaignScore } from '../services/campaignScores';
 import { autoSubmitDailyIfComplete } from '../services/dailyScores';
-import { loadInterstitial, isCapElapsed, showInterstitial } from '../services/interstitialAdService';
+import { incrementLevelCount, maybeShowInterstitial } from '../services/interstitialAdService';
 import * as analytics from '../services/analytics';
 import { ParticleCanvas } from './ParticleCanvas';
 import { BottomNav } from './BottomNav';
@@ -28,20 +28,19 @@ export function ResultScreen() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { status, currentLevel, score, timeElapsed, tapTimestamps, mode, startLevel, startFreePlay, difficulty, timed, currentChallengeIndex } = useGameStore();
-  const { dailyStreak, recordLevelComplete, updateDailyStreak, removeAdsPurchased } = useSettingsStore();
+  const { dailyStreak, recordLevelComplete, updateDailyStreak } = useSettingsStore();
 
-  // T-018: interstitial on Result mount — the only trigger (never mid-gameplay).
-  // Preload, then show if Remove Ads is not owned AND the 3-minute cap has
-  // elapsed. Fire-and-forget: never blocks the Result screen from rendering, and
-  // fails silently on no-fill (native-only — AdMob has no web implementation).
+  // T-018 / T-018b: interstitial on Result mount — the only trigger (never
+  // mid-gameplay). First count this completion, then let the service decide:
+  // it shows when Remove Ads is not owned AND (3-min cap elapsed OR >= 5
+  // completions since the last ad). Fire-and-forget: never blocks the Result
+  // screen from rendering, fails silently on no-fill (native-only — AdMob has
+  // no web implementation).
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
-    if (removeAdsPurchased) return; // AC5: no load, no show
     (async () => {
-      await loadInterstitial(); // AC2: preload on mount
-      if (await isCapElapsed()) {
-        void showInterstitial(); // AC3/AC4: show if cap clear; persists timestamp + reloads
-      }
+      await incrementLevelCount();   // T-018b: count this completion first
+      await maybeShowInterstitial(); // decides on dual trigger + IAP guard
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
