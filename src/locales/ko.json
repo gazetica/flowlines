@@ -30,7 +30,9 @@
     "games": "게임 수",
     "avg": "평균",
     "campaign_progress": "캠페인 진행도",
-    "daily_sub": "3개 챌린지 모두 완료"
+    "daily_sub": "3개 챌린지 모두 완료",
+    "tagline_1": "숫자는 기다리지 않는다.",
+    "tagline_2": "얼마나 빨리 찾을 수 있나요?"
   },
 
   "game": {
@@ -232,7 +234,12 @@
     "reward_gem_1": "+1 💎",
     "reward_gem_3": "+3 💎",
     "complete_to_claim": "모든 챌린지를 완료하여 받기",
-    "complete_7": "7일을 완료하여 받기"
+    "complete_7": "7일을 완료하여 받기",
+    "gem_reward_label": "+1 젬",
+    "gem_reward_sub": "데일리 챌린지 보상",
+    "claim_daily": "오늘의 보상 받기",
+    "claim_weekly": "주간 보상 3개 받기",
+    "streak_label": "연속:"
   },
 
   "difficulty": {
@@ -241,7 +248,9 @@
     "pro": "프로",
     "pro_sub": "내림차순 N² → 1",
     "expert": "전문가",
-    "expert_sub": "무작위 순서"
+    "expert_sub": "무작위 순서",
+    "select_title": "난이도 선택",
+    "start": "시작"
   },
 
   "freeplay": {
@@ -249,7 +258,8 @@
     "grid_size": "격자 크기",
     "difficulty": "난이도",
     "timer": "타이머",
-    "off": "끄기"
+    "off": "끄기",
+    "toggle_on": "켜짐"
   },
 
   "campaign": {

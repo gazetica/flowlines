@@ -118,7 +118,7 @@ export function DifficultyScreen() {
 
       <div style={{ textAlign: 'center', padding: '56px 24px 24px', position: 'relative', zIndex: 1 }}>
         <h1 style={{ fontFamily: "'Space Mono', monospace", fontSize: 18, color: 'var(--white)', letterSpacing: 2 }}>
-          SELECT DIFFICULTY
+          {t('difficulty.select_title')}
         </h1>
       </div>
 
@@ -181,7 +181,7 @@ export function DifficultyScreen() {
             boxShadow: selected === 'easy' ? SKIN.btnGoldShadow : `0 0 16px ${selectedOpt.border}, 0 4px 12px rgba(0,0,0,0.4)`,
           }}
         >
-          START
+          {t('difficulty.start')}
         </button>
       </div>
     </div>

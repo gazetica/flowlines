@@ -30,7 +30,9 @@
     "games": "SPIELE",
     "avg": "Ø",
     "campaign_progress": "KAMPAGNENFORTSCHRITT",
-    "daily_sub": "Schließe alle 3 Challenges ab"
+    "daily_sub": "Schließe alle 3 Challenges ab",
+    "tagline_1": "Zahlen warten nicht.",
+    "tagline_2": "Wie schnell findest du sie?"
   },
 
   "game": {
@@ -232,7 +234,12 @@
     "reward_gem_1": "+1 💎",
     "reward_gem_3": "+3 💎",
     "complete_to_claim": "Schließe alle Challenges ab, um einzulösen",
-    "complete_7": "Schließe 7 Tage ab, um einzulösen"
+    "complete_7": "Schließe 7 Tage ab, um einzulösen",
+    "gem_reward_label": "+1 EDELSTEIN",
+    "gem_reward_sub": "Tägliche Challenge Belohnung",
+    "claim_daily": "TÄGLICH EINLÖSEN",
+    "claim_weekly": "WÖCHENTLICH 3 EINLÖSEN",
+    "streak_label": "Streak:"
   },
 
   "difficulty": {
@@ -241,7 +248,9 @@
     "pro": "PRO",
     "pro_sub": "Absteigend N² → 1",
     "expert": "EXPERTE",
-    "expert_sub": "Zufällige Reihenfolge"
+    "expert_sub": "Zufällige Reihenfolge",
+    "select_title": "SCHWIERIGKEIT WÄHLEN",
+    "start": "START"
   },
 
   "freeplay": {
@@ -249,7 +258,8 @@
     "grid_size": "Gittergröße",
     "difficulty": "Schwierigkeit",
     "timer": "Timer",
-    "off": "AUS"
+    "off": "AUS",
+    "toggle_on": "AN"
   },
 
   "campaign": {

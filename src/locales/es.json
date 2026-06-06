@@ -30,7 +30,9 @@
     "games": "PARTIDAS",
     "avg": "PROM",
     "campaign_progress": "PROGRESO DE CAMPAÑA",
-    "daily_sub": "Completa los 3 desafíos"
+    "daily_sub": "Completa los 3 desafíos",
+    "tagline_1": "Los números no esperan.",
+    "tagline_2": "¿Qué tan rápido puedes encontrarlos?"
   },
 
   "game": {
@@ -232,7 +234,12 @@
     "reward_gem_1": "+1 💎",
     "reward_gem_3": "+3 💎",
     "complete_to_claim": "Completa todos los desafíos para reclamar",
-    "complete_7": "Completa 7 días para reclamar"
+    "complete_7": "Completa 7 días para reclamar",
+    "gem_reward_label": "+1 GEMA",
+    "gem_reward_sub": "Recompensa Desafío Diario",
+    "claim_daily": "RECLAMAR DIARIO",
+    "claim_weekly": "RECLAMAR 3 SEMANAL",
+    "streak_label": "Racha:"
   },
 
   "difficulty": {
@@ -241,7 +248,9 @@
     "pro": "PRO",
     "pro_sub": "Descendente N² → 1",
     "expert": "EXPERTO",
-    "expert_sub": "Orden aleatorio"
+    "expert_sub": "Orden aleatorio",
+    "select_title": "SELECCIONAR DIFICULTAD",
+    "start": "INICIAR"
   },
 
   "freeplay": {
@@ -249,7 +258,8 @@
     "grid_size": "Tamaño de cuadrícula",
     "difficulty": "Dificultad",
     "timer": "Temporizador",
-    "off": "OFF"
+    "off": "OFF",
+    "toggle_on": "ON"
   },
 
   "campaign": {

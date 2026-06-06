@@ -165,7 +165,7 @@ export function HomeScreen() {
             <div style={{ fontSize: 10, color: 'var(--muted)', marginTop: 2 }}>{t('home.daily_sub')}</div>
           </div>
           <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: '#00D2C8' }}>
-            Streak: {dailyStreak} 🔥
+            {t('daily.streak_label')} {dailyStreak} 🔥
           </span>
         </button>
       </div>
@@ -228,10 +228,10 @@ export function HomeScreen() {
         }}
       >
         <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 16, fontWeight: 700, color: '#E8F0F8', letterSpacing: 0.5 }}>
-          Numbers don't wait.
+          {t('home.tagline_1')}
         </div>
         <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, color: '#5E7A9C', marginTop: 4 }}>
-          How fast can you find them?
+          {t('home.tagline_2')}
         </div>
       </div>
 

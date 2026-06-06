@@ -30,7 +30,9 @@
     "games": "PARTIES",
     "avg": "MOY",
     "campaign_progress": "PROGRESSION CAMPAGNE",
-    "daily_sub": "Terminez les 3 défis"
+    "daily_sub": "Terminez les 3 défis",
+    "tagline_1": "Les chiffres n'attendent pas.",
+    "tagline_2": "À quelle vitesse les trouvez-vous?"
   },
 
   "game": {
@@ -232,7 +234,12 @@
     "reward_gem_1": "+1 💎",
     "reward_gem_3": "+3 💎",
     "complete_to_claim": "Terminez tous les défis pour réclamer",
-    "complete_7": "Terminez 7 jours pour réclamer"
+    "complete_7": "Terminez 7 jours pour réclamer",
+    "gem_reward_label": "+1 GEMME",
+    "gem_reward_sub": "Récompense Défi Quotidien",
+    "claim_daily": "RÉCLAMER QUOTIDIEN",
+    "claim_weekly": "RÉCLAMER 3 HEBDOMADAIRE",
+    "streak_label": "Série :"
   },
 
   "difficulty": {
@@ -241,7 +248,9 @@
     "pro": "PRO",
     "pro_sub": "Décroissant N² → 1",
     "expert": "EXPERT",
-    "expert_sub": "Ordre aléatoire"
+    "expert_sub": "Ordre aléatoire",
+    "select_title": "CHOISIR DIFFICULTÉ",
+    "start": "DÉMARRER"
   },
 
   "freeplay": {
@@ -249,7 +258,8 @@
     "grid_size": "Taille de la grille",
     "difficulty": "Difficulté",
     "timer": "Minuteur",
-    "off": "OFF"
+    "off": "OFF",
+    "toggle_on": "ON"
   },
 
   "campaign": {

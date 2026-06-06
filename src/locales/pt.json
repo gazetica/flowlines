@@ -30,7 +30,9 @@
     "games": "JOGOS",
     "avg": "MÉD",
     "campaign_progress": "PROGRESSO DA CAMPANHA",
-    "daily_sub": "Complete os 3 desafios"
+    "daily_sub": "Complete os 3 desafios",
+    "tagline_1": "Os números não esperam.",
+    "tagline_2": "Quão rápido você os encontra?"
   },
 
   "game": {
@@ -232,7 +234,12 @@
     "reward_gem_1": "+1 💎",
     "reward_gem_3": "+3 💎",
     "complete_to_claim": "Complete todos os desafios para resgatar",
-    "complete_7": "Complete 7 dias para resgatar"
+    "complete_7": "Complete 7 dias para resgatar",
+    "gem_reward_label": "+1 GEMA",
+    "gem_reward_sub": "Recompensa Desafio Diário",
+    "claim_daily": "RESGATAR DIÁRIO",
+    "claim_weekly": "RESGATAR 3 SEMANAL",
+    "streak_label": "Sequência:"
   },
 
   "difficulty": {
@@ -241,7 +248,9 @@
     "pro": "PRO",
     "pro_sub": "Decrescente N² → 1",
     "expert": "ESPECIALISTA",
-    "expert_sub": "Ordem aleatória"
+    "expert_sub": "Ordem aleatória",
+    "select_title": "SELECIONAR DIFICULDADE",
+    "start": "INICIAR"
   },
 
   "freeplay": {
@@ -249,7 +258,8 @@
     "grid_size": "Tamanho da grade",
     "difficulty": "Dificuldade",
     "timer": "Temporizador",
-    "off": "OFF"
+    "off": "OFF",
+    "toggle_on": "ON"
   },
 
   "campaign": {

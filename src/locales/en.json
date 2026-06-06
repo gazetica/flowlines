@@ -30,7 +30,9 @@
     "games": "GAMES",
     "avg": "AVG",
     "campaign_progress": "CAMPAIGN PROGRESS",
-    "daily_sub": "Complete all 3 challenges"
+    "daily_sub": "Complete all 3 challenges",
+    "tagline_1": "Numbers don't wait.",
+    "tagline_2": "How fast can you find them?"
   },
 
   "game": {
@@ -232,7 +234,12 @@
     "reward_gem_1": "+1 💎",
     "reward_gem_3": "+3 💎",
     "complete_to_claim": "Complete all challenges to claim",
-    "complete_7": "Complete 7 days to claim"
+    "complete_7": "Complete 7 days to claim",
+    "gem_reward_label": "+1 GEM",
+    "gem_reward_sub": "Daily Challenge Reward",
+    "claim_daily": "CLAIM YOUR DAILY",
+    "claim_weekly": "CLAIM YOUR WEEKLY 3",
+    "streak_label": "Streak:"
   },
 
   "difficulty": {
@@ -241,7 +248,9 @@
     "pro": "PRO",
     "pro_sub": "Descending N² → 1",
     "expert": "EXPERT",
-    "expert_sub": "Random order"
+    "expert_sub": "Random order",
+    "select_title": "SELECT DIFFICULTY",
+    "start": "START"
   },
 
   "freeplay": {
@@ -249,7 +258,8 @@
     "grid_size": "Grid Size",
     "difficulty": "Difficulty",
     "timer": "Timer",
-    "off": "OFF"
+    "off": "OFF",
+    "toggle_on": "ON"
   },
 
   "campaign": {

@@ -96,7 +96,7 @@ export function FreePlayScreen() {
 
         <SectionLabel>{t('freeplay.timer')}</SectionLabel>
         <div style={{ display: 'flex', gap: 6 }}>
-          <Chip active={timerOn} onClick={() => setTimerOn(true)}>ON · {timerSecs}s</Chip>
+          <Chip active={timerOn} onClick={() => setTimerOn(true)}>{t('freeplay.toggle_on')} · {timerSecs}s</Chip>
           <Chip active={!timerOn} onClick={() => setTimerOn(false)}>{t('freeplay.off')}</Chip>
         </div>
         {timerOn && (

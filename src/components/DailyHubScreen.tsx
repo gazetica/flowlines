@@ -419,10 +419,10 @@ function DiamondDisplay({ claimable }: { claimable: boolean }) {
     >
       <div style={{ fontSize: 36, opacity: claimable ? 1 : 0.3 }}>💎</div>
       <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 14, color: claimable ? '#FFD700' : SKIN.muted, marginTop: 4 }}>
-        +1 GEM
+        {i18n.t('daily.gem_reward_label')}
       </div>
       <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: SKIN.muted, marginTop: 2 }}>
-        Daily Challenge Reward
+        {i18n.t('daily.gem_reward_sub')}
       </div>
     </div>
   );
@@ -457,7 +457,7 @@ function ClaimButton({ allDone, claimed, onClaim }: { allDone: boolean; claimed:
           color: '#07111F', boxShadow: SKIN.btnGoldShadow, cursor: 'pointer', fontWeight: 700,
         }}
       >
-        💎 CLAIM YOUR DAILY 💎
+        💎 {i18n.t('daily.claim_daily')} 💎
       </button>
     );
   }
@@ -505,7 +505,7 @@ function WeeklyClaimButton({ streakComplete, claimed, onClaim }: { streakComplet
           color: '#07111F', boxShadow: SKIN.btnGoldShadow, cursor: 'pointer', fontWeight: 700,
         }}
       >
-        💎 CLAIM YOUR WEEKLY 3 💎
+        💎 {i18n.t('daily.claim_weekly')} 💎
       </button>
     );
   }
