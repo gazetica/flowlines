@@ -16,6 +16,7 @@ import { countryFlag } from '../utils/countryFlag';
 import { useTranslation } from 'react-i18next';
 import { useSettingsStore } from '../store/settingsStore';
 import type { Language } from '../store/settingsStore';
+import * as musicService from '../services/musicService';
 
 const LANGUAGES: { code: Language; label: string }[] = [
   { code: 'en', label: 'English' },
@@ -46,6 +47,15 @@ export function SettingsScreen() {
   } = useSettingsStore();
   const [countryOpen, setCountryOpen] = useState(false);
 
+  // B-002: persist the toggle AND drive the music service so it starts/stops
+  // immediately (AC4/AC5). play()/pause() are idempotent and safe to call before
+  // any prior init (they lazily build the Howl).
+  const handleMusicToggle = async (v: boolean) => {
+    await setMusicEnabled(v);
+    if (v) musicService.play();
+    else musicService.pause();
+  };
+
   return (
     <>
     {countryOpen && (
@@ -55,7 +65,7 @@ export function SettingsScreen() {
       {/* AUDIO */}
       <Section label={t('settings.section_audio')}>
         <ToggleRow label={t('settings.sound_effects')} value={soundEnabled} onChange={setSoundEnabled} />
-        <ToggleRow label={t('settings.music')} value={musicEnabled} onChange={setMusicEnabled} />
+        <ToggleRow label={t('settings.music')} value={musicEnabled} onChange={handleMusicToggle} />
       </Section>
 
       {/* DISPLAY */}

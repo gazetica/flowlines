@@ -12,6 +12,7 @@ import { useSettingsStore } from './store/settingsStore';
 import { requestAndResolve } from './services/consentService';
 import { initAdmob } from './services/admob';
 import * as analytics from './services/analytics';
+import * as musicService from './services/musicService';
 import { LanguageScreen } from './components/LanguageScreen';
 import { HowToPlayScreen } from './components/HowToPlayScreen';
 import { HomeScreen } from './components/HomeScreen';
@@ -61,6 +62,16 @@ export function App() {
       await requestAndResolve(); // UMP consent (form for EU; NOT_REQUIRED otherwise)
       await initAdmob(); // AdMob.initialize — strictly after consent resolves
     })();
+  }, []);
+
+  // B-002: background music. Settings are hydrated before App renders (main.tsx
+  // awaits loadFromPreferences), so the saved toggle is reliable here. init()
+  // wires the background/foreground listener; we only auto-play if music was left
+  // ON. Defaults OFF on a fresh install (no auto-play on first run). Not native-
+  // gated — Howler plays in the browser too.
+  useEffect(() => {
+    musicService.init();
+    if (useSettingsStore.getState().musicEnabled) musicService.play();
   }, []);
 
   return (
