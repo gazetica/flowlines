@@ -13,6 +13,14 @@ import { useTranslation } from 'react-i18next';
 import { fetchLevelLeader, getPlayerPB } from '../services/campaignScores';
 import type { LevelLeaderInfo } from '../services/campaignScores';
 import { useSettingsStore } from '../store/settingsStore';
+import { loadLocalTier, getTier, TIER_COLORS } from '../services/tierService';
+import type { Tier } from '../services/tierService';
+
+// F-001b: coloured " (PRO)" / " (EXPERT)" suffix after an alias.
+function TierTag({ tier, t }: { tier: Tier | null; t: (k: string) => string }) {
+  if (!tier) return null;
+  return <span style={{ color: TIER_COLORS[tier] }}> {t(tier === 'expert' ? 'tier.expert_tag' : 'tier.pro_tag')}</span>;
+}
 
 interface LeaderPanelProps {
   levelId: number;
@@ -24,14 +32,20 @@ export function LeaderPanel({ levelId, compact = false }: LeaderPanelProps) {
   const { alias } = useSettingsStore();
   const [leader, setLeader] = useState<LevelLeaderInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const [myTier, setMyTier] = useState<Tier | null>(null);
+  const [leaderTier, setLeaderTier] = useState<Tier | null>(null);
 
   const playerPB = getPlayerPB(levelId);
 
+  useEffect(() => { loadLocalTier().then(setMyTier); }, []);
+
   useEffect(() => {
     setLoading(true);
+    setLeaderTier(null);
     fetchLevelLeader(levelId).then((data) => {
       setLeader(data);
       setLoading(false);
+      if (data?.alias) getTier(data.alias).then(setLeaderTier);
     });
   }, [levelId]);
 
@@ -80,7 +94,7 @@ export function LeaderPanel({ levelId, compact = false }: LeaderPanelProps) {
             whiteSpace: 'nowrap',
           }}
         >
-          {alias || 'Player'}
+          {alias || 'Player'}<TierTag tier={myTier} t={t} />
         </div>
         <StatRow
           label="Score"
@@ -131,7 +145,7 @@ export function LeaderPanel({ levelId, compact = false }: LeaderPanelProps) {
                 whiteSpace: 'nowrap',
               }}
             >
-              {leader.alias}
+              {leader.alias}<TierTag tier={leaderTier} t={t} />
             </div>
             <StatRow
               label="Score"

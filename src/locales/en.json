@@ -278,7 +278,10 @@
     "early_access_badge": "EARLY ACCESS",
     "unlock_pro": "UNLOCK FOR $3.99",
     "unlock_expert": "UNLOCK FOR $4.99",
-    "placeholder_toast": "Available in full release"
+    "placeholder_toast": "Available in full release",
+    "pro_gate_sub": "Free — Pro Campaign Gate opens on 1,000 Players Completing Campaign 1",
+    "expert_gate_sub": "Free — Expert Campaign Gate opens on 1,000 Players Completing Campaign 2",
+    "gate_counter": "{{count}} / {{total}}"
   },
 
   "hints": {
@@ -287,5 +290,12 @@
 
   "country": {
     "prefer_not": "Prefer not to say"
+  },
+
+  "tier": {
+    "pro": "PRO",
+    "expert": "EXPERT",
+    "pro_tag": "(PRO)",
+    "expert_tag": "(EXPERT)"
   }
 }

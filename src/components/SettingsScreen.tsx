@@ -7,7 +7,7 @@
 // inject the React namespace).
 
 import type React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ParticleCanvas } from './ParticleCanvas';
 import { BottomNav } from './BottomNav';
@@ -17,6 +17,8 @@ import { useTranslation } from 'react-i18next';
 import { useSettingsStore } from '../store/settingsStore';
 import type { Language } from '../store/settingsStore';
 import * as musicService from '../services/musicService';
+import { loadLocalTier, TIER_COLORS } from '../services/tierService';
+import type { Tier } from '../services/tierService';
 
 const LANGUAGES: { code: Language; label: string }[] = [
   { code: 'en', label: 'English' },
@@ -46,6 +48,9 @@ export function SettingsScreen() {
     removeAdsPurchased,
   } = useSettingsStore();
   const [countryOpen, setCountryOpen] = useState(false);
+  // F-001b: local player tier tag (PRO/EXPERT) shown next to the alias.
+  const [tier, setTier] = useState<Tier | null>(null);
+  useEffect(() => { loadLocalTier().then(setTier); }, []);
 
   // B-002: persist the toggle AND drive the music service so it starts/stops
   // immediately (AC4/AC5). play()/pause() are idempotent and safe to call before
@@ -102,23 +107,30 @@ export function SettingsScreen() {
             <div style={labelStyle}>{t('settings.alias_label')}</div>
             <div style={{ fontSize: 11, color: 'var(--muted)' }}>{t('settings.alias_sub')}</div>
           </div>
-          <input
-            type="text"
-            value={alias}
-            onChange={(e) => setAlias(e.target.value)}
-            placeholder={t('settings.alias_placeholder')}
-            maxLength={16}
-            style={{
-              background: 'var(--navy-card)',
-              border: '1px solid var(--navy-border)',
-              color: 'var(--white)',
-              borderRadius: 4,
-              padding: '6px 10px',
-              width: 120,
-              fontFamily: "'Space Mono', monospace",
-              fontSize: 11,
-            }}
-          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <input
+              type="text"
+              value={alias}
+              onChange={(e) => setAlias(e.target.value)}
+              placeholder={t('settings.alias_placeholder')}
+              maxLength={16}
+              style={{
+                background: 'var(--navy-card)',
+                border: '1px solid var(--navy-border)',
+                color: 'var(--white)',
+                borderRadius: 4,
+                padding: '6px 10px',
+                width: 120,
+                fontFamily: "'Space Mono', monospace",
+                fontSize: 11,
+              }}
+            />
+            {tier && (
+              <span style={{ color: TIER_COLORS[tier], fontFamily: "'Space Mono', monospace", fontSize: 11, fontWeight: 700 }}>
+                {t(tier === 'expert' ? 'tier.expert_tag' : 'tier.pro_tag')}
+              </span>
+            )}
+          </div>
         </div>
         {/* Country (T-005 Part 3.5) */}
         <div style={rowStyle}>

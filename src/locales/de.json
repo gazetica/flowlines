@@ -278,7 +278,10 @@
     "early_access_badge": "FRÜHZUGANG",
     "unlock_pro": "FÜR $3.99 FREISCHALTEN",
     "unlock_expert": "FÜR $4.99 FREISCHALTEN",
-    "placeholder_toast": "In der Vollversion verfügbar"
+    "placeholder_toast": "In der Vollversion verfügbar",
+    "pro_gate_sub": "Kostenlos — Die Pro-Kampagne öffnet, wenn 1.000 Spieler Kampagne 1 abschließen",
+    "expert_gate_sub": "Kostenlos — Die Experten-Kampagne öffnet, wenn 1.000 Spieler Kampagne 2 abschließen",
+    "gate_counter": "{{count}} / {{total}}"
   },
 
   "hints": {
@@ -287,5 +290,12 @@
 
   "country": {
     "prefer_not": "Keine Angabe"
+  },
+
+  "tier": {
+    "pro": "PRO",
+    "expert": "EXPERTE",
+    "pro_tag": "(PRO)",
+    "expert_tag": "(EXPERT)"
   }
 }

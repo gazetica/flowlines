@@ -16,6 +16,8 @@ import { countryFlag } from '../utils/countryFlag';
 import { ParticleCanvas } from './ParticleCanvas';
 import { BottomNav } from './BottomNav';
 import { useSettingsStore } from '../store/settingsStore';
+import { loadLocalTier, getTiers, TIER_COLORS } from '../services/tierService';
+import type { Tier } from '../services/tierService';
 
 type Tab = 'campaign' | 'daily' | 'alltime';
 interface Row {
@@ -43,6 +45,10 @@ export function LeaderboardScreen() {
   // T-006 Part 5: the player's local score for this tab — used for the pinned
   // row when they fall outside the fetched top-50 (null = no score for this tab).
   const [playerScore, setPlayerScore] = useState<number | null>(null);
+  // F-001b: tier tags — local player from Preferences, others batched from Supabase.
+  const [myTier, setMyTier] = useState<Tier | null>(null);
+  const [tierMap, setTierMap] = useState<Record<string, Tier>>({});
+  useEffect(() => { loadLocalTier().then(setMyTier); }, []);
 
   // Player's index within the fetched (top-50) list, or -1 when not present.
   const playerIndex = alias ? rows.findIndex((r) => r.alias === alias) : -1;
@@ -77,6 +83,8 @@ export function LeaderboardScreen() {
         setRows(data);
         setPlayerScore(local > 0 ? local : null);
         setLoading(false);
+        // Batch-fetch tiers for every alias shown (one query; empty on error).
+        getTiers(data.map((r) => r.alias)).then((m) => { if (active) setTierMap(m); });
       }
     });
     return () => {
@@ -118,6 +126,7 @@ export function LeaderboardScreen() {
         rows.map((row, i) => {
           const rank = i + 1;
           const isMe = row.alias === alias;
+          const rowTier: Tier | null = isMe ? myTier : tierMap[row.alias] ?? null;
           return (
             <div
               key={`${row.alias}-${i}`}
@@ -140,6 +149,7 @@ export function LeaderboardScreen() {
               <span style={{ fontSize: 20 }}>{countryFlag(row.country)}</span>
               <span style={{ flex: 1, fontSize: 14, color: isMe ? 'var(--gold)' : 'var(--white)' }}>
                 {isMe ? `${row.alias} (${t('leaderboard.you')})` : row.alias}
+                {rowTier && <span style={{ color: TIER_COLORS[rowTier] }}> {t(rowTier === 'expert' ? 'tier.expert_tag' : 'tier.pro_tag')}</span>}
               </span>
               <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 14, color: rank === 1 ? 'var(--gold)' : 'var(--white)' }}>{row.score.toLocaleString()}</span>
             </div>
@@ -170,7 +180,7 @@ export function LeaderboardScreen() {
               {playerScore != null ? '50+' : '—'}
             </span>
             <span style={{ fontSize: 20 }}>{countryFlag(country)}</span>
-            <span style={{ flex: 1, fontSize: 14, color: 'var(--gold)' }}>{alias || 'Player'}</span>
+            <span style={{ flex: 1, fontSize: 14, color: 'var(--gold)' }}>{alias || 'Player'}{myTier && <span style={{ color: TIER_COLORS[myTier] }}> {t(myTier === 'expert' ? 'tier.expert_tag' : 'tier.pro_tag')}</span>}</span>
             <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 14, color: playerScore != null ? 'var(--gold)' : 'var(--muted)' }}>
               {playerScore != null ? playerScore.toLocaleString() : t('leaderboard.no_score')}
             </span>

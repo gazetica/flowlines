@@ -29,6 +29,7 @@ import {
   isPurchased,
   recordCompletion,
 } from '../services/campaignGateService';
+import { setLocalTier } from '../services/tierService';
 import { ParticleCanvas } from './ParticleCanvas';
 import { BottomNav } from './BottomNav';
 
@@ -82,6 +83,9 @@ export function CampaignScreen() {
     if (isCampaignDone(1, 100)) void recordCompletion(alias, 1);
     if (isCampaignDone(101, 200)) void recordCompletion(alias, 2);
     if (isCampaignDone(201, 300)) void recordCompletion(alias, 3);
+    // F-001b: cache the local player tier (expert outranks pro; never downgrades).
+    if (isCampaignDone(101, 200)) setLocalTier('expert');
+    else if (isCampaignDone(1, 100)) setLocalTier('pro');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -166,7 +170,7 @@ export function CampaignScreen() {
           campaign={2}
           difficulty="pro"
           titleKey="campaign.pro_title"
-          subKey="campaign.pro_sub"
+          subKey="campaign.pro_gate_sub"
           unlockKey="campaign.unlock_pro"
           gate={gate2}
           levels={levelsInRange(101, 200)}
@@ -181,7 +185,7 @@ export function CampaignScreen() {
           campaign={3}
           difficulty="expert"
           titleKey="campaign.expert_title"
-          subKey="campaign.expert_sub"
+          subKey="campaign.expert_gate_sub"
           unlockKey="campaign.unlock_expert"
           gate={gate3}
           levels={levelsInRange(201, 300)}
@@ -225,7 +229,6 @@ function tileStyle(isDone: boolean, isUnlocked: boolean): React.CSSProperties {
 
 // —— Gated campaign section (C2 / C3) ————————————————————————————————
 function GatedCampaign({
-  campaign,
   titleKey,
   subKey,
   unlockKey,
@@ -265,8 +268,9 @@ function GatedCampaign({
           {gate.purchased && <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 8, color: 'var(--success)', border: '1px solid rgba(46,204,113,0.4)', borderRadius: 4, padding: '1px 5px' }}>{t('campaign.early_access_badge')}</span>}
         </div>
         <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 3 }}>{t(subKey)}</div>
-        <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: 'var(--blue-light)', marginTop: 4 }}>
-          {t('campaign.gate_progress', { count: gate.count.toLocaleString(), total: gate.total.toLocaleString(), n: campaign - 1 })}
+        {/* F-001b: large right-aligned live gate counter (cyan). */}
+        <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 26, fontWeight: 700, color: '#00f5ff', textAlign: 'right', marginTop: 6, textShadow: '0 0 10px rgba(0,245,255,0.3)' }}>
+          {t('campaign.gate_counter', { count: gate.count.toLocaleString(), total: gate.total.toLocaleString() })}
         </div>
         {accessible && (
           <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: 'var(--muted)', marginTop: 2 }}>

@@ -278,7 +278,10 @@
     "early_access_badge": "ACCESO ANTICIPADO",
     "unlock_pro": "DESBLOQUEAR POR $3.99",
     "unlock_expert": "DESBLOQUEAR POR $4.99",
-    "placeholder_toast": "Disponible en la versión completa"
+    "placeholder_toast": "Disponible en la versión completa",
+    "pro_gate_sub": "Gratis — La Campaña Pro se abre cuando 1.000 jugadores completen la Campaña 1",
+    "expert_gate_sub": "Gratis — La Campaña Experto se abre cuando 1.000 jugadores completen la Campaña 2",
+    "gate_counter": "{{count}} / {{total}}"
   },
 
   "hints": {
@@ -287,5 +290,12 @@
 
   "country": {
     "prefer_not": "Prefiero no decirlo"
+  },
+
+  "tier": {
+    "pro": "PRO",
+    "expert": "EXPERTO",
+    "pro_tag": "(PRO)",
+    "expert_tag": "(EXPERT)"
   }
 }

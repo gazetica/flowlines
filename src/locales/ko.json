@@ -278,7 +278,10 @@
     "early_access_badge": "얼리 액세스",
     "unlock_pro": "$3.99에 잠금 해제",
     "unlock_expert": "$4.99에 잠금 해제",
-    "placeholder_toast": "정식 출시 버전에서 사용 가능"
+    "placeholder_toast": "정식 출시 버전에서 사용 가능",
+    "pro_gate_sub": "무료 — 1,000명의 플레이어가 캠페인 1을 완료하면 프로 캠페인이 열립니다",
+    "expert_gate_sub": "무료 — 1,000명의 플레이어가 캠페인 2를 완료하면 전문가 캠페인이 열립니다",
+    "gate_counter": "{{count}} / {{total}}"
   },
 
   "hints": {
@@ -287,5 +290,12 @@
 
   "country": {
     "prefer_not": "밝히지 않음"
+  },
+
+  "tier": {
+    "pro": "프로",
+    "expert": "전문가",
+    "pro_tag": "(PRO)",
+    "expert_tag": "(EXPERT)"
   }
 }

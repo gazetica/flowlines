@@ -294,6 +294,13 @@ export function GameScreen() {
   const isPaused = status === 'paused';
   const timeLimit = currentLevel?.timeLimit ?? 30;
 
+  // F-001b: campaign tier from the level id — Pro (101–200) / Expert (201–300).
+  // Drives the right-aligned HUD label + the play-area border colour.
+  const campaignTier: 'pro' | 'expert' | null = currentLevel
+    ? currentLevel.id >= 201 ? 'expert' : currentLevel.id >= 101 ? 'pro' : null
+    : null;
+  const tierColor = campaignTier === 'expert' ? '#00f5ff' : campaignTier === 'pro' ? '#9B59B6' : undefined;
+
   return (
     <div
       style={{
@@ -315,7 +322,8 @@ export function GameScreen() {
       />
 
       {/* Phaser canvas container (z-index 1, above background, below HUD) */}
-      <div id="phaser-container" style={{ position: 'absolute', inset: 0, zIndex: 1 }} />
+      {/* F-001b: tier-coloured play-area border (Pro purple / Expert cyan); none for C1. */}
+      <div id="phaser-container" style={{ position: 'absolute', inset: 0, zIndex: 1, border: tierColor ? `2px solid ${tierColor}` : 'none', boxShadow: tierColor ? `inset 0 0 24px ${tierColor}33` : 'none' }} />
 
       {/* HUD overlay — glassmorphism bar (T-009c: 2-row grid so the three labels
           align on one line and the three values share a baseline). The TIMER value
@@ -395,10 +403,21 @@ export function GameScreen() {
             fontFamily: "'Space Mono', monospace",
             fontSize: '11px',
             letterSpacing: '1px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
           }}
         >
-          <span style={{ color: '#6B84A8' }}>{t('game.level_prefix')} </span>
-          <span style={{ color: '#F0F4FF' }}>{currentLevel.id}</span>
+          <span>
+            <span style={{ color: '#6B84A8' }}>{t('game.level_prefix')} </span>
+            <span style={{ color: '#F0F4FF' }}>{currentLevel.id}</span>
+          </span>
+          {/* F-001b: PRO/EXPERT tier label, right-aligned (campaigns 2/3 only). */}
+          {campaignTier && (
+            <span style={{ color: tierColor, fontWeight: 700 }}>
+              {t(campaignTier === 'expert' ? 'tier.expert' : 'tier.pro')}
+            </span>
+          )}
         </div>
       )}
 
