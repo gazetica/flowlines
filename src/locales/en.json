@@ -127,7 +127,11 @@
     "restore": "RESTORE PREVIOUS PURCHASES",
     "payment_note": "Payment processed by Google Play.",
     "terms_note": "By purchasing you agree to our Terms & Conditions.",
-    "billing_notice": "BILLING ACTIVE IN FULL RELEASE"
+    "billing_notice": "BILLING ACTIVE IN FULL RELEASE",
+    "pro_campaign_title": "PRO CAMPAIGN — EARLY ACCESS",
+    "pro_campaign_desc": "Unlock 100 Pro levels now. Keep forever.",
+    "expert_campaign_title": "EXPERT CAMPAIGN — EARLY ACCESS",
+    "expert_campaign_desc": "Unlock 100 Expert levels now. Keep forever."
   },
 
   "consent": {
@@ -265,7 +269,16 @@
   "campaign": {
     "title": "CAMPAIGN",
     "coming_soon": "COMING SOON",
-    "coming_soon_sub": "More levels on the way"
+    "coming_soon_sub": "Levels 301–400 · More challenges on the way",
+    "pro_title": "PRO CAMPAIGN",
+    "pro_sub": "Levels 101–200 · Descending · 1.5× score",
+    "expert_title": "EXPERT CAMPAIGN",
+    "expert_sub": "Levels 201–300 · Random · 2× score",
+    "gate_progress": "{{count}} / {{total}} players completed Campaign {{n}}",
+    "early_access_badge": "EARLY ACCESS",
+    "unlock_pro": "UNLOCK FOR $3.99",
+    "unlock_expert": "UNLOCK FOR $4.99",
+    "placeholder_toast": "Available in full release"
   },
 
   "hints": {

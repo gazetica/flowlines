@@ -127,7 +127,11 @@
     "restore": "RESTAURAR COMPRAS ANTERIORES",
     "payment_note": "Pagamento processado pelo Google Play.",
     "terms_note": "Ao comprar, você concorda com nossos Termos e Condições.",
-    "billing_notice": "COBRANÇA ATIVA NA VERSÃO COMPLETA"
+    "billing_notice": "COBRANÇA ATIVA NA VERSÃO COMPLETA",
+    "pro_campaign_title": "CAMPANHA PRO — ACESSO ANTECIPADO",
+    "pro_campaign_desc": "Desbloqueie 100 níveis Pro agora. Seus para sempre.",
+    "expert_campaign_title": "CAMPANHA ESPECIALISTA — ACESSO ANTECIPADO",
+    "expert_campaign_desc": "Desbloqueie 100 níveis Especialista agora. Seus para sempre."
   },
 
   "consent": {
@@ -265,7 +269,16 @@
   "campaign": {
     "title": "CAMPANHA",
     "coming_soon": "EM BREVE",
-    "coming_soon_sub": "Mais níveis a caminho"
+    "coming_soon_sub": "Níveis 301–400 · Mais desafios a caminho",
+    "pro_title": "CAMPANHA PRO",
+    "pro_sub": "Níveis 101–200 · Decrescente · pontuação 1,5×",
+    "expert_title": "CAMPANHA ESPECIALISTA",
+    "expert_sub": "Níveis 201–300 · Aleatório · pontuação 2×",
+    "gate_progress": "{{count}} / {{total}} jogadores completaram a Campanha {{n}}",
+    "early_access_badge": "ACESSO ANTECIPADO",
+    "unlock_pro": "DESBLOQUEAR POR $3.99",
+    "unlock_expert": "DESBLOQUEAR POR $4.99",
+    "placeholder_toast": "Disponível na versão completa"
   },
 
   "hints": {

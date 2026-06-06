@@ -5,6 +5,7 @@
 // here are display-only with a "billing active in full release" note.
 
 import type React from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useSettingsStore } from '../store/settingsStore';
@@ -14,6 +15,19 @@ import { BottomNav } from './BottomNav';
 export function IAPScreen() {
   const { t } = useTranslation();
   const { removeAdsPurchased } = useSettingsStore();
+
+  // F-001: brief toast for the placeholder Early-Access buttons.
+  const [toast, setToast] = useState<string | null>(null);
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 1900);
+  };
+
+  // F-001: Early-Access campaign placeholders (display-only until T-019).
+  const EARLY_ACCESS = [
+    { key: 'pro', title: t('iap.pro_campaign_title'), desc: t('iap.pro_campaign_desc'), price: '$3.99', unlockKey: 'campaign.unlock_pro' },
+    { key: 'expert', title: t('iap.expert_campaign_title'), desc: t('iap.expert_campaign_desc'), price: '$4.99', unlockKey: 'campaign.unlock_expert' },
+  ];
 
   const PRODUCTS = [
     {
@@ -76,6 +90,34 @@ export function IAPScreen() {
         </div>
       ))}
 
+      {/* F-001: Early Access — Pro & Expert campaigns (placeholder) */}
+      {EARLY_ACCESS.map((ea) => (
+        <div
+          key={ea.key}
+          style={{
+            margin: '0 16px 12px',
+            background: 'rgba(10,26,46,0.75)',
+            border: '1px solid rgba(147,51,234,0.4)',
+            borderRadius: 10,
+            padding: '16px',
+            boxShadow: '0 0 16px rgba(147,51,234,0.08)',
+          }}
+        >
+          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 8, letterSpacing: 2, color: '#B36BFF', marginBottom: 8 }}>⚡ {t('campaign.early_access_badge')}</div>
+          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 13, color: 'var(--white)', marginBottom: 4 }}>{ea.title}</div>
+          <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 12 }}>{ea.desc}</div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 18, color: '#B36BFF' }}>{ea.price}</span>
+            <button
+              onClick={() => showToast(t('campaign.placeholder_toast'))}
+              style={{ padding: '8px 16px', fontSize: 10, fontFamily: "'Space Mono', monospace", letterSpacing: 1, borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 700, background: 'linear-gradient(135deg,#9333EA,#7C3AED)', color: '#fff' }}
+            >
+              {t(ea.unlockKey)}
+            </button>
+          </div>
+        </div>
+      ))}
+
       {/* Sprint 4 note */}
       <div style={{ margin: '0 16px 16px', padding: '12px', background: 'rgba(30,139,195,0.06)', border: '1px solid rgba(30,139,195,0.2)', borderRadius: 8, textAlign: 'center' }}>
         <p style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: 'var(--blue-light)', letterSpacing: 1 }}>{t('iap.billing_notice')}</p>
@@ -105,6 +147,14 @@ export function IAPScreen() {
       >
         {t('iap.restore')}
       </button>
+
+      {toast && (
+        <div style={{ position: 'fixed', bottom: '14%', left: 0, right: 0, textAlign: 'center', zIndex: 50, pointerEvents: 'none' }}>
+          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, color: 'var(--white)', background: 'rgba(8,18,32,0.92)', border: '1px solid rgba(147,51,234,0.4)', borderRadius: 8, padding: '8px 14px' }}>
+            {toast}
+          </span>
+        </div>
+      )}
     </ScreenShell>
   );
 }

@@ -127,7 +127,11 @@
     "restore": "FRÜHERE KÄUFE WIEDERHERSTELLEN",
     "payment_note": "Zahlung über Google Play abgewickelt.",
     "terms_note": "Mit dem Kauf stimmst du unseren AGB zu.",
-    "billing_notice": "ABRECHNUNG IN DER VOLLVERSION AKTIV"
+    "billing_notice": "ABRECHNUNG IN DER VOLLVERSION AKTIV",
+    "pro_campaign_title": "PRO-KAMPAGNE — FRÜHZUGANG",
+    "pro_campaign_desc": "Schalte jetzt 100 Pro-Level frei. Für immer behalten.",
+    "expert_campaign_title": "EXPERTEN-KAMPAGNE — FRÜHZUGANG",
+    "expert_campaign_desc": "Schalte jetzt 100 Experten-Level frei. Für immer behalten."
   },
 
   "consent": {
@@ -265,7 +269,16 @@
   "campaign": {
     "title": "KAMPAGNE",
     "coming_soon": "DEMNÄCHST",
-    "coming_soon_sub": "Weitere Level sind unterwegs"
+    "coming_soon_sub": "Level 301–400 · Weitere Herausforderungen sind unterwegs",
+    "pro_title": "PRO-KAMPAGNE",
+    "pro_sub": "Level 101–200 · Absteigend · 1,5× Punkte",
+    "expert_title": "EXPERTEN-KAMPAGNE",
+    "expert_sub": "Level 201–300 · Zufällig · 2× Punkte",
+    "gate_progress": "{{count}} / {{total}} Spieler haben Kampagne {{n}} abgeschlossen",
+    "early_access_badge": "FRÜHZUGANG",
+    "unlock_pro": "FÜR $3.99 FREISCHALTEN",
+    "unlock_expert": "FÜR $4.99 FREISCHALTEN",
+    "placeholder_toast": "In der Vollversion verfügbar"
   },
 
   "hints": {

@@ -127,7 +127,11 @@
     "restore": "이전 구매 복원",
     "payment_note": "결제는 Google Play를 통해 처리됩니다.",
     "terms_note": "구매하면 이용약관에 동의하게 됩니다.",
-    "billing_notice": "정식 출시 버전에서 결제 활성화"
+    "billing_notice": "정식 출시 버전에서 결제 활성화",
+    "pro_campaign_title": "프로 캠페인 — 얼리 액세스",
+    "pro_campaign_desc": "지금 100개의 프로 레벨을 잠금 해제하세요. 영구 소장.",
+    "expert_campaign_title": "전문가 캠페인 — 얼리 액세스",
+    "expert_campaign_desc": "지금 100개의 전문가 레벨을 잠금 해제하세요. 영구 소장."
   },
 
   "consent": {
@@ -265,7 +269,16 @@
   "campaign": {
     "title": "캠페인",
     "coming_soon": "출시 예정",
-    "coming_soon_sub": "더 많은 레벨이 곧 추가됩니다"
+    "coming_soon_sub": "레벨 301–400 · 더 많은 챌린지가 곧 추가됩니다",
+    "pro_title": "프로 캠페인",
+    "pro_sub": "레벨 101–200 · 내림차순 · 1.5배 점수",
+    "expert_title": "전문가 캠페인",
+    "expert_sub": "레벨 201–300 · 무작위 · 2배 점수",
+    "gate_progress": "{{count}} / {{total}}명의 플레이어가 캠페인 {{n}}을 완료했습니다",
+    "early_access_badge": "얼리 액세스",
+    "unlock_pro": "$3.99에 잠금 해제",
+    "unlock_expert": "$4.99에 잠금 해제",
+    "placeholder_toast": "정식 출시 버전에서 사용 가능"
   },
 
   "hints": {

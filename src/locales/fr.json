@@ -127,7 +127,11 @@
     "restore": "RESTAURER LES ACHATS PRÉCÉDENTS",
     "payment_note": "Paiement traité par Google Play.",
     "terms_note": "En achetant, vous acceptez nos Conditions générales.",
-    "billing_notice": "PAIEMENT ACTIF DANS LA VERSION COMPLÈTE"
+    "billing_notice": "PAIEMENT ACTIF DANS LA VERSION COMPLÈTE",
+    "pro_campaign_title": "CAMPAGNE PRO — ACCÈS ANTICIPÉ",
+    "pro_campaign_desc": "Débloquez 100 niveaux Pro maintenant. Gardez-les pour toujours.",
+    "expert_campaign_title": "CAMPAGNE EXPERT — ACCÈS ANTICIPÉ",
+    "expert_campaign_desc": "Débloquez 100 niveaux Expert maintenant. Gardez-les pour toujours."
   },
 
   "consent": {
@@ -265,7 +269,16 @@
   "campaign": {
     "title": "CAMPAGNE",
     "coming_soon": "BIENTÔT DISPONIBLE",
-    "coming_soon_sub": "D'autres niveaux arrivent"
+    "coming_soon_sub": "Niveaux 301–400 · D'autres défis arrivent",
+    "pro_title": "CAMPAGNE PRO",
+    "pro_sub": "Niveaux 101–200 · Décroissant · score ×1,5",
+    "expert_title": "CAMPAGNE EXPERT",
+    "expert_sub": "Niveaux 201–300 · Aléatoire · score ×2",
+    "gate_progress": "{{count}} / {{total}} joueurs ont terminé la Campagne {{n}}",
+    "early_access_badge": "ACCÈS ANTICIPÉ",
+    "unlock_pro": "DÉBLOQUER POUR $3.99",
+    "unlock_expert": "DÉBLOQUER POUR $4.99",
+    "placeholder_toast": "Disponible dans la version complète"
   },
 
   "hints": {
