@@ -6,6 +6,7 @@
 import type React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
 import { ParticleCanvas } from './ParticleCanvas';
 import { BottomNav } from './BottomNav';
@@ -20,18 +21,30 @@ const DEV_TOOLS = import.meta.env.DEV || import.meta.env.VITE_DEV_TOOLS === 'tru
 export function AboutScreen() {
   const { t } = useTranslation();
 
+  // B-003: open external links. Native-only (web logs to console). http(s) opens in
+  // the in-app browser (Custom Tabs); mailto/tel can't render in Custom Tabs, so they
+  // go through window.open, which Capacitor's WebView resolves to the system handler
+  // (email / dialer).
   const openUrl = async (url: string) => {
-    await Browser.open({ url });
+    if (!Capacitor.isNativePlatform()) {
+      console.log('[About] external link (web no-op):', url);
+      return;
+    }
+    if (url.startsWith('mailto:') || url.startsWith('tel:')) {
+      window.open(url, '_system');
+    } else {
+      await Browser.open({ url });
+    }
   };
 
-  // T-016: rows are either a URL (opened in the in-app browser) or an action.
+  // Rows are either a URL (openUrl) or an action (e.g. the GDPR consent form).
   const LINKS: { label: string; url?: string; action?: () => Promise<void> }[] = [
     { label: t('about.privacy_policy'), url: 'https://gazetica.com/privacy' },
     { label: t('about.terms'), url: 'https://gazetica.com/terms' },
     { label: t('about.ad_preferences'), action: reopenForm }, // T-016: GDPR UMP — reopen consent form
     { label: t('about.rate_app'), url: 'https://play.google.com/store/apps/details?id=com.gazetica.numtap' },
-    { label: t('about.contact'), url: 'mailto:support@gazetica.com' },
-    { label: t('about.more_games'), url: 'https://gazetica.com' },
+    { label: t('about.contact'), url: 'mailto:support@gazetica.com' }, // B-003 AC4
+    { label: t('about.more_games'), url: 'https://gazetica.com/games.html' }, // B-003 AC5
   ];
 
   return (
