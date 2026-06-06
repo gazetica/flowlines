@@ -6,6 +6,8 @@
 // challenges over that same layout — C1 ascending (easy), C2 descending (pro),
 // C3 random order (expert). Labels never reveal the difficulty.
 
+import i18n from '../i18n';
+
 export type DailyChallengeIndex = 1 | 2 | 3;
 export type DailyDifficulty = 'easy' | 'pro' | 'expert';
 
@@ -78,6 +80,6 @@ export function getDailyChallenge(index: DailyChallengeIndex, date?: string): Da
     gridSize: 5,
     difficulty: DIFFICULTY_BY_INDEX[index],
     seed: dateToSeed(d),
-    label: `CHALLENGE ${index}`,
+    label: i18n.t('daily.challenge', { n: index }),
   };
 }

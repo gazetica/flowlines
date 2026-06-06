@@ -201,18 +201,18 @@ export function ResultScreen() {
           {/* T-009b Fix 2: failed (timer expired) shows a distinct "LEVEL FAILED"
               heading in danger red; win keeps "LEVEL COMPLETE". (Locale files are
               not in scope this task, so the failed strings are literals.) */}
-          {isComplete ? t('result.level_complete') : 'LEVEL FAILED'}
+          {isComplete ? t('result.level_complete') : t('result.level_failed')}
         </h1>
         {!isComplete && (
           <p style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: '#6B84A8', letterSpacing: 1, marginBottom: 4 }}>
-            TIME OUT
+            {t('result.time_out')}
           </p>
         )}
         <p style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: 'var(--muted)', letterSpacing: 1 }}>
           {/* T-009: Classic/Campaign play prefixes the level number (e.g.
               "Level 3 · 4×4 Grid · 65s"). Other modes keep the grid·time line. */}
-          {mode === 'campaign' ? `Level ${currentLevel.id} · ` : ''}
-          {currentLevel.grid}×{currentLevel.grid} Grid · {Math.round(timeElapsed)}s
+          {mode === 'campaign' ? `${t('common.level', { id: currentLevel.id })} · ` : ''}
+          {t('result.grid_label', { size: currentLevel.grid })} · {t('result.time_label', { seconds: Math.round(timeElapsed) })}
         </p>
       </div>
 
@@ -252,7 +252,7 @@ export function ResultScreen() {
         )}
         {isComplete && mode === 'freeplay' && fpBest !== null && (
           <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, color: 'var(--gold)', letterSpacing: 1, marginTop: 6 }}>
-            ★ Best (this config): {fpBest.toLocaleString()}
+            {t('result.best_config')} {fpBest.toLocaleString()}
           </div>
         )}
       </div>

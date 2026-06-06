@@ -13,6 +13,7 @@
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import Phaser from 'phaser';
 import { useGameStore } from '../store/gameStore';
 import { useSettingsStore } from '../store/settingsStore';
@@ -28,6 +29,7 @@ import * as musicService from '../services/musicService';
 import { SKIN } from '../styles/skin';
 
 export function GameScreen() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const phaserRef = useRef<Phaser.Game | null>(null);
   const particleCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -130,7 +132,7 @@ export function GameScreen() {
   const handleWatchAd = async () => {
     if (status !== 'playing') return;
     if (sessionHints >= MAX_SESSION_HINTS) {
-      showToast('No more hints this session');
+      showToast(t('game.toast_no_hints'));
       return;
     }
 
@@ -150,7 +152,7 @@ export function GameScreen() {
       applyHintToTile();
       setSessionHints((n) => n + 1);
     } else if (outcome === 'unavailable') {
-      showToast('No ad available');
+      showToast(t('game.toast_no_ad'));
     }
     // 'dismissed' → no highlight, no penalty, no toast (AC5)
   };
@@ -340,9 +342,9 @@ export function GameScreen() {
         }}
       >
         {/* Labels row — same size / colour / line for all three */}
-        <div style={HUD_LABEL}>TIMER</div>
-        <div style={HUD_LABEL}>NEXT</div>
-        <div style={HUD_LABEL}>SCORE</div>
+        <div style={HUD_LABEL}>{t('game.hud_timer')}</div>
+        <div style={HUD_LABEL}>{t('game.hud_next')}</div>
+        <div style={HUD_LABEL}>{t('game.hud_score')}</div>
 
         {/* Values row — baseline-aligned. TIMER & SCORE 22px white; NEXT 28px gold. */}
         <div className="hud-timer-value" style={{ fontFamily: "'Space Mono',monospace", fontSize: '22px', lineHeight: 1, color: '#F0F4FF' }}>
@@ -395,7 +397,7 @@ export function GameScreen() {
             letterSpacing: '1px',
           }}
         >
-          <span style={{ color: '#6B84A8' }}>LEVEL </span>
+          <span style={{ color: '#6B84A8' }}>{t('game.level_prefix')} </span>
           <span style={{ color: '#F0F4FF' }}>{currentLevel.id}</span>
         </div>
       )}
@@ -429,14 +431,14 @@ export function GameScreen() {
               {/* State A — Get More Hints */}
               <div style={{ ...PROMO_CONTENT, opacity: promo === 'hints' ? 1 : 0, transition: 'opacity 0.3s' }}>
                 <span style={{ fontSize: 20, color: '#FFD700' }}>💎</span>
-                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: '#FFD700', letterSpacing: 0.3 }}>GET MORE HINTS</span>
-                <span style={{ fontSize: 8, color: SKIN.muted }}>Tap to buy gem packs</span>
+                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: '#FFD700', letterSpacing: 0.3 }}>{t('game.get_more_hints')}</span>
+                <span style={{ fontSize: 8, color: SKIN.muted }}>{t('game.get_more_hints_sub')}</span>
               </div>
               {/* State B — Remove Ads */}
               <div style={{ ...PROMO_CONTENT, opacity: promo === 'ads' ? 1 : 0, transition: 'opacity 0.3s' }}>
                 <span style={{ fontSize: 20 }}>🚫</span>
-                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: SKIN.white, letterSpacing: 0.3 }}>REMOVE ADS</span>
-                <span style={{ fontSize: 8, color: SKIN.muted }}>Play without interruptions</span>
+                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: SKIN.white, letterSpacing: 0.3 }}>{t('game.remove_ads')}</span>
+                <span style={{ fontSize: 8, color: SKIN.muted }}>{t('game.remove_ads_sub')}</span>
               </div>
             </button>
 
@@ -446,8 +448,8 @@ export function GameScreen() {
               style={{ ...HINT_CARD_BASE, border: '1px solid rgba(46,204,113,0.3)' }}
             >
               <span style={{ fontSize: 20 }}>📺</span>
-              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: SKIN.white, letterSpacing: 0.3 }}>WATCH AD</span>
-              <span style={{ fontSize: 8, color: SKIN.muted }}>Get 1 hint free</span>
+              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: SKIN.white, letterSpacing: 0.3 }}>{t('game.watch_ad')}</span>
+              <span style={{ fontSize: 8, color: SKIN.muted }}>{t('game.watch_ad_sub')}</span>
             </button>
 
             {/* Right card — USE HINT */}
@@ -456,8 +458,8 @@ export function GameScreen() {
               style={{ ...HINT_CARD_BASE, border: '1px solid rgba(0,210,200,0.3)' }}
             >
               <span style={{ fontSize: 20, color: '#FFD700' }}>💡</span>
-              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: '#FFD700', letterSpacing: 0.3 }}>USE HINT</span>
-              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: SKIN.white }}>💎 ×{hintCount} left</span>
+              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: '#FFD700', letterSpacing: 0.3 }}>{t('game.use_hint')}</span>
+              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: SKIN.white }}>💎 {t('game.hints_left', { count: hintCount })}</span>
             </button>
           </div>
 

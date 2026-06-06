@@ -24,6 +24,10 @@ import type { DailyChallengeIndex } from '../game/DailyChallenge';
 import { ParticleCanvas } from './ParticleCanvas';
 import { BottomNav } from './BottomNav';
 import { SKIN } from '../styles/skin';
+// B-001a: this screen's labels live in module-scope sub-components (Instructions,
+// StreakMap, ClaimButton, …) that can't use the useTranslation hook, so we read
+// from the i18n singleton directly.
+import i18n from '../i18n';
 
 // —— Weekly diamond claim (T-008 Part 2) ————————————————————————————
 // One claim per ISO week, keyed 'weekly_diamond_claimed_YYYY-WNN'. Stored via
@@ -126,7 +130,7 @@ export function DailyHubScreen() {
     await setDailyDiamondClaimed();
     await setLastDailyCompletionDate(today);
     setClaimed(true);
-    flashReward('+1 💎');
+    flashReward(i18n.t('daily.reward_gem_1'));
   };
 
   // T-008 Part 2: weekly diamond — once per ISO week, requires a full 7-day
@@ -136,7 +140,7 @@ export function DailyHubScreen() {
     await addHints(3);
     await setWeeklyDiamondClaimed();
     setWeeklyClaimedState(true);
-    flashReward('+3 💎');
+    flashReward(i18n.t('daily.reward_gem_3'));
     await setDailyStreak(0); // streak resets — nodes derive from dailyStreak
   };
 
@@ -150,15 +154,15 @@ export function DailyHubScreen() {
         <button onClick={() => navigate('/home')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Space Mono', monospace", fontSize: 20, color: 'var(--muted)', padding: 0 }}>
           ←
         </button>
-        <h1 style={{ fontFamily: "'Space Mono', monospace", fontSize: 16, color: 'var(--gold)', letterSpacing: 2, flex: 1 }}>DAILY CHALLENGE</h1>
+        <h1 style={{ fontFamily: "'Space Mono', monospace", fontSize: 16, color: 'var(--gold)', letterSpacing: 2, flex: 1 }}>{i18n.t('daily.title')}</h1>
         <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: '#FFD700' }}>{dailyStreak} 🔥</span>
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '18px 20px 24px', position: 'relative', zIndex: 1 }}>
         {/* —— DAILY CHALLENGES section (T-007 Fix 3: now ABOVE the streak map) —— */}
         <Instructions
-          line1="Complete all 3 daily challenges every day."
-          line2="Complete in order — each challenge unlocks the next."
+          line1={i18n.t('daily.instruction_1')}
+          line2={i18n.t('daily.instruction_2')}
         />
         <ChallengeTrack cardScores={cardScores} onPlay={play} />
         <DiamondDisplay claimable={allDone} />
@@ -169,7 +173,7 @@ export function DailyHubScreen() {
           {/* T-008 Part 1.5: single yellow instruction line (no duplicate of the
               challenge line shown above). */}
           <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, fontWeight: 700, color: '#FFD700', marginBottom: 12 }}>
-            Reach 7 days in a row to claim 3 💎 gems.
+            {i18n.t('daily.streak_goal')}
           </div>
           <StreakMap nodeState={nodeState} isFilled={isFilled} streakComplete={streakComplete} />
           <WeeklyClaimButton streakComplete={streakComplete} claimed={weeklyClaimed} onClaim={weeklyClaim} />
@@ -274,7 +278,7 @@ function ClaimNode({ claimable }: { claimable: boolean }) {
       >
         💎
       </div>
-      <div style={{ fontSize: 7, color: SKIN.muted, fontFamily: "'Space Mono', monospace", marginTop: 4 }}>CLAIM</div>
+      <div style={{ fontSize: 7, color: SKIN.muted, fontFamily: "'Space Mono', monospace", marginTop: 4 }}>{i18n.t('daily.claim')}</div>
     </div>
   );
 }
@@ -296,13 +300,13 @@ function StreakMap({
     <div style={{ marginBottom: 8 }}>
       {/* Row 1 — Day 1 → Day 2 → Day 3 → Day 4 */}
       <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-        <NodeCell state={nodeState(0)} label="Day 1" />
+        <NodeCell state={nodeState(0)} label={i18n.t('daily.day', { n: 1 })} />
         <HConn gold={isFilled(1)} />
-        <NodeCell state={nodeState(1)} label="Day 2" />
+        <NodeCell state={nodeState(1)} label={i18n.t('daily.day', { n: 2 })} />
         <HConn gold={isFilled(2)} />
-        <NodeCell state={nodeState(2)} label="Day 3" />
+        <NodeCell state={nodeState(2)} label={i18n.t('daily.day', { n: 3 })} />
         <HConn gold={isFilled(3)} />
-        <NodeCell state={nodeState(3)} label="Day 4" />
+        <NodeCell state={nodeState(3)} label={i18n.t('daily.day', { n: 4 })} />
       </div>
 
       {/* drop from Day 4 (right column) down to Day 5 */}
@@ -311,11 +315,11 @@ function StreakMap({
       {/* Row 2 — flow Day5 → Day6 → Day7 → CLAIM, row-reverse so visual L→R is
           CLAIM, Day 7, Day 6, Day 5 (Day 5 sits under Day 4 on the right). */}
       <div style={{ display: 'flex', alignItems: 'flex-start', flexDirection: 'row-reverse' }}>
-        <NodeCell state={nodeState(4)} label="Day 5" />
+        <NodeCell state={nodeState(4)} label={i18n.t('daily.day', { n: 5 })} />
         <HConn gold={isFilled(5)} />
-        <NodeCell state={nodeState(5)} label="Day 6" />
+        <NodeCell state={nodeState(5)} label={i18n.t('daily.day', { n: 6 })} />
         <HConn gold={isFilled(6)} />
-        <NodeCell state={nodeState(6)} label="Day 7" />
+        <NodeCell state={nodeState(6)} label={i18n.t('daily.day', { n: 7 })} />
         <HConn gold={streakComplete} />
         <ClaimNode claimable={streakComplete} />
       </div>
@@ -378,7 +382,7 @@ function ChallengeTrack({
                   <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 18, color: SKIN.white }}>{i + 1}</span>
                 )}
                 <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 7, letterSpacing: 0.3, color: done ? '#07111F' : SKIN.muted, textTransform: 'uppercase' }}>
-                  CHALLENGE {i + 1}
+                  {i18n.t('daily.challenge', { n: i + 1 })}
                 </span>
               </button>
               <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 8, color: SKIN.muted, minHeight: 10 }}>
@@ -438,7 +442,7 @@ function ClaimButton({ allDone, claimed, onClaim }: { allDone: boolean; claimed:
           background: SKIN.cardBg, color: SKIN.success, cursor: 'default', fontWeight: 700,
         }}
       >
-        ✓ DAILY 💎 CLAIMED
+        ✓ DAILY 💎 {i18n.t('daily.claimed')}
       </button>
     );
   }
@@ -467,7 +471,7 @@ function ClaimButton({ allDone, claimed, onClaim }: { allDone: boolean; claimed:
         color: SKIN.muted, cursor: 'default',
       }}
     >
-      💎 Complete all challenges to claim
+      💎 {i18n.t('daily.complete_to_claim')}
     </button>
   );
 }
@@ -486,7 +490,7 @@ function WeeklyClaimButton({ streakComplete, claimed, onClaim }: { streakComplet
           background: SKIN.cardBg, color: SKIN.success, cursor: 'default', fontWeight: 700,
         }}
       >
-        ✓ WEEKLY 3 💎 CLAIMED
+        ✓ WEEKLY 3 💎 {i18n.t('daily.claimed')}
       </button>
     );
   }
@@ -515,7 +519,7 @@ function WeeklyClaimButton({ streakComplete, claimed, onClaim }: { streakComplet
         color: SKIN.muted, cursor: 'default',
       }}
     >
-      💎 Complete 7 days to claim
+      💎 {i18n.t('daily.complete_7')}
     </button>
   );
 }

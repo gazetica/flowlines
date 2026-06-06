@@ -28,7 +28,9 @@
     "day_streak": "Tagesserie",
     "rank": "RANG",
     "games": "SPIELE",
-    "avg": "Ø"
+    "avg": "Ø",
+    "campaign_progress": "CAMPAIGN PROGRESS",
+    "daily_sub": "Complete all 3 challenges"
   },
 
   "game": {
@@ -41,7 +43,18 @@
     "paused_title": "PAUSIERT",
     "btn_resume": "FORTSETZEN",
     "btn_restart": "NEU STARTEN",
-    "btn_home": "START"
+    "btn_home": "START",
+    "level_prefix": "LEVEL",
+    "remove_ads": "REMOVE ADS",
+    "remove_ads_sub": "Play without interruptions",
+    "watch_ad": "WATCH AD",
+    "watch_ad_sub": "Get 1 hint free",
+    "use_hint": "USE HINT",
+    "hints_left": "×{{count}} left",
+    "get_more_hints": "GET MORE HINTS",
+    "get_more_hints_sub": "Tap to buy gem packs",
+    "toast_no_hints": "No more hints this session",
+    "toast_no_ad": "No ad available"
   },
 
   "result": {
@@ -58,7 +71,12 @@
     "btn_play_again": "NOCHMAL SPIELEN",
     "btn_home": "START",
     "btn_leaderboard": "RANGLISTE",
-    "ad_slot": "Werbung"
+    "ad_slot": "Werbung",
+    "level_failed": "LEVEL FAILED",
+    "time_out": "TIME OUT",
+    "grid_label": "{{size}}×{{size}} Grid",
+    "time_label": "{{seconds}}s",
+    "best_config": "★ Best (this config):"
   },
 
   "leaderboard": {
@@ -69,7 +87,9 @@
     "you": "Du",
     "anonymous_note": "Anonym · Keine Anmeldung nötig · Alias in den Einstellungen festlegen",
     "loading": "Wird geladen...",
-    "empty": "Noch keine Punkte. Sei der Erste!"
+    "empty": "Noch keine Punkte. Sei der Erste!",
+    "your_ranking": "YOUR RANKING",
+    "no_score": "No score yet"
   },
 
   "settings": {
@@ -88,7 +108,8 @@
     "remove_ads": "Werbung dauerhaft entfernen",
     "remove_ads_sub": "Einmaliger Kauf",
     "remove_ads_purchased": "Gekauft ✓",
-    "restore_purchases": "Käufe wiederherstellen"
+    "restore_purchases": "Käufe wiederherstellen",
+    "country": "Country"
   },
 
   "iap": {
@@ -103,7 +124,8 @@
     "btn_buy_short": "KAUFEN",
     "restore": "FRÜHERE KÄUFE WIEDERHERSTELLEN",
     "payment_note": "Zahlung über Google Play abgewickelt.",
-    "terms_note": "Mit dem Kauf stimmst du unseren AGB zu."
+    "terms_note": "Mit dem Kauf stimmst du unseren AGB zu.",
+    "billing_notice": "BILLING ACTIVE IN FULL RELEASE"
   },
 
   "consent": {
@@ -126,7 +148,18 @@
     "demo_label": "TIPPE ALS NÄCHSTES DIE GOLDENE ZAHL",
     "demo_hint": "Goldene Kachel = als Nächstes tippen · ✓ = bereits getippt",
     "btn_play": "LOS GEHT'S!",
-    "btn_skip": "TUTORIAL ÜBERSPRINGEN"
+    "btn_skip": "TUTORIAL ÜBERSPRINGEN",
+    "hud_title": "THE HUD TELLS YOU WHAT'S NEXT",
+    "normal": "Normal",
+    "danger": "Danger!",
+    "mode_campaign": "CAMPAIGN",
+    "mode_campaign_sub": "100 levels · 3×3 to 7×7 · 3-star rating",
+    "mode_daily": "DAILY",
+    "mode_daily_sub": "1 puzzle per day · Global leaderboard",
+    "mode_endless": "ENDLESS",
+    "mode_endless_sub": "How many rounds in 3 minutes?",
+    "mode_speed": "SPEED",
+    "mode_speed_sub": "4×4 · Halved timer · 2× score"
   },
 
   "language": {
@@ -185,5 +218,51 @@
     "fog": "Nebel",
     "mirror": "Spiegel",
     "countdown": "Countdown"
+  },
+
+  "daily": {
+    "title": "DAILY CHALLENGE",
+    "instruction_1": "Complete all 3 daily challenges every day.",
+    "instruction_2": "Complete in order — each challenge unlocks the next.",
+    "streak_goal": "Reach 7 days in a row to claim 3 💎 gems.",
+    "day": "Day {{n}}",
+    "claim": "CLAIM",
+    "claimed": "CLAIMED",
+    "challenge": "CHALLENGE {{n}}",
+    "reward_gem_1": "+1 💎",
+    "reward_gem_3": "+3 💎",
+    "complete_to_claim": "Complete all challenges to claim",
+    "complete_7": "Complete 7 days to claim"
+  },
+
+  "difficulty": {
+    "easy": "EASY",
+    "easy_sub": "Ascending 1 → N²",
+    "pro": "PRO",
+    "pro_sub": "Descending N² → 1",
+    "expert": "EXPERT",
+    "expert_sub": "Random order"
+  },
+
+  "freeplay": {
+    "title": "FREE PLAY",
+    "grid_size": "Grid Size",
+    "difficulty": "Difficulty",
+    "timer": "Timer",
+    "off": "OFF"
+  },
+
+  "campaign": {
+    "title": "CAMPAIGN",
+    "coming_soon": "COMING SOON",
+    "coming_soon_sub": "More levels on the way"
+  },
+
+  "hints": {
+    "no_ads": "No ads available right now. Try buying gems."
+  },
+
+  "country": {
+    "prefer_not": "Prefer not to say"
   }
 }

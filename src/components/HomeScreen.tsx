@@ -16,10 +16,11 @@ import { BottomNav } from './BottomNav';
 // rectangular row). Endless/Speed go through the difficulty pre-screen; Free
 // Play has its own config screen.
 type ModeCardKey = 'endless' | 'freeplay' | 'speed';
-const MODE_CARDS: { key: ModeCardKey; icon: string; label: string; sub: string; accent: string; iconColour: string }[] = [
-  { key: 'endless', icon: '∞', label: 'ENDLESS', sub: '5×5 · 3min', accent: 'rgba(147,51,234,0.4)', iconColour: '#9333EA' },
-  { key: 'freeplay', icon: '▦', label: 'FREE PLAY', sub: 'Your rules', accent: 'rgba(59,130,246,0.4)', iconColour: '#3B82F6' },
-  { key: 'speed', icon: '⚡', label: 'SPEED', sub: '4×4 · 2×pt', accent: 'rgba(245,158,11,0.4)', iconColour: '#F59E0B' },
+// B-001a: labels are i18n keys resolved with t() in render (existing keys reused).
+const MODE_CARDS: { key: ModeCardKey; icon: string; labelKey: string; sub: string; accent: string; iconColour: string }[] = [
+  { key: 'endless', icon: '∞', labelKey: 'home.mode_endless', sub: '5×5 · 3min', accent: 'rgba(147,51,234,0.4)', iconColour: '#9333EA' },
+  { key: 'freeplay', icon: '▦', labelKey: 'home.freePlayLabel', sub: 'Your rules', accent: 'rgba(59,130,246,0.4)', iconColour: '#3B82F6' },
+  { key: 'speed', icon: '⚡', labelKey: 'home.mode_speed', sub: '4×4 · 2×pt', accent: 'rgba(245,158,11,0.4)', iconColour: '#F59E0B' },
 ];
 
 export function HomeScreen() {
@@ -134,7 +135,7 @@ export function HomeScreen() {
           onClick={() => navigate('/campaign')}
           style={{ width: '100%', padding: '10px', fontSize: 10, letterSpacing: 1 }}
         >
-          🗺️ CAMPAIGN PROGRESS
+          🗺️ {t('home.campaign_progress')}
         </button>
       </div>
 
@@ -159,9 +160,9 @@ export function HomeScreen() {
           <span style={{ fontSize: 22 }}>🔥</span>
           <div style={{ flex: 1 }}>
             <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, color: '#00D2C8', letterSpacing: 1 }}>
-              DAILY CHALLENGE
+              {t('daily.title')}
             </div>
-            <div style={{ fontSize: 10, color: 'var(--muted)', marginTop: 2 }}>Complete all 3 challenges</div>
+            <div style={{ fontSize: 10, color: 'var(--muted)', marginTop: 2 }}>{t('home.daily_sub')}</div>
           </div>
           <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: '#00D2C8' }}>
             Streak: {dailyStreak} 🔥
@@ -202,7 +203,7 @@ export function HomeScreen() {
               >
                 <span style={{ fontSize: 28, color: card.iconColour, lineHeight: 1 }}>{card.icon}</span>
                 <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: 'var(--white)', letterSpacing: 0.5, textTransform: 'uppercase' }}>
-                  {card.label}
+                  {t(card.labelKey)}
                 </div>
                 <div style={{ fontSize: 8, color: 'var(--muted)' }}>{card.sub}</div>
               </button>

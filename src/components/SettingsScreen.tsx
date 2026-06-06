@@ -122,7 +122,7 @@ export function SettingsScreen() {
         </div>
         {/* Country (T-005 Part 3.5) */}
         <div style={rowStyle}>
-          <span style={labelStyle}>Country</span>
+          <span style={labelStyle}>{t('settings.country')}</span>
           <button
             onClick={() => setCountryOpen(true)}
             style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--navy-card)', border: '1px solid var(--navy-border)', borderRadius: 4, padding: '6px 10px', cursor: 'pointer', color: 'var(--white)', fontFamily: "'Space Mono', monospace", fontSize: 11 }}

@@ -24,10 +24,11 @@ interface Row {
   score: number;
 }
 
-const TABS: { key: Tab; label: string }[] = [
-  { key: 'campaign', label: 'CAMPAIGN' },
-  { key: 'daily', label: 'DAILY' },
-  { key: 'alltime', label: 'ALL-TIME' },
+// B-001a: tab labels resolved via existing keys (uppercased for the tab style).
+const TABS: { key: Tab; labelKey: string }[] = [
+  { key: 'campaign', labelKey: 'modes.campaign' },
+  { key: 'daily', labelKey: 'leaderboard.tab_daily' },
+  { key: 'alltime', labelKey: 'leaderboard.tab_alltime' },
 ];
 
 const RANK_COLOURS: Record<number, string> = { 1: '#FFD700', 2: '#C0C0C0', 3: '#CD7F32' };
@@ -86,7 +87,7 @@ export function LeaderboardScreen() {
   return (
     <ScreenShell title={t('leaderboard.title')}>
       <div style={{ display: 'flex', borderBottom: '1px solid rgba(30,139,195,0.15)' }}>
-        {TABS.map(({ key, label }) => (
+        {TABS.map(({ key, labelKey }) => (
           <button
             key={key}
             onClick={() => setTab(key)}
@@ -104,7 +105,7 @@ export function LeaderboardScreen() {
               transition: 'color 0.2s',
             }}
           >
-            {label}
+            {t(labelKey).toUpperCase()}
           </button>
         ))}
       </div>
@@ -171,11 +172,11 @@ export function LeaderboardScreen() {
             <span style={{ fontSize: 20 }}>{countryFlag(country)}</span>
             <span style={{ flex: 1, fontSize: 14, color: 'var(--gold)' }}>{alias || 'Player'}</span>
             <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 14, color: playerScore != null ? 'var(--gold)' : 'var(--muted)' }}>
-              {playerScore != null ? playerScore.toLocaleString() : 'No score yet'}
+              {playerScore != null ? playerScore.toLocaleString() : t('leaderboard.no_score')}
             </span>
           </div>
           <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 7, color: 'var(--muted)', letterSpacing: 1, marginTop: 4 }}>
-            YOUR RANKING
+            {t('leaderboard.your_ranking')}
           </div>
         </div>
       )}

@@ -152,7 +152,7 @@ export function HowToPlayScreen() {
                   marginBottom: 8,
                 }}
               >
-                {"THE HUD TELLS YOU WHAT'S NEXT"}
+                {t('how_to_play.hud_title')}
               </p>
               <div
                 style={{
@@ -261,7 +261,7 @@ export function HowToPlayScreen() {
                   TIMER
                 </div>
                 <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 28, color: 'var(--white)' }}>24</div>
-                <div style={{ fontSize: 10, color: 'var(--muted)' }}>Normal</div>
+                <div style={{ fontSize: 10, color: 'var(--muted)' }}>{t('how_to_play.normal')}</div>
               </div>
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: 'var(--muted)', letterSpacing: 1 }}>
@@ -277,7 +277,7 @@ export function HowToPlayScreen() {
                 >
                   08
                 </div>
-                <div style={{ fontSize: 10, color: 'var(--danger)' }}>Danger!</div>
+                <div style={{ fontSize: 10, color: 'var(--danger)' }}>{t('how_to_play.danger')}</div>
               </div>
             </div>
           </div>
@@ -298,13 +298,13 @@ export function HowToPlayScreen() {
               {t('home.modes_label')}
             </p>
             {[
-              { name: 'CAMPAIGN', desc: '100 levels · 3×3 to 7×7 · 3-star rating', icon: '🎯' },
-              { name: 'DAILY', desc: '1 puzzle per day · Global leaderboard', icon: '📅' },
-              { name: 'ENDLESS', desc: 'How many rounds in 3 minutes?', icon: '♾️' },
-              { name: 'SPEED', desc: '4×4 · Halved timer · 2× score', icon: '⚡' },
+              { nameKey: 'how_to_play.mode_campaign', descKey: 'how_to_play.mode_campaign_sub', icon: '🎯' },
+              { nameKey: 'how_to_play.mode_daily', descKey: 'how_to_play.mode_daily_sub', icon: '📅' },
+              { nameKey: 'how_to_play.mode_endless', descKey: 'how_to_play.mode_endless_sub', icon: '♾️' },
+              { nameKey: 'how_to_play.mode_speed', descKey: 'how_to_play.mode_speed_sub', icon: '⚡' },
             ].map((mode) => (
               <div
-                key={mode.name}
+                key={mode.nameKey}
                 style={{
                   background: 'rgba(10,26,46,0.75)',
                   border: '1px solid rgba(30,139,195,0.2)',
@@ -318,8 +318,8 @@ export function HowToPlayScreen() {
               >
                 <span style={{ fontSize: 22 }}>{mode.icon}</span>
                 <div>
-                  <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, color: 'var(--gold)' }}>{mode.name}</div>
-                  <div style={{ fontSize: 12, color: 'var(--muted)' }}>{mode.desc}</div>
+                  <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, color: 'var(--gold)' }}>{t(mode.nameKey)}</div>
+                  <div style={{ fontSize: 12, color: 'var(--muted)' }}>{t(mode.descKey)}</div>
                 </div>
               </div>
             ))}

@@ -28,7 +28,9 @@
     "day_streak": "연속 일수",
     "rank": "랭킹",
     "games": "게임 수",
-    "avg": "평균"
+    "avg": "평균",
+    "campaign_progress": "CAMPAIGN PROGRESS",
+    "daily_sub": "Complete all 3 challenges"
   },
 
   "game": {
@@ -41,7 +43,18 @@
     "paused_title": "일시정지됨",
     "btn_resume": "계속하기",
     "btn_restart": "다시 시작",
-    "btn_home": "홈"
+    "btn_home": "홈",
+    "level_prefix": "LEVEL",
+    "remove_ads": "REMOVE ADS",
+    "remove_ads_sub": "Play without interruptions",
+    "watch_ad": "WATCH AD",
+    "watch_ad_sub": "Get 1 hint free",
+    "use_hint": "USE HINT",
+    "hints_left": "×{{count}} left",
+    "get_more_hints": "GET MORE HINTS",
+    "get_more_hints_sub": "Tap to buy gem packs",
+    "toast_no_hints": "No more hints this session",
+    "toast_no_ad": "No ad available"
   },
 
   "result": {
@@ -58,7 +71,12 @@
     "btn_play_again": "다시 플레이",
     "btn_home": "홈",
     "btn_leaderboard": "순위표",
-    "ad_slot": "광고"
+    "ad_slot": "광고",
+    "level_failed": "LEVEL FAILED",
+    "time_out": "TIME OUT",
+    "grid_label": "{{size}}×{{size}} Grid",
+    "time_label": "{{seconds}}s",
+    "best_config": "★ Best (this config):"
   },
 
   "leaderboard": {
@@ -69,7 +87,9 @@
     "you": "나",
     "anonymous_note": "익명 · 로그인 불필요 · 설정에서 별명을 정하세요",
     "loading": "불러오는 중...",
-    "empty": "아직 점수가 없습니다. 첫 번째가 되어보세요!"
+    "empty": "아직 점수가 없습니다. 첫 번째가 되어보세요!",
+    "your_ranking": "YOUR RANKING",
+    "no_score": "No score yet"
   },
 
   "settings": {
@@ -88,7 +108,8 @@
     "remove_ads": "광고 영구 제거",
     "remove_ads_sub": "일회성 구매",
     "remove_ads_purchased": "구매 완료 ✓",
-    "restore_purchases": "구매 복원"
+    "restore_purchases": "구매 복원",
+    "country": "Country"
   },
 
   "iap": {
@@ -103,7 +124,8 @@
     "btn_buy_short": "구매",
     "restore": "이전 구매 복원",
     "payment_note": "결제는 Google Play를 통해 처리됩니다.",
-    "terms_note": "구매하면 이용약관에 동의하게 됩니다."
+    "terms_note": "구매하면 이용약관에 동의하게 됩니다.",
+    "billing_notice": "BILLING ACTIVE IN FULL RELEASE"
   },
 
   "consent": {
@@ -126,7 +148,18 @@
     "demo_label": "다음에 금색 숫자를 탭하세요",
     "demo_hint": "금색 칸 = 다음에 탭 · ✓ = 이미 탭함",
     "btn_play": "플레이 시작!",
-    "btn_skip": "튜토리얼 건너뛰기"
+    "btn_skip": "튜토리얼 건너뛰기",
+    "hud_title": "THE HUD TELLS YOU WHAT'S NEXT",
+    "normal": "Normal",
+    "danger": "Danger!",
+    "mode_campaign": "CAMPAIGN",
+    "mode_campaign_sub": "100 levels · 3×3 to 7×7 · 3-star rating",
+    "mode_daily": "DAILY",
+    "mode_daily_sub": "1 puzzle per day · Global leaderboard",
+    "mode_endless": "ENDLESS",
+    "mode_endless_sub": "How many rounds in 3 minutes?",
+    "mode_speed": "SPEED",
+    "mode_speed_sub": "4×4 · Halved timer · 2× score"
   },
 
   "language": {
@@ -185,5 +218,51 @@
     "fog": "안개",
     "mirror": "미러",
     "countdown": "카운트다운"
+  },
+
+  "daily": {
+    "title": "DAILY CHALLENGE",
+    "instruction_1": "Complete all 3 daily challenges every day.",
+    "instruction_2": "Complete in order — each challenge unlocks the next.",
+    "streak_goal": "Reach 7 days in a row to claim 3 💎 gems.",
+    "day": "Day {{n}}",
+    "claim": "CLAIM",
+    "claimed": "CLAIMED",
+    "challenge": "CHALLENGE {{n}}",
+    "reward_gem_1": "+1 💎",
+    "reward_gem_3": "+3 💎",
+    "complete_to_claim": "Complete all challenges to claim",
+    "complete_7": "Complete 7 days to claim"
+  },
+
+  "difficulty": {
+    "easy": "EASY",
+    "easy_sub": "Ascending 1 → N²",
+    "pro": "PRO",
+    "pro_sub": "Descending N² → 1",
+    "expert": "EXPERT",
+    "expert_sub": "Random order"
+  },
+
+  "freeplay": {
+    "title": "FREE PLAY",
+    "grid_size": "Grid Size",
+    "difficulty": "Difficulty",
+    "timer": "Timer",
+    "off": "OFF"
+  },
+
+  "campaign": {
+    "title": "CAMPAIGN",
+    "coming_soon": "COMING SOON",
+    "coming_soon_sub": "More levels on the way"
+  },
+
+  "hints": {
+    "no_ads": "No ads available right now. Try buying gems."
+  },
+
+  "country": {
+    "prefer_not": "Prefer not to say"
   }
 }

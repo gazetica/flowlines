@@ -78,7 +78,7 @@ export function IAPScreen() {
 
       {/* Sprint 4 note */}
       <div style={{ margin: '0 16px 16px', padding: '12px', background: 'rgba(30,139,195,0.06)', border: '1px solid rgba(30,139,195,0.2)', borderRadius: 8, textAlign: 'center' }}>
-        <p style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: 'var(--blue-light)', letterSpacing: 1 }}>BILLING ACTIVE IN FULL RELEASE</p>
+        <p style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: 'var(--blue-light)', letterSpacing: 1 }}>{t('iap.billing_notice')}</p>
       </div>
 
       <div style={{ textAlign: 'center', padding: '0 20px 8px' }}>

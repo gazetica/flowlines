@@ -9,6 +9,7 @@
 // project's `verbatimModuleSyntax`. The brief's combined import would not compile.
 
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { fetchLevelLeader, getPlayerPB } from '../services/campaignScores';
 import type { LevelLeaderInfo } from '../services/campaignScores';
 import { useSettingsStore } from '../store/settingsStore';
@@ -19,6 +20,7 @@ interface LeaderPanelProps {
 }
 
 export function LeaderPanel({ levelId, compact = false }: LeaderPanelProps) {
+  const { t } = useTranslation();
   const { alias } = useSettingsStore();
   const [leader, setLeader] = useState<LevelLeaderInfo | null>(null);
   const [loading, setLoading] = useState(true);
@@ -140,7 +142,7 @@ export function LeaderPanel({ levelId, compact = false }: LeaderPanelProps) {
             <StatRow label="Time" value={`${leader.timeSecs}s`} colour="var(--white)" fontSize={fs.stat} />
           </>
         ) : (
-          <div style={{ fontSize: fs.alias, color: 'var(--muted)', fontFamily: "'Space Mono', monospace" }}>Be first!</div>
+          <div style={{ fontSize: fs.alias, color: 'var(--muted)', fontFamily: "'Space Mono', monospace" }}>{t('leaderboard.empty')}</div>
         )}
       </div>
     </div>

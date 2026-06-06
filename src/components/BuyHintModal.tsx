@@ -9,13 +9,13 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useSettingsStore } from '../store/settingsStore';
 import { showRewarded } from '../services/admob';
 import { SKIN } from '../styles/skin';
 
-const NO_ADS_MSG = 'No ads available right now. Try buying gems.';
-
 export function BuyHintModal({ onClose, onApplyHint }: { onClose: () => void; onApplyHint: () => void }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const hintCount = useSettingsStore((s) => s.hintCount);
   const addHints = useSettingsStore((s) => s.addHints);
@@ -34,7 +34,7 @@ export function BuyHintModal({ onClose, onApplyHint }: { onClose: () => void; on
         rewarded = true;
       });
     } catch {
-      setError(NO_ADS_MSG); // dismiss/unavailable — Cancel resumes the game
+      setError(t('hints.no_ads')); // dismiss/unavailable — Cancel resumes the game
       setBusy(false);
       return;
     }
@@ -45,7 +45,7 @@ export function BuyHintModal({ onClose, onApplyHint }: { onClose: () => void; on
       onClose(); // closes + resumes the game (caller's handler)
       return;
     }
-    setError(NO_ADS_MSG);
+    setError(t('hints.no_ads'));
     setBusy(false);
   };
 

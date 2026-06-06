@@ -7,6 +7,9 @@
 import { useState } from 'react';
 import { countryFlag } from '../utils/countryFlag';
 import { SKIN } from '../styles/skin';
+// B-001a: countryName() is a plain exported function (not a component), so it
+// reads the "prefer not to say" label from the i18n singleton directly.
+import i18n from '../i18n';
 
 const COUNTRIES: { code: string; name: string }[] = [
   { code: 'AU', name: 'Australia' },
@@ -35,7 +38,7 @@ const COUNTRIES: { code: string; name: string }[] = [
 ].sort((a, b) => a.name.localeCompare(b.name));
 
 export function countryName(code: string): string {
-  if (!code || code === 'XX') return 'Prefer not to say';
+  if (!code || code === 'XX') return i18n.t('country.prefer_not');
   return COUNTRIES.find((c) => c.code === code)?.name ?? code;
 }
 
@@ -112,7 +115,7 @@ export function CountrySelector({
         {filtered.map((c) => (
           <Row key={c.code} code={c.code} flag={countryFlag(c.code)} name={c.name} />
         ))}
-        {ql === '' && <Row code="XX" flag="🌐" name="Prefer not to say" />}
+        {ql === '' && <Row code="XX" flag="🌐" name={i18n.t('country.prefer_not')} />}
       </div>
     </div>
   );

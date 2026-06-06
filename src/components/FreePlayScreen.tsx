@@ -7,6 +7,7 @@
 import type React from 'react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useGameStore } from '../store/gameStore';
 import type { Difficulty } from '../game/GridEngine';
 import { ParticleCanvas } from './ParticleCanvas';
@@ -14,10 +15,10 @@ import { BottomNav } from './BottomNav';
 import { SKIN } from '../styles/skin';
 
 const GRIDS = [3, 4, 5, 6, 7];
-const DIFFS: { key: Difficulty; label: string }[] = [
-  { key: 'easy', label: 'EASY' },
-  { key: 'pro', label: 'PRO' },
-  { key: 'expert', label: 'EXPERT' },
+const DIFFS: { key: Difficulty; labelKey: string }[] = [
+  { key: 'easy', labelKey: 'difficulty.easy' },
+  { key: 'pro', labelKey: 'difficulty.pro' },
+  { key: 'expert', labelKey: 'difficulty.expert' },
 ];
 const TIMERS = [20, 30, 60, 90];
 
@@ -53,6 +54,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 export function FreePlayScreen() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const startFreePlay = useGameStore((s) => s.startFreePlay);
   const [grid, setGrid] = useState(4);
@@ -74,28 +76,28 @@ export function FreePlayScreen() {
         <button onClick={() => navigate('/home')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Space Mono', monospace", fontSize: 20, color: 'var(--muted)', padding: 0 }}>
           ←
         </button>
-        <h1 style={{ fontFamily: "'Space Mono', monospace", fontSize: 16, color: 'var(--gold)', letterSpacing: 2, flex: 1 }}>FREE PLAY</h1>
+        <h1 style={{ fontFamily: "'Space Mono', monospace", fontSize: 16, color: 'var(--gold)', letterSpacing: 2, flex: 1 }}>{t('freeplay.title')}</h1>
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '8px 20px 20px', position: 'relative', zIndex: 1 }}>
-        <SectionLabel>Grid Size</SectionLabel>
+        <SectionLabel>{t('freeplay.grid_size')}</SectionLabel>
         <div style={{ display: 'flex', gap: 6 }}>
           {GRIDS.map((g) => (
             <Chip key={g} active={grid === g} onClick={() => setGrid(g)}>{g}×{g}</Chip>
           ))}
         </div>
 
-        <SectionLabel>Difficulty</SectionLabel>
+        <SectionLabel>{t('freeplay.difficulty')}</SectionLabel>
         <div style={{ display: 'flex', gap: 6 }}>
           {DIFFS.map((d) => (
-            <Chip key={d.key} active={diff === d.key} onClick={() => setDiff(d.key)}>{d.label}</Chip>
+            <Chip key={d.key} active={diff === d.key} onClick={() => setDiff(d.key)}>{t(d.labelKey)}</Chip>
           ))}
         </div>
 
-        <SectionLabel>Timer</SectionLabel>
+        <SectionLabel>{t('freeplay.timer')}</SectionLabel>
         <div style={{ display: 'flex', gap: 6 }}>
           <Chip active={timerOn} onClick={() => setTimerOn(true)}>ON · {timerSecs}s</Chip>
-          <Chip active={!timerOn} onClick={() => setTimerOn(false)}>OFF</Chip>
+          <Chip active={!timerOn} onClick={() => setTimerOn(false)}>{t('freeplay.off')}</Chip>
         </div>
         {timerOn && (
           <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>

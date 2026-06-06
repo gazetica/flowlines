@@ -6,6 +6,7 @@
 // literal here, so importing `t` would be an unused-local under noUnusedLocals.)
 
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useSettingsStore } from '../store/settingsStore';
 import { useGameStore } from '../store/gameStore';
 import { LevelManager } from '../game/LevelManager';
@@ -13,6 +14,7 @@ import { ParticleCanvas } from './ParticleCanvas';
 import { BottomNav } from './BottomNav';
 
 export function CampaignScreen() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { completedLevels } = useSettingsStore();
   const { startLevel } = useGameStore();
@@ -38,7 +40,7 @@ export function CampaignScreen() {
         <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Space Mono', monospace", fontSize: 20, color: 'var(--muted)', padding: 0 }}>
           ←
         </button>
-        <h1 style={{ fontFamily: "'Space Mono', monospace", fontSize: 16, color: 'var(--gold)', letterSpacing: 2 }}>CAMPAIGN</h1>
+        <h1 style={{ fontFamily: "'Space Mono', monospace", fontSize: 16, color: 'var(--gold)', letterSpacing: 2 }}>{t('campaign.title')}</h1>
       </div>
 
       {/* Level map */}
@@ -105,8 +107,8 @@ export function CampaignScreen() {
 
         {/* Pack 4 teaser */}
         <div style={{ textAlign: 'center', padding: '20px', background: 'rgba(10,26,46,0.5)', border: '1px dashed rgba(30,139,195,0.2)', borderRadius: 10 }}>
-          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: 'var(--muted)', letterSpacing: 2, marginBottom: 6 }}>PACK 4 — COMING SOON</div>
-          <div style={{ fontSize: 12, color: 'rgba(107,132,168,0.5)' }}>More levels on the way</div>
+          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: 'var(--muted)', letterSpacing: 2, marginBottom: 6 }}>PACK 4 — {t('campaign.coming_soon')}</div>
+          <div style={{ fontSize: 12, color: 'rgba(107,132,168,0.5)' }}>{t('campaign.coming_soon_sub')}</div>
         </div>
       </div>
       <BottomNav />

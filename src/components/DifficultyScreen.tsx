@@ -11,6 +11,7 @@
 
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useGameStore } from '../store/gameStore';
 import type { GameMode } from '../store/gameStore';
 import type { Difficulty } from '../game/GridEngine';
@@ -19,8 +20,8 @@ import { SKIN } from '../styles/skin';
 
 interface DiffStyle {
   key: Difficulty;
-  label: string;
-  desc: string;
+  labelKey: string;
+  descKey: string;
   mult: string;
   accent: string; // header / border / glow base colour
   cardBg: string;
@@ -33,8 +34,8 @@ interface DiffStyle {
 const OPTIONS: DiffStyle[] = [
   {
     key: 'easy',
-    label: 'EASY',
-    desc: 'Ascending 1 → N²',
+    labelKey: 'difficulty.easy',
+    descKey: 'difficulty.easy_sub',
     mult: '1.0×',
     accent: '#7FB0FF',
     cardBg: 'linear-gradient(135deg, #0F3460 0%, #0A2040 100%)',
@@ -45,8 +46,8 @@ const OPTIONS: DiffStyle[] = [
   },
   {
     key: 'pro',
-    label: 'PRO',
-    desc: 'Descending N² → 1',
+    labelKey: 'difficulty.pro',
+    descKey: 'difficulty.pro_sub',
     mult: '1.5×',
     accent: '#F59E0B',
     cardBg: 'linear-gradient(135deg, #3D1F00 0%, #2A1500 100%)',
@@ -57,8 +58,8 @@ const OPTIONS: DiffStyle[] = [
   },
   {
     key: 'expert',
-    label: 'EXPERT',
-    desc: 'Random order',
+    labelKey: 'difficulty.expert',
+    descKey: 'difficulty.expert_sub',
     mult: '2.0×',
     accent: '#9333EA',
     cardBg: 'linear-gradient(135deg, #2D0A3F 0%, #1A0628 100%)',
@@ -93,6 +94,7 @@ function MiniTile({ number, accent }: { number: number | '?'; accent: string }) 
 }
 
 export function DifficultyScreen() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const startLevel = useGameStore((s) => s.startLevel);
@@ -152,9 +154,9 @@ export function DifficultyScreen() {
               </div>
 
               <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 16, letterSpacing: 1, color: opt.accent, marginBottom: 6, textShadow: isSel ? `0 0 10px ${opt.accent}` : 'none' }}>
-                {opt.label}
+                {t(opt.labelKey)}
               </div>
-              <div style={{ fontSize: 12, color: SKIN.muted, marginBottom: 2 }}>{opt.desc}</div>
+              <div style={{ fontSize: 12, color: SKIN.muted, marginBottom: 2 }}>{t(opt.descKey)}</div>
               <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, color: opt.accent }}>{opt.mult}</div>
             </button>
           );
