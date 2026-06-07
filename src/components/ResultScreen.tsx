@@ -18,7 +18,7 @@ import { submitCampaignScore } from '../services/campaignScores';
 import { autoSubmitDailyIfComplete } from '../services/dailyScores';
 import { incrementLevelCount, maybeShowInterstitial } from '../services/interstitialAdService';
 import { isCampaignUnlocked, isPurchased } from '../services/campaignGateService';
-import { showResultBanner, hideResultBanner } from '../services/bannerAdService';
+import { GazeticaPromoCard } from './GazeticaPromoCard';
 import * as analytics from '../services/analytics';
 import { ParticleCanvas } from './ParticleCanvas';
 import { BottomNav } from './BottomNav';
@@ -44,19 +44,6 @@ export function ResultScreen() {
       await incrementLevelCount();   // T-018b: count this completion first
       await maybeShowInterstitial(); // decides on dual trigger + IAP guard
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // B-008: ResultScreen banner ad (native only). Show shortly after mount so the
-  // result renders first; hide on unmount. Suppressed when Remove Ads is owned.
-  useEffect(() => {
-    if (!Capacitor.isNativePlatform()) return;
-    if (useSettingsStore.getState().removeAdsPurchased) return;
-    const id = setTimeout(() => { void showResultBanner(); }, 500);
-    return () => {
-      clearTimeout(id);
-      void hideResultBanner();
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -332,10 +319,18 @@ export function ResultScreen() {
         </div>
       )}
 
-      {/* B-008: the AdMob banner renders natively at the screen bottom
-          (BOTTOM_CENTER), driven by bannerAdService on mount/unmount. This div
-          stays as layout spacing where the old placeholder sat. */}
-      <div style={{ margin: '0 20px 12px', padding: '8px', position: 'relative', zIndex: 1 }} />
+      {/* B-012: Internal house ad — cross-promotion of upcoming Gazetica games.
+          Variant adapts to available space: compact (campaign win) / medium
+          (other win) / full (fail or timeout). */}
+      <div style={{ margin: '0 20px 12px', position: 'relative', zIndex: 1 }}>
+        <GazeticaPromoCard
+          variant={
+            !isComplete ? 'full'
+            : mode === 'campaign' ? 'compact'
+            : 'medium'
+          }
+        />
+      </div>
 
       {/* Action card(s) — T-004A Fix 5. Campaign (with a next level): gold NEXT
           LEVEL primary + dark PLAY AGAIN secondary. All other cases: gold PLAY
