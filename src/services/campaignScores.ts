@@ -23,6 +23,7 @@ export interface LevelLeaderInfo {
   alias: string;
   score: number;
   timeSecs: number;
+  country: string; // B-005: ISO code for the leader's flag ('' / 'XX' = none)
 }
 
 /**
@@ -59,7 +60,7 @@ export async function submitCampaignScore(params: {
 export async function fetchLevelLeader(levelId: number): Promise<LevelLeaderInfo | null> {
   const { data, error } = await supabase
     .from('campaign_scores')
-    .select('alias, score, time_secs')
+    .select('alias, score, time_secs, country')
     .eq('level_id', levelId)
     .order('score', { ascending: false })
     .limit(1)
@@ -70,6 +71,7 @@ export async function fetchLevelLeader(levelId: number): Promise<LevelLeaderInfo
     alias: data.alias,
     score: data.score,
     timeSecs: data.time_secs,
+    country: data.country ?? '', // B-005: '' when the row has no country
   };
 }
 

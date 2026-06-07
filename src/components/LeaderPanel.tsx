@@ -15,6 +15,16 @@ import type { LevelLeaderInfo } from '../services/campaignScores';
 import { useSettingsStore } from '../store/settingsStore';
 import { loadLocalTier, getTier, TIER_COLORS } from '../services/tierService';
 import type { Tier } from '../services/tierService';
+import { countryFlag } from '../utils/countryFlag';
+
+// B-005: the flag emoji to prepend before an alias, or '' when the country is
+// missing/unset ('XX', empty, or not a 2-letter code) so we never render a
+// placeholder (the shared countryFlag() returns a 🌐 globe for those — suppress
+// it here for the YOU/LEADER panels per the brief). Pure; exported for tests.
+export function aliasFlag(country: string | null | undefined): string {
+  if (!country || country === 'XX' || country.length !== 2) return '';
+  return countryFlag(country);
+}
 
 // F-001b: coloured " (PRO)" / " (EXPERT)" suffix after an alias.
 function TierTag({ tier, t }: { tier: Tier | null; t: (k: string) => string }) {
@@ -29,7 +39,7 @@ interface LeaderPanelProps {
 
 export function LeaderPanel({ levelId, compact = false }: LeaderPanelProps) {
   const { t } = useTranslation();
-  const { alias } = useSettingsStore();
+  const { alias, country } = useSettingsStore();
   const [leader, setLeader] = useState<LevelLeaderInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [myTier, setMyTier] = useState<Tier | null>(null);
@@ -94,7 +104,7 @@ export function LeaderPanel({ levelId, compact = false }: LeaderPanelProps) {
             whiteSpace: 'nowrap',
           }}
         >
-          {alias || 'Player'}<TierTag tier={myTier} t={t} />
+          {aliasFlag(country) && `${aliasFlag(country)} `}{alias || 'Player'}<TierTag tier={myTier} t={t} />
         </div>
         <StatRow
           label="Score"
@@ -145,7 +155,7 @@ export function LeaderPanel({ levelId, compact = false }: LeaderPanelProps) {
                 whiteSpace: 'nowrap',
               }}
             >
-              {leader.alias}<TierTag tier={leaderTier} t={t} />
+              {aliasFlag(leader.country) && `${aliasFlag(leader.country)} `}{leader.alias}<TierTag tier={leaderTier} t={t} />
             </div>
             <StatRow
               label="Score"
