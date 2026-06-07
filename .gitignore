@@ -37,3 +37,7 @@ android/app/google-services.json
 .env
 .env.local
 .env.*.local
+# Release signing — keystore + credentials (DEV-001 hardening)
+gazetica-numtap.jks
+*.jks
+android/keystore.properties
