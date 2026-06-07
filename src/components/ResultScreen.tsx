@@ -17,6 +17,7 @@ import { LeaderPanel } from './LeaderPanel';
 import { submitCampaignScore } from '../services/campaignScores';
 import { autoSubmitDailyIfComplete } from '../services/dailyScores';
 import { incrementLevelCount, maybeShowInterstitial } from '../services/interstitialAdService';
+import { isCampaignUnlocked, isPurchased } from '../services/campaignGateService';
 import * as analytics from '../services/analytics';
 import { ParticleCanvas } from './ParticleCanvas';
 import { BottomNav } from './BottomNav';
@@ -64,6 +65,14 @@ export function ResultScreen() {
   } | null>(null);
   const [isPB, setIsPB] = useState(false);
   const [fpBest, setFpBest] = useState<number | null>(null); // Free Play local PB
+
+  // B-004: campaign-boundary gate. When NEXT LEVEL would cross into a locked
+  // Campaign 2/3 (next id 101 or 201), suppress the button and show a locked
+  // message instead. nextCampaignLocked holds the resolved lock state;
+  // gateCheckPending hides the button while the async gate query is in flight so
+  // NEXT LEVEL never flashes before the locked message replaces it.
+  const [nextCampaignLocked, setNextCampaignLocked] = useState(false);
+  const [gateCheckPending, setGateCheckPending] = useState(false);
 
   useEffect(() => {
     if (!currentLevel) return;
@@ -147,6 +156,25 @@ export function ResultScreen() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, currentLevel]);
+
+  // B-004: at a campaign boundary (next level 101 or 201) check whether the next
+  // campaign is locked before rendering NEXT LEVEL. The query is async (Supabase
+  // via campaignGateService) — gateCheckPending suppresses the button until it
+  // resolves. Non-boundary levels never enter this path (no flicker, no change).
+  useEffect(() => {
+    if (!currentLevel || mode !== 'campaign') return;
+    const nid = LevelManager.getNextLevelId(currentLevel.id);
+    if (nid !== 101 && nid !== 201) return;
+    let alive = true;
+    setGateCheckPending(true);
+    (async () => {
+      const locked = await isCampaignLocked(nid);
+      if (!alive) return;
+      setNextCampaignLocked(locked);
+      setGateCheckPending(false);
+    })();
+    return () => { alive = false; };
+  }, [currentLevel, mode]);
 
   if (!currentLevel) {
     navigate('/home', { replace: true });
@@ -309,13 +337,25 @@ export function ResultScreen() {
           </button>
         ) : isComplete && nextLevelId && mode === 'campaign' ? (
           <>
-            <button
-              className="btn-gold"
-              onClick={handleNextLevel}
-              style={{ width: '100%', padding: '14px', fontSize: 11, letterSpacing: 2, marginBottom: 10, textTransform: 'uppercase' }}
-            >
-              ▶ {t('result.btn_next_level')} ({LevelManager.getLevel(nextLevelId).grid}×{LevelManager.getLevel(nextLevelId).grid})
-            </button>
+            {/* B-004: NEXT LEVEL is gate-aware at campaign boundaries (101/201).
+                While the gate query is pending, show a brief placeholder so the
+                button never flashes; if the next campaign is locked, show the
+                CampaignLockedMessage in its place; otherwise the normal button. */}
+            {gateCheckPending ? (
+              <div style={{ width: '100%', padding: '14px', marginBottom: 10, textAlign: 'center', fontFamily: "'Space Mono', monospace", fontSize: 16, color: 'var(--muted)', letterSpacing: 6, opacity: 0.5 }}>
+                ···
+              </div>
+            ) : nextCampaignLocked ? (
+              <CampaignLockedMessage campaignNumber={nextLevelId === 101 ? 2 : 3} onGo={() => navigate('/campaign')} />
+            ) : (
+              <button
+                className="btn-gold"
+                onClick={handleNextLevel}
+                style={{ width: '100%', padding: '14px', fontSize: 11, letterSpacing: 2, marginBottom: 10, textTransform: 'uppercase' }}
+              >
+                ▶ {t('result.btn_next_level')} ({LevelManager.getLevel(nextLevelId).grid}×{LevelManager.getLevel(nextLevelId).grid})
+              </button>
+            )}
             <button
               onClick={handlePlayAgain}
               style={{
@@ -348,6 +388,47 @@ export function ResultScreen() {
 
       {/* Standard 4-icon footer (T-004A Fix 5/6) */}
       <BottomNav />
+    </div>
+  );
+}
+
+// —— B-004: campaign-boundary gate check ————————————————————————————————
+// True when `nextLevelId` crosses into Campaign 2 (101) or Campaign 3 (201) AND
+// that campaign is still locked. A campaign is unlocked by EITHER the Early-Access
+// IAP flag (isPurchased — reads the campaignN_purchased Preferences key) OR the
+// community gate being met (isCampaignUnlocked). Any other id is mid-campaign and
+// returns false synchronously (no Supabase call). Uses the existing gate-service
+// API only — no duplicated gate/Preferences logic. Exported for unit testing.
+export async function isCampaignLocked(nextLevelId: number): Promise<boolean> {
+  const campaignId = nextLevelId === 101 ? 2 : nextLevelId === 201 ? 3 : 0;
+  if (!campaignId) return false;
+  const [purchased, unlocked] = await Promise.all([
+    isPurchased(campaignId),
+    isCampaignUnlocked(campaignId),
+  ]);
+  return !purchased && !unlocked;
+}
+
+// Shown in place of NEXT LEVEL when the next campaign is gate-locked. Styling
+// mirrors the CampaignScreen gate cards (navy-card surface, navy-border, gold
+// lock). The button routes to the Campaign screen, where the live gate counter
+// and the Early-Access unlock live. Exported for unit testing.
+export function CampaignLockedMessage({ campaignNumber, onGo }: { campaignNumber: number; onGo: () => void }) {
+  return (
+    <div style={{ background: 'var(--navy-card)', border: '1px solid var(--navy-border)', borderRadius: 12, padding: 16, marginBottom: 10, textAlign: 'center' }}>
+      <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 13, color: 'var(--gold)', letterSpacing: 1, marginBottom: 6 }}>
+        🔒 Campaign {campaignNumber} Locked
+      </div>
+      <div style={{ fontSize: 11, color: 'var(--white)', marginBottom: 12 }}>
+        Unlock via Early Access or wait for the community gate
+      </div>
+      <button
+        className="btn-gold"
+        onClick={onGo}
+        style={{ width: '100%', padding: '12px', fontSize: 11, letterSpacing: 1, textTransform: 'uppercase' }}
+      >
+        GO TO CAMPAIGN SCREEN
+      </button>
     </div>
   );
 }
