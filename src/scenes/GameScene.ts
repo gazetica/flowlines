@@ -18,6 +18,49 @@ import type { Cell } from '../game/GridEngine';
 import { useGameStore } from '../store/gameStore';
 import * as soundService from '../services/soundService';
 
+// B-010: choose which countdown tiles stay permanently visible after the 3s hide.
+// Returns Math.ceil(total/2) cell keys ("row,col"): the first-target cell is always
+// included (ascending → value 1, descending → value n²); the remaining slots are
+// filled from a Fisher-Yates shuffle of the other untapped cells. Pure (no Phaser /
+// scene state) so it is unit-testable. Selection is made once, at the hide instant.
+export function selectCountdownVisibleTiles(
+  grid: Cell[][],
+  gridSize: number,
+  direction: 'ascending' | 'descending'
+): Set<string> {
+  const total = gridSize * gridSize;
+  const visibleCount = Math.ceil(total / 2);
+  const firstTarget = direction === 'descending' ? total : 1;
+
+  // Candidates = untapped cells only (tapped cells are always visible already).
+  const candidates: { key: string; value: number }[] = [];
+  for (const row of grid) {
+    for (const cell of row) {
+      if (!cell.tapped) candidates.push({ key: `${cell.row},${cell.col}`, value: cell.value });
+    }
+  }
+
+  const visible = new Set<string>();
+
+  // Rule 1: the first target is always visible — claim its slot first.
+  const firstIdx = candidates.findIndex((c) => c.value === firstTarget);
+  if (firstIdx !== -1) {
+    visible.add(candidates[firstIdx].key);
+    candidates.splice(firstIdx, 1);
+  }
+
+  // Rule 2: fill the remaining slots from a Fisher-Yates shuffle of the rest.
+  for (let i = candidates.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+  }
+  for (let i = 0; i < candidates.length && visible.size < visibleCount; i++) {
+    visible.add(candidates[i].key);
+  }
+
+  return visible;
+}
+
 export class GameScene extends Phaser.Scene {
   private tileObjects: Phaser.GameObjects.Container[][] = [];
   private hintGlowTween: Phaser.Tweens.Tween | null = null;
@@ -30,6 +73,9 @@ export class GameScene extends Phaser.Scene {
   // cell 3s after it was first shown. Player taps the (now-blank) tiles from memory.
   private countdownFirstSeen = new Map<string, number>();
   private countdownHidden = new Set<string>();
+  // B-010: cells chosen to stay permanently visible after the 3s hide (50% of
+  // tiles, first target always included). Picked once at hide; reset per level.
+  private countdownPermanentlyVisible = new Set<string>();
   private lastRunId = -1;
 
   // B-002e: tracks the last status we saw so the win/fail SFX fires exactly once
@@ -114,6 +160,7 @@ export class GameScene extends Phaser.Scene {
       this.lastRunId = runId;
       this.countdownFirstSeen.clear();
       this.countdownHidden.clear();
+      this.countdownPermanentlyVisible.clear(); // B-010
     }
 
     // Shuffle modifier tick
@@ -162,6 +209,15 @@ export class GameScene extends Phaser.Scene {
           if (seen === undefined) {
             this.countdownFirstSeen.set(k, now);
           } else if (!this.countdownHidden.has(k) && now - seen > 3000) {
+            // B-010: the instant the first tile is due to hide, pick which 50% of
+            // tiles stay permanently visible (first target guaranteed). Once only.
+            if (this.countdownHidden.size === 0) {
+              this.countdownPermanentlyVisible = selectCountdownVisibleTiles(
+                grid,
+                currentLevel.grid,
+                currentLevel.direction
+              );
+            }
             this.countdownHidden.add(k);
             changed = true;
           }
@@ -174,13 +230,18 @@ export class GameScene extends Phaser.Scene {
   // Whether a cell's number should currently render.
   //  - tapped cells: always (they show the green check)
   //  - fog: only while revealed (set by the pointer-move reveal)
-  //  - countdown: visible until hidden by the 3s view-layer timer
+  //  - countdown: visible until hidden by the 3s timer, UNLESS chosen to stay
+  //    permanently visible (B-010 partial reveal)
   //  - none/shuffle/mirror: always visible
   private isVisible(cell: Cell): boolean {
     if (cell.tapped) return true;
     const mod = useGameStore.getState().currentLevel?.modifier;
     if (mod === 'fog') return cell.revealed;
-    if (mod === 'countdown') return !this.countdownHidden.has(`${cell.row},${cell.col}`);
+    if (mod === 'countdown') {
+      const key = `${cell.row},${cell.col}`;
+      if (this.countdownPermanentlyVisible.has(key)) return true; // B-010
+      return !this.countdownHidden.has(key);
+    }
     return true;
   }
 
