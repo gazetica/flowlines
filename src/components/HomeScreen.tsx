@@ -268,7 +268,7 @@ function AchievementCard({ accent, bg, subColor, checkColor, title, sub, complet
         alignSelf: 'center', // …centred on screen
         minHeight: 80,
         borderRadius: 999, // full pill — half-circle ends
-        border: `2px solid ${accent}`,
+        border: `2px dotted ${accent}`, // B-007: dotted pill border (PRO purple / EXPERT cyan)
         background: bg,
         padding: '12px 22px',
         marginBottom: 12,

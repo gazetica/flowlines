@@ -18,6 +18,7 @@ import { submitCampaignScore } from '../services/campaignScores';
 import { autoSubmitDailyIfComplete } from '../services/dailyScores';
 import { incrementLevelCount, maybeShowInterstitial } from '../services/interstitialAdService';
 import { isCampaignUnlocked, isPurchased } from '../services/campaignGateService';
+import { showResultBanner, hideResultBanner } from '../services/bannerAdService';
 import * as analytics from '../services/analytics';
 import { ParticleCanvas } from './ParticleCanvas';
 import { BottomNav } from './BottomNav';
@@ -43,6 +44,19 @@ export function ResultScreen() {
       await incrementLevelCount();   // T-018b: count this completion first
       await maybeShowInterstitial(); // decides on dual trigger + IAP guard
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // B-008: ResultScreen banner ad (native only). Show shortly after mount so the
+  // result renders first; hide on unmount. Suppressed when Remove Ads is owned.
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    if (useSettingsStore.getState().removeAdsPurchased) return;
+    const id = setTimeout(() => { void showResultBanner(); }, 500);
+    return () => {
+      clearTimeout(id);
+      void hideResultBanner();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -318,10 +332,10 @@ export function ResultScreen() {
         </div>
       )}
 
-      {/* Ad slot placeholder — Sprint 4 replaces with real interstitial */}
-      <div style={{ margin: '0 20px 12px', background: 'rgba(10,26,46,0.4)', border: '1px dashed rgba(30,139,195,0.15)', borderRadius: 6, padding: '8px', textAlign: 'center', position: 'relative', zIndex: 1 }}>
-        <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: 'rgba(30,139,195,0.3)', letterSpacing: 1 }}>{t('result.ad_slot')} · SPRINT 4</span>
-      </div>
+      {/* B-008: the AdMob banner renders natively at the screen bottom
+          (BOTTOM_CENTER), driven by bannerAdService on mount/unmount. This div
+          stays as layout spacing where the old placeholder sat. */}
+      <div style={{ margin: '0 20px 12px', padding: '8px', position: 'relative', zIndex: 1 }} />
 
       {/* Action card(s) — T-004A Fix 5. Campaign (with a next level): gold NEXT
           LEVEL primary + dark PLAY AGAIN secondary. All other cases: gold PLAY
