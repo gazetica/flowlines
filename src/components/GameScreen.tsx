@@ -27,6 +27,8 @@ import { initAppLifecycle, removeAppLifecycle } from '../services/appLifecycle';
 import * as soundService from '../services/soundService';
 import * as musicService from '../services/musicService';
 import { SKIN } from '../styles/skin';
+import { App } from '@capacitor/app';
+import { PauseModal, quitTarget } from './PauseModal';
 
 export function GameScreen() {
   const { t } = useTranslation();
@@ -50,6 +52,64 @@ export function GameScreen() {
   // T-017 AC7: max 3 rewarded hints per game session (resets each new level/run).
   const MAX_SESSION_HINTS = 3;
   const [sessionHints, setSessionHints] = useState(0);
+
+  // F-002: pause modal on Android back button during active play. pauseOpenRef
+  // mirrors the state so the (once-registered) back listener reads it without a
+  // stale closure.
+  const [pauseOpen, setPauseOpen] = useState(false);
+  const pauseOpenRef = useRef(false);
+
+  const openPause = () => {
+    if (pauseOpenRef.current) return;
+    pauseOpenRef.current = true;
+    setPauseOpen(true);
+    useGameStore.getState().pauseGame();          // status → paused → TimerComponent freezes
+    phaserRef.current?.scene.pause('GameScene');  // stop the scene update loop
+  };
+  const resumePause = () => {
+    if (!pauseOpenRef.current) return;
+    pauseOpenRef.current = false;
+    setPauseOpen(false);
+    phaserRef.current?.scene.resume('GameScene');
+    useGameStore.getState().resumeGame();         // timer resumes from the frozen value
+  };
+  const restartFromPause = () => {
+    pauseOpenRef.current = false;
+    setPauseOpen(false);
+    phaserRef.current?.scene.resume('GameScene'); // scene must run for the fresh render
+    const st = useGameStore.getState();
+    const lvl = st.currentLevel;
+    if (!lvl) return;
+    if (st.mode === 'freeplay') {
+      st.startFreePlay({ gridSize: lvl.grid, difficulty: st.difficulty, timerSecs: st.timed ? lvl.timeLimit : null });
+    } else if (st.mode === 'daily' && st.currentChallengeIndex) {
+      st.startDailyChallenge(st.currentChallengeIndex);
+    } else {
+      // Campaign: keep pro/expert; omit difficulty for C1 ('easy') so the level's
+      // own direction (e.g. descending levels) is preserved, not forced ascending.
+      st.startLevel(lvl.id, st.mode, st.difficulty === 'easy' ? undefined : st.difficulty);
+    }
+  };
+  const quitFromPause = () => {
+    pauseOpenRef.current = false;
+    setPauseOpen(false);
+    navigate(quitTarget(useGameStore.getState().mode));
+  };
+
+  // Intercept the Android back button while GameScreen is mounted (native only).
+  // While paused → resume; while actively playing → open the pause modal; else a
+  // safe fallback to Home so the player is never trapped.
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    let handle: { remove: () => void } | undefined;
+    App.addListener('backButton', () => {
+      if (pauseOpenRef.current) { resumePause(); return; }
+      if (useGameStore.getState().status === 'playing') { openPause(); return; }
+      navigate('/home');
+    }).then((h) => { handle = h; });
+    return () => { handle?.remove(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 1900);
@@ -576,6 +636,11 @@ export function GameScreen() {
 
       {hintModalOpen && (
         <BuyHintModal onClose={closeHintModal} onApplyHint={applyHintToTile} />
+      )}
+
+      {/* F-002: pause overlay (Android back during play). Resume / Restart / Quit. */}
+      {pauseOpen && (
+        <PauseModal onResume={resumePause} onRestart={restartFromPause} onQuit={quitFromPause} />
       )}
 
     </div>
