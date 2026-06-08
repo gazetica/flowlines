@@ -20,6 +20,7 @@ const DEV_TOOLS = import.meta.env.DEV || import.meta.env.VITE_DEV_TOOLS === 'tru
 
 export function AboutScreen() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   // B-003: open external links. Native-only (web logs to console). http(s) opens in
   // the in-app browser (Custom Tabs); mailto/tel can't render in Custom Tabs, so they
@@ -37,8 +38,10 @@ export function AboutScreen() {
     }
   };
 
-  // Rows are either a URL (openUrl) or an action (e.g. the GDPR consent form).
-  const LINKS: { label: string; url?: string; action?: () => Promise<void> }[] = [
+  // Rows are a route (in-app navigation), a URL (openUrl), or an action (e.g. the GDPR
+  // consent form). F-003: "How to Play" sits first so the tutorial is reachable any time.
+  const LINKS: { label: string; route?: string; url?: string; action?: () => Promise<void> }[] = [
+    { label: t('about.how_to_play'), route: '/how-to-play' }, // F-003: permanent tutorial access
     { label: t('about.privacy_policy'), url: 'https://gazetica.com/privacy' },
     { label: t('about.terms'), url: 'https://gazetica.com/terms' },
     { label: t('about.ad_preferences'), action: reopenForm }, // T-016: GDPR UMP — reopen consent form
@@ -80,14 +83,14 @@ export function AboutScreen() {
       {LINKS.map((link) => (
         <button
           key={link.label}
-          onClick={() => (link.action ? link.action() : link.url ? openUrl(link.url) : undefined)}
+          onClick={() => (link.route ? navigate(link.route) : link.action ? link.action() : link.url ? openUrl(link.url) : undefined)}
           style={{
             width: '100%',
             background: 'none',
             border: 'none',
             borderBottom: '1px solid rgba(30,139,195,0.1)',
             padding: '14px 20px',
-            cursor: link.url || link.action ? 'pointer' : 'default',
+            cursor: link.route || link.url || link.action ? 'pointer' : 'default',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',

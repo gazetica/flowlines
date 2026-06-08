@@ -65,6 +65,11 @@ export async function requestAndResolve(): Promise<void> {
  */
 export async function reopenForm(): Promise<void> {
   try {
+    // B-014: privacy-options availability is only populated by a consent-info request,
+    // and that state can be stale by the time the user opens About → Ad Preferences.
+    // Refresh it first (re-applying the EEA debug gate so the form is reachable from a
+    // non-EEA test device in dev builds), then present the privacy-options entry point.
+    await AdMob.requestConsentInfo(buildRequestOptions());
     await AdMob.showPrivacyOptionsForm();
   } catch (err) {
     console.warn('[consentService] reopenForm failed:', err);

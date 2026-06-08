@@ -1,11 +1,12 @@
 // HowToPlayScreen.tsx
 // Numtap | Gazetica Studio | Sprint 3 Day 4 | Task T-012a | VD-11
 //
-// 3-page onboarding carousel. Page 1: tap-in-order + interactive demo grid.
-// Page 2: timer mechanics. Page 3: game modes overview.
-// NOTE: per the brief, the numbered step paragraphs use literal English text
-// (the how_to_play.stepN i18n keys carry {{tag}} markup that needs a <Trans>
-// renderer — deferred). The chrome (badge/title/labels/buttons) is translated.
+// 3-page onboarding carousel. Page 1: tap-in-sequence + interactive demo grid.
+// Page 2: timer + hint mechanics. Page 3: game-modes overview.
+// NOTE: the numbered step paragraphs are literal English text (a <Trans> renderer
+// for tagged markup was deferred). The now-stale how_to_play.stepN / demo_* i18n
+// keys were removed in B-013; the translated chrome (badge/title/sub/mode rows/
+// labels/buttons) stays in the locale files.
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -126,7 +127,7 @@ export function HowToPlayScreen() {
                 </div>
                 <p style={{ fontSize: 13, color: 'var(--white)', lineHeight: 1.5 }}>
                   {key === 'step1'
-                    ? "A grid of shuffled numbers appears. Tap them in order from 1 upward — the HUD shows what's next."
+                    ? 'A grid of shuffled numbers appears. Tap them in sequence — the HUD shows your next target.'
                     : "The HUD shows NEXT — that's your only clue. Scan the grid and find it yourself. Faster = higher score."}
                 </p>
               </div>
@@ -240,7 +241,7 @@ export function HowToPlayScreen() {
                 <p style={{ fontSize: 13, color: 'var(--white)', lineHeight: 1.5 }}>
                   {key === 'step3'
                     ? 'Wrong tap? −100 points. Accuracy matters. Grids grow from 3×3 up to 7×7 — harder to scan every time.'
-                    : 'Stuck? Tap HINT — watch a short ad and the target lights up gold for 5 seconds.'}
+                    : 'Stuck? Tap HINT — watch a short ad and the target tile glows cyan until you tap it correctly.'}
                 </p>
               </div>
             ))}
@@ -300,6 +301,7 @@ export function HowToPlayScreen() {
             {[
               { nameKey: 'how_to_play.mode_campaign', descKey: 'how_to_play.mode_campaign_sub', icon: '🎯' },
               { nameKey: 'how_to_play.mode_daily', descKey: 'how_to_play.mode_daily_sub', icon: '📅' },
+              { nameKey: 'how_to_play.mode_freeplay', descKey: 'how_to_play.mode_freeplay_sub', icon: '🎮' },
               { nameKey: 'how_to_play.mode_endless', descKey: 'how_to_play.mode_endless_sub', icon: '♾️' },
               { nameKey: 'how_to_play.mode_speed', descKey: 'how_to_play.mode_speed_sub', icon: '⚡' },
             ].map((mode) => (
