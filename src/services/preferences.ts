@@ -39,6 +39,9 @@ export const PREF_KEYS = {
   LAST_DAILY_COMPLETION_DATE: 'lastDailyCompletionDate',
   COMPLETED_LEVELS:    'completedLevels',   // JSON: { [levelId]: starsEarned }
   BEST_SCORES:         'bestScores',        // JSON: { [mode_levelId]: score }
+  // T-002: PB completion time per level, stored alongside BEST_SCORES so the
+  // LeaderPanel YOU row can show a real time (best previous completion).
+  BEST_TIMES:          'bestTimes',         // JSON: { [mode_levelId]: seconds }
 } as const;
 
 type PrefKey = typeof PREF_KEYS[keyof typeof PREF_KEYS];

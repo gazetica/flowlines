@@ -36,7 +36,7 @@ export async function submitCampaignScore(params: {
   timeSecs: number;
   gridSize: number;
 }): Promise<void> {
-  const { alias, country } = useSettingsStore.getState();
+  const { alias, country, bestScores, setBestTime } = useSettingsStore.getState();
   const { levelId, score, timeSecs, gridSize } = params;
 
   const { error } = await supabase.from('campaign_scores').insert({
@@ -50,6 +50,17 @@ export async function submitCampaignScore(params: {
 
   if (error) {
     console.warn('[campaignScores] submit error:', error.message);
+  }
+
+  // T-002: store the PB time locally so getPlayerPB() (and thus the YOU row) can show
+  // it. ResultScreen calls recordLevelComplete() BEFORE this, so bestScores already
+  // holds max(prev, score) — i.e. on a new PB `score === bestScores[key]`. We therefore
+  // gate on `>=` (a strict `>` would never fire on a real PB). Stored regardless of the
+  // Supabase result so the local panel works offline, mirroring the local score write.
+  // Guard against a null/undefined time (the brief's requirement).
+  const pbKey = `campaign_${levelId}`;
+  if (timeSecs != null && score >= (bestScores[pbKey] ?? 0)) {
+    await setBestTime(pbKey, timeSecs);
   }
 }
 
@@ -80,8 +91,11 @@ export async function fetchLevelLeader(levelId: number): Promise<LevelLeaderInfo
  * Uses settingsStore.bestScores (local) — no network call needed.
  */
 export function getPlayerPB(levelId: number): { score: number; timeSecs: number | null } {
-  const { bestScores } = useSettingsStore.getState();
-  const score = bestScores[`campaign_${levelId}`] ?? 0;
-  // Time is not currently stored separately — return null until T-002 adds it.
-  return { score, timeSecs: null };
+  const { bestScores, bestTimes } = useSettingsStore.getState();
+  const key = `campaign_${levelId}`;
+  const score = bestScores[key] ?? 0;
+  // T-002: PB time is now stored locally (by submitCampaignScore on a best run),
+  // alongside the score. Null until the level's first completion.
+  const timeSecs = bestTimes[key] ?? null;
+  return { score, timeSecs };
 }

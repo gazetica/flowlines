@@ -62,6 +62,23 @@ describe('settingsStore — hint inventory (T-006)', () => {
   });
 });
 
+describe('settingsStore — bestTimes (T-002)', () => {
+  beforeEach(() => {
+    useSettingsStore.setState({ bestTimes: {} });
+  });
+
+  it('setBestTime stores a PB time in state under the given key', async () => {
+    await useSettingsStore.getState().setBestTime('campaign_1', 6.2);
+    expect(useSettingsStore.getState().bestTimes['campaign_1']).toBe(6.2);
+  });
+
+  it('setBestTime overwrites an existing time and leaves other keys intact', async () => {
+    useSettingsStore.setState({ bestTimes: { campaign_1: 9, campaign_2: 4 } });
+    await useSettingsStore.getState().setBestTime('campaign_1', 5);
+    expect(useSettingsStore.getState().bestTimes).toEqual({ campaign_1: 5, campaign_2: 4 });
+  });
+});
+
 describe('nextDailyStreak — daily streak logic (T-006)', () => {
   const today = '2026-06-04';
 

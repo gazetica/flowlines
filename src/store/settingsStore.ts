@@ -29,6 +29,11 @@ export interface BestScores {
   [key: string]: number; // key = `${mode}_${levelId}` e.g. "campaign_47"
 }
 
+// T-002: PB completion time (seconds) per level, keyed identically to bestScores.
+export interface BestTimes {
+  [key: string]: number; // key = `${mode}_${levelId}` e.g. "campaign_47"
+}
+
 interface SettingsState {
   // Onboarding
   languageSelected: boolean;
@@ -54,6 +59,7 @@ interface SettingsState {
   lastDailyCompletionDate: string; // 'YYYY-MM-DD' all-3-daily submitted, or ''
   completedLevels: CompletedLevels;
   bestScores: BestScores;
+  bestTimes: BestTimes; // T-002: PB time per level (parallel to bestScores)
 
   // Hydration flag — true once loadFromPreferences completes
   hydrated: boolean;
@@ -79,6 +85,8 @@ interface SettingsState {
   consumeHint: () => boolean; // false if 0 available (no decrement); true + decrement otherwise
 
   recordLevelComplete: (levelId: number, stars: number, score: number, mode: string) => Promise<void>;
+  // T-002: store a PB completion time (seconds) under `${mode}_${levelId}`.
+  setBestTime: (key: string, time: number) => Promise<void>;
   updateDailyStreak: () => Promise<void>;
   // T-006: daily-challenge streak setters + completion-date tracking.
   setDailyStreak: (n: number) => Promise<void>;
@@ -143,6 +151,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   lastDailyCompletionDate: '',
   completedLevels: {},
   bestScores: {},
+  bestTimes: {},
   hydrated: false,
 
   // —— Load all settings from Preferences ——
@@ -162,6 +171,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       lastDailyCompletionDate,
       completedLevels,
       bestScores,
+      bestTimes,
       country,
     ] = await Promise.all([
       prefGetBool(PREF_KEYS.LANGUAGE_SELECTED, false),
@@ -178,6 +188,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       prefGet(PREF_KEYS.LAST_DAILY_COMPLETION_DATE),
       prefGetJSON<CompletedLevels>(PREF_KEYS.COMPLETED_LEVELS, {}),
       prefGetJSON<BestScores>(PREF_KEYS.BEST_SCORES, {}),
+      prefGetJSON<BestTimes>(PREF_KEYS.BEST_TIMES, {}),
       prefGet(PREF_KEYS.COUNTRY),
     ]);
 
@@ -196,6 +207,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       lastDailyCompletionDate: lastDailyCompletionDate ?? '',
       completedLevels,
       bestScores,
+      bestTimes,
       // T-005: stored country, else a best-effort guess from the device timezone.
       country: country ?? detectCountry(),
       hydrated: true,
@@ -298,6 +310,15 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       prefSetJSON(PREF_KEYS.COMPLETED_LEVELS, newCompleted),
       prefSetJSON(PREF_KEYS.BEST_SCORES, newBestScores),
     ]);
+  },
+
+  // T-002: persist a PB completion time under `${mode}_${levelId}`. Mirrors the
+  // bestScores write-through (in-memory set + Preferences). The PB gate (only on a
+  // best run) lives at the call site in campaignScores.submitCampaignScore.
+  setBestTime: async (key, time) => {
+    const next = { ...get().bestTimes, [key]: time };
+    set({ bestTimes: next });
+    await prefSetJSON(PREF_KEYS.BEST_TIMES, next);
   },
 
   // Updates dailyStreak and lastPlayedDate.
