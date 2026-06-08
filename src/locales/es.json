@@ -64,6 +64,7 @@
   },
 
   "result": {
+    "difficulty": "Dificultad",
     "level_complete": "¡NIVEL COMPLETADO!",
     "times_up": "¡SE ACABÓ EL TIEMPO!",
     "new_pb": "¡NUEVO RÉCORD PERSONAL!",
@@ -119,6 +120,10 @@
   },
 
   "iap": {
+    "toast_purchase_complete": "Compra completada ✓",
+    "toast_purchase_failed": "Compra fallida",
+    "toast_restored": "Compras restauradas ✓",
+    "toast_no_restore": "No hay compras para restaurar",
     "title": "DESBLOQUEAR MÁS",
     "sub": "Apoya a Gazetica · Juega sin anuncios",
     "popular_badge": "MÁS POPULAR",
@@ -148,6 +153,12 @@
   },
 
   "how_to_play": {
+    "step1": "Aparece una cuadrícula de números mezclados. Tócalos en secuencia — el HUD muestra tu próximo objetivo.",
+    "step2": "El HUD muestra NEXT — esa es tu única pista. Explora la cuadrícula y encuéntralo tú mismo. Más rápido = mayor puntuación.",
+    "step3": "¿Toque incorrecto? −100 puntos. La precisión importa. Las cuadrículas crecen de 3×3 a 7×7 — más difíciles de explorar cada vez.",
+    "step4": "¿Atascado? Toca HINT — mira un anuncio corto y la casilla objetivo brilla en cian hasta que la toques correctamente.",
+    "grid_hint": "Oro ✓ = último tocado · Verde ✓ = hecho · ¡Encuentra el siguiente!",
+    "next": "SIGUIENTE →",
     "badge": "CÓMO JUGAR",
     "title": "Toca los números en orden",
     "sub": "Entrena tus ojos. Vence al reloj.",

@@ -64,6 +64,7 @@
   },
 
   "result": {
+    "difficulty": "Difficulty",
     "level_complete": "LEVEL COMPLETE!",
     "times_up": "TIME'S UP!",
     "new_pb": "NEW PERSONAL BEST!",
@@ -119,6 +120,10 @@
   },
 
   "iap": {
+    "toast_purchase_complete": "Purchase complete ✓",
+    "toast_purchase_failed": "Purchase failed",
+    "toast_restored": "Purchases restored ✓",
+    "toast_no_restore": "No purchases to restore",
     "title": "UNLOCK MORE",
     "sub": "Support Gazetica · Play ad-free",
     "popular_badge": "MOST POPULAR",
@@ -148,6 +153,12 @@
   },
 
   "how_to_play": {
+    "step1": "A grid of shuffled numbers appears. Tap them in sequence — the HUD shows your next target.",
+    "step2": "The HUD shows NEXT — that's your only clue. Scan the grid and find it yourself. Faster = higher score.",
+    "step3": "Wrong tap? −100 points. Accuracy matters. Grids grow from 3×3 up to 7×7 — harder to scan every time.",
+    "step4": "Stuck? Tap HINT — watch a short ad and the target tile glows cyan until you tap it correctly.",
+    "grid_hint": "Gold ✓ = last tapped · Green ✓ = done · Find the next one!",
+    "next": "NEXT →",
     "badge": "HOW TO PLAY",
     "title": "Tap Numbers in Order",
     "sub": "Train your eyes. Race the clock.",

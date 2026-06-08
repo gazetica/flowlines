@@ -58,9 +58,9 @@ export function IAPScreen() {
     if (res.success) {
       await onSuccess(res.purchaseToken);
       analytics.iapPurchase({ productId: sku, value: valueFor(sku, fallbackPrice) });
-      showToast('Purchase complete ✓');
+      showToast(t('iap.toast_purchase_complete'));
     } else if (res.error && res.error !== 'USER_CANCELED') {
-      showToast('Purchase failed');
+      showToast(t('iap.toast_purchase_failed'));
     }
   };
 
@@ -83,7 +83,7 @@ export function IAPScreen() {
       else if (p.productId === PRODUCT_IDS.CAMPAIGN2) await prefSetBool(PREF_KEYS.CAMPAIGN2_PURCHASED, true);
       else if (p.productId === PRODUCT_IDS.CAMPAIGN3) await prefSetBool(PREF_KEYS.CAMPAIGN3_PURCHASED, true);
     }
-    showToast(restored.length ? 'Purchases restored ✓' : 'No purchases to restore');
+    showToast(restored.length ? t('iap.toast_restored') : t('iap.toast_no_restore'));
   };
 
   // F-001: Early-Access campaign placeholders (display-only until T-019).

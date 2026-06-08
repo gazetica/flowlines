@@ -64,6 +64,7 @@
   },
 
   "result": {
+    "difficulty": "Dificuldade",
     "level_complete": "NÍVEL CONCLUÍDO!",
     "times_up": "TEMPO ESGOTADO!",
     "new_pb": "NOVO RECORDE PESSOAL!",
@@ -119,6 +120,10 @@
   },
 
   "iap": {
+    "toast_purchase_complete": "Compra concluída ✓",
+    "toast_purchase_failed": "Falha na compra",
+    "toast_restored": "Compras restauradas ✓",
+    "toast_no_restore": "Nenhuma compra para restaurar",
     "title": "DESBLOQUEAR MAIS",
     "sub": "Apoie a Gazetica · Jogue sem anúncios",
     "popular_badge": "MAIS POPULAR",
@@ -148,6 +153,12 @@
   },
 
   "how_to_play": {
+    "step1": "Surge uma grade de números embaralhados. Toque neles em sequência — o HUD mostra seu próximo alvo.",
+    "step2": "O HUD mostra NEXT — essa é sua única pista. Examine a grade e encontre você mesmo. Mais rápido = pontuação maior.",
+    "step3": "Toque errado? −100 pontos. A precisão importa. As grades crescem de 3×3 até 7×7 — cada vez mais difíceis de examinar.",
+    "step4": "Travou? Toque em HINT — assista a um anúncio curto e o bloco-alvo brilha em ciano até você tocá-lo corretamente.",
+    "grid_hint": "Ouro ✓ = último tocado · Verde ✓ = concluído · Encontre o próximo!",
+    "next": "PRÓXIMO →",
     "badge": "COMO JOGAR",
     "title": "Toque os números em ordem",
     "sub": "Treine seus olhos. Corra contra o relógio.",

@@ -126,9 +126,7 @@ export function HowToPlayScreen() {
                   {i + 1}
                 </div>
                 <p style={{ fontSize: 13, color: 'var(--white)', lineHeight: 1.5 }}>
-                  {key === 'step1'
-                    ? 'A grid of shuffled numbers appears. Tap them in sequence — the HUD shows your next target.'
-                    : "The HUD shows NEXT — that's your only clue. Scan the grid and find it yourself. Faster = higher score."}
+                  {t(`how_to_play.${key}`)}
                 </p>
               </div>
             ))}
@@ -197,7 +195,7 @@ export function HowToPlayScreen() {
                 })}
               </div>
               <p style={{ fontSize: 10, color: 'var(--muted)', textAlign: 'center' }}>
-                Gold ✓ = last tapped · Green ✓ = done · Find the next one!
+                {t('how_to_play.grid_hint')}
               </p>
             </div>
           </div>
@@ -239,9 +237,7 @@ export function HowToPlayScreen() {
                   {i + 3}
                 </div>
                 <p style={{ fontSize: 13, color: 'var(--white)', lineHeight: 1.5 }}>
-                  {key === 'step3'
-                    ? 'Wrong tap? −100 points. Accuracy matters. Grids grow from 3×3 up to 7×7 — harder to scan every time.'
-                    : 'Stuck? Tap HINT — watch a short ad and the target tile glows cyan until you tap it correctly.'}
+                  {t(`how_to_play.${key}`)}
                 </p>
               </div>
             ))}
@@ -354,7 +350,7 @@ export function HowToPlayScreen() {
             onClick={() => setPage((p) => p + 1)}
             style={{ width: '100%', padding: '14px', fontSize: 11, letterSpacing: 2 }}
           >
-            NEXT →
+            {t('how_to_play.next')}
           </button>
         ) : (
           <button

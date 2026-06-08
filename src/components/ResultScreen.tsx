@@ -297,7 +297,7 @@ export function ResultScreen() {
                   [t('result.time_bonus'), breakdown.timeBonus],
                   [t('result.speed_bonus'), breakdown.speedBonus],
                 ]),
-            ['Difficulty', `${breakdown.difficultyMult}×`],
+            [t('result.difficulty'), `${breakdown.difficultyMult}×`],
             [t('result.accuracy'), accuracy],
           ].map(([label, value]) => (
             <div key={String(label)} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 16px', borderBottom: '1px solid rgba(30,139,195,0.08)', fontSize: 13, color: 'var(--muted)' }}>

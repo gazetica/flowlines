@@ -64,6 +64,7 @@
   },
 
   "result": {
+    "difficulty": "Schwierigkeit",
     "level_complete": "LEVEL GESCHAFFT!",
     "times_up": "ZEIT ABGELAUFEN!",
     "new_pb": "NEUER PERSÖNLICHER REKORD!",
@@ -119,6 +120,10 @@
   },
 
   "iap": {
+    "toast_purchase_complete": "Kauf abgeschlossen ✓",
+    "toast_purchase_failed": "Kauf fehlgeschlagen",
+    "toast_restored": "Käufe wiederhergestellt ✓",
+    "toast_no_restore": "Keine Käufe zum Wiederherstellen",
     "title": "MEHR FREISCHALTEN",
     "sub": "Unterstütze Gazetica · Spiele werbefrei",
     "popular_badge": "AM BELIEBTESTEN",
@@ -148,6 +153,12 @@
   },
 
   "how_to_play": {
+    "step1": "Ein Raster aus gemischten Zahlen erscheint. Tippe sie der Reihe nach an — das HUD zeigt dein nächstes Ziel.",
+    "step2": "Das HUD zeigt NEXT — das ist dein einziger Hinweis. Durchsuche das Raster und finde sie selbst. Schneller = höhere Punktzahl.",
+    "step3": "Falsch getippt? −100 Punkte. Genauigkeit zählt. Die Raster wachsen von 3×3 bis 7×7 — jedes Mal schwerer zu überblicken.",
+    "step4": "Festgefahren? Tippe auf HINT — sieh dir eine kurze Anzeige an und die Zielkachel leuchtet cyan, bis du sie richtig antippst.",
+    "grid_hint": "Gold ✓ = zuletzt getippt · Grün ✓ = erledigt · Finde die nächste!",
+    "next": "WEITER →",
     "badge": "SO WIRD GESPIELT",
     "title": "Tippe Zahlen der Reihe nach",
     "sub": "Trainiere deine Augen. Schlage die Uhr.",

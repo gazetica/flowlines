@@ -65,16 +65,15 @@ export async function requestAndResolve(): Promise<void> {
  */
 export async function reopenForm(): Promise<void> {
   try {
-    // B-014: privacy-options availability is only populated by a consent-info request,
-    // and that state can be stale by the time the user opens About → Ad Preferences.
-    // Refresh it first (re-applying the EEA debug gate so the form is reachable from a
-    // non-EEA test device in dev builds), then present the privacy-options entry point.
-    const info = await AdMob.requestConsentInfo(buildRequestOptions());
-    // B-017: only present the form when UMP actually has one. Non-EEA users (no form)
-    // tap to a silent no-op — no error, no alert — which is the correct behaviour.
-    if (info.isConsentFormAvailable) {
-      await AdMob.showPrivacyOptionsForm();
-    }
+    // B-014: refresh consent state + re-apply the EEA debug gate so the privacy-options
+    // form is reachable (incl. from a non-EEA test device in dev builds).
+    await AdMob.requestConsentInfo(buildRequestOptions());
+    // B-019: present the privacy-options form UNCONDITIONALLY. Once the user has already
+    // consented/declined, UMP reports isConsentFormAvailable=false — but they tapped Ad
+    // Preferences precisely to CHANGE that choice, so the B-017 guard wrongly blocked the
+    // re-open. showPrivacyOptionsForm throws when no form exists (non-EEA / none configured);
+    // the catch below swallows it (silent no-op, no alert) — the correct UMP pattern.
+    await AdMob.showPrivacyOptionsForm();
   } catch (err) {
     console.warn('[consentService] reopenForm failed:', err);
   }

@@ -78,7 +78,7 @@ export function SettingsScreen() {
       else if (p.productId === PRODUCT_IDS.CAMPAIGN2) await prefSetBool(PREF_KEYS.CAMPAIGN2_PURCHASED, true);
       else if (p.productId === PRODUCT_IDS.CAMPAIGN3) await prefSetBool(PREF_KEYS.CAMPAIGN3_PURCHASED, true);
     }
-    showToast(restored.length ? 'Purchases restored ✓' : 'No purchases to restore');
+    showToast(restored.length ? t('iap.toast_restored') : t('iap.toast_no_restore'));
   };
 
   return (

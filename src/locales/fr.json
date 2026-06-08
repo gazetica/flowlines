@@ -64,6 +64,7 @@
   },
 
   "result": {
+    "difficulty": "Difficulté",
     "level_complete": "NIVEAU TERMINÉ !",
     "times_up": "TEMPS ÉCOULÉ !",
     "new_pb": "NOUVEAU RECORD PERSONNEL !",
@@ -119,6 +120,10 @@
   },
 
   "iap": {
+    "toast_purchase_complete": "Achat terminé ✓",
+    "toast_purchase_failed": "Échec de l'achat",
+    "toast_restored": "Achats restaurés ✓",
+    "toast_no_restore": "Aucun achat à restaurer",
     "title": "DÉBLOQUER PLUS",
     "sub": "Soutenez Gazetica · Jouez sans pub",
     "popular_badge": "LE PLUS POPULAIRE",
@@ -148,6 +153,12 @@
   },
 
   "how_to_play": {
+    "step1": "Une grille de nombres mélangés apparaît. Touchez-les dans l'ordre — le HUD indique votre prochaine cible.",
+    "step2": "Le HUD affiche NEXT — c'est votre seul indice. Parcourez la grille et trouvez-le vous-même. Plus vite = meilleur score.",
+    "step3": "Mauvaise touche ? −100 points. La précision compte. Les grilles passent de 3×3 à 7×7 — de plus en plus dures à parcourir.",
+    "step4": "Bloqué ? Touchez HINT — regardez une courte pub et la tuile cible brille en cyan jusqu’à ce que vous la touchiez correctement.",
+    "grid_hint": "Or ✓ = dernier touché · Vert ✓ = terminé · Trouvez le suivant !",
+    "next": "SUIVANT →",
     "badge": "COMMENT JOUER",
     "title": "Touchez les chiffres dans l'ordre",
     "sub": "Entraînez vos yeux. Battez le chrono.",
