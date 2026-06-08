@@ -16,7 +16,6 @@ const H = vi.hoisted(() => ({
 
 vi.mock('react-router-dom', () => ({ useNavigate: () => H.navigate }));
 vi.mock('../services/consentService', () => ({ reopenForm: () => H.reopen() }));
-vi.mock('../services/crashlytics', () => ({ testCrash: async () => {} }));
 vi.mock('./ParticleCanvas', () => ({ ParticleCanvas: () => null }));
 vi.mock('./BottomNav', () => ({ BottomNav: () => null }));
 vi.mock('@capacitor/core', () => ({ Capacitor: { isNativePlatform: () => false } }));

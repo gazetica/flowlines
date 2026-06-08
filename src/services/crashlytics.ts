@@ -24,13 +24,3 @@ export async function recordError(error: unknown): Promise<void> {
     console.warn('[crashlytics] recordError failed:', err);
   }
 }
-
-/**
- * Force a native crash to validate Crashlytics end-to-end. Dev/test only — the
- * sole call-site (the About "Test Crash" button) is gated out of production
- * builds. The report uploads on the NEXT app launch after the crash.
- */
-export async function testCrash(): Promise<void> {
-  if (!Capacitor.isNativePlatform()) return;
-  await FirebaseCrashlytics.crash({ message: 'T-021 test crash' });
-}

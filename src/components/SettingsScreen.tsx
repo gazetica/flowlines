@@ -14,23 +14,13 @@ import { BottomNav } from './BottomNav';
 import { CountrySelector, countryName } from './CountrySelector';
 import { countryFlag } from '../utils/countryFlag';
 import { useTranslation } from 'react-i18next';
-import { Preferences } from '@capacitor/preferences';
 import { useSettingsStore } from '../store/settingsStore';
 import type { Language } from '../store/settingsStore';
-import { useGameStore } from '../store/gameStore';
 import * as musicService from '../services/musicService';
 import { loadLocalTier, TIER_COLORS } from '../services/tierService';
 import type { Tier } from '../services/tierService';
 import { PRODUCT_IDS, restorePurchases } from '../services/billing';
 import { prefSetBool, PREF_KEYS } from '../services/preferences';
-
-// DEV-001: dev-only level-skip tools. Same gate as AboutScreen/consentService —
-// true in `npm run dev` AND in the on-device dev build (`VITE_DEV_TOOLS=true
-// npm run build`), but false in a plain release `npm run build`, so the section
-// is testable on the device yet absent from production. (The brief specified bare
-// `import.meta.env.DEV`, which is false in ALL builds and would make the §8 device
-// check impossible — corrected to the project's established DEV_TOOLS convention.)
-const DEV_TOOLS = import.meta.env.DEV || import.meta.env.VITE_DEV_TOOLS === 'true';
 
 const LANGUAGES: { code: Language; label: string }[] = [
   { code: 'en', label: 'English' },
@@ -89,41 +79,6 @@ export function SettingsScreen() {
       else if (p.productId === PRODUCT_IDS.CAMPAIGN3) await prefSetBool(PREF_KEYS.CAMPAIGN3_PURCHASED, true);
     }
     showToast(restored.length ? 'Purchases restored ✓' : 'No purchases to restore');
-  };
-
-  // DEV-001: level-skip + test-state reset (dev builds only).
-  const [jumpInput, setJumpInput] = useState('');
-  const [jumpError, setJumpError] = useState<string | null>(null);
-  const [resetMsg, setResetMsg] = useState<string | null>(null);
-
-  const handleJump = async () => {
-    const n = parseInt(jumpInput.trim(), 10);
-    if (Number.isNaN(n) || n < 1 || n > 300) {
-      setJumpError('Enter a level between 1 and 300');
-      return;
-    }
-    setJumpError(null);
-    await Preferences.set({ key: 'currentLevel', value: String(n) });
-    // Replicate CampaignScreen's flow exactly: C1 (1–100) no difficulty, C2
-    // (101–200) 'pro', C3 (201–300) 'expert' — so the engine gets the right
-    // tap order/multiplier for the jumped-to campaign.
-    const difficulty: 'pro' | 'expert' | undefined = n <= 100 ? undefined : n <= 200 ? 'pro' : 'expert';
-    useGameStore.getState().startLevel(n, 'campaign', difficulty);
-    console.log(`[DEV] Jumping to level ${n}`);
-    navigate('/game');
-  };
-
-  const handleReset = async () => {
-    await Preferences.remove({ key: 'removeAdsPurchased' });
-    await Preferences.remove({ key: 'completedLevels' });
-    await Preferences.remove({ key: 'currentLevel' });
-    await Preferences.remove({ key: 'campaign2_purchased' });
-    await Preferences.remove({ key: 'campaign3_purchased' });
-    await Preferences.remove({ key: 'player_tier' });
-    await Preferences.set({ key: 'country', value: 'IN' });
-    console.log('[DEV] Test state reset');
-    setResetMsg('Test state reset ✓');
-    setTimeout(() => setResetMsg(null), 2000);
   };
 
   return (
@@ -240,41 +195,6 @@ export function SettingsScreen() {
           <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: 'var(--muted)' }}>›</span>
         </div>
       </Section>
-
-      {/* DEV-001: hidden dev tools — only in dev / VITE_DEV_TOOLS builds. */}
-      {DEV_TOOLS && (
-        <div style={{ borderTop: '2px solid rgba(245,158,11,0.5)', marginTop: 8 }}>
-          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: '#F59E0B', letterSpacing: 2, padding: '14px 20px 6px' }}>⚠ DEV TOOLS</div>
-
-          {/* Jump to Level — input + GO on one row */}
-          <div style={rowStyle}>
-            <span style={labelStyle}>Jump to Level</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <input
-                type="number"
-                inputMode="numeric"
-                value={jumpInput}
-                onChange={(e) => setJumpInput(e.target.value)}
-                placeholder="1-300"
-                style={{ background: 'var(--navy-card)', border: '1px solid var(--navy-border)', color: 'var(--white)', borderRadius: 4, padding: '6px 10px', width: 72, fontFamily: "'Space Mono', monospace", fontSize: 11 }}
-              />
-              <button onClick={handleJump} className="btn-gold" style={{ padding: '6px 16px', fontSize: 10 }}>GO</button>
-            </div>
-          </div>
-          {jumpError && (
-            <div style={{ padding: '0 20px 10px', fontFamily: "'Space Mono', monospace", fontSize: 11, color: 'var(--danger)' }}>{jumpError}</div>
-          )}
-
-          {/* Reset Test State — own row */}
-          <div style={rowStyle}>
-            <span style={labelStyle}>Reset Test State</span>
-            <button onClick={handleReset} className="btn-outline" style={{ padding: '6px 14px', fontSize: 10 }}>RESET</button>
-          </div>
-          {resetMsg && (
-            <div style={{ padding: '0 20px 10px', fontFamily: "'Space Mono', monospace", fontSize: 11, color: 'var(--success)' }}>{resetMsg}</div>
-          )}
-        </div>
-      )}
 
       {toast && (
         <div style={{ position: 'fixed', bottom: '12%', left: 0, right: 0, textAlign: 'center', zIndex: 50, pointerEvents: 'none' }}>
