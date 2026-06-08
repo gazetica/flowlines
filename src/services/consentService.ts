@@ -69,8 +69,12 @@ export async function reopenForm(): Promise<void> {
     // and that state can be stale by the time the user opens About → Ad Preferences.
     // Refresh it first (re-applying the EEA debug gate so the form is reachable from a
     // non-EEA test device in dev builds), then present the privacy-options entry point.
-    await AdMob.requestConsentInfo(buildRequestOptions());
-    await AdMob.showPrivacyOptionsForm();
+    const info = await AdMob.requestConsentInfo(buildRequestOptions());
+    // B-017: only present the form when UMP actually has one. Non-EEA users (no form)
+    // tap to a silent no-op — no error, no alert — which is the correct behaviour.
+    if (info.isConsentFormAvailable) {
+      await AdMob.showPrivacyOptionsForm();
+    }
   } catch (err) {
     console.warn('[consentService] reopenForm failed:', err);
   }
