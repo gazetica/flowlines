@@ -315,7 +315,14 @@ export function ResultScreen() {
       {/* Per-level leader panel (YOU vs LEADER) — campaign only (T-001). */}
       {mode === 'campaign' && currentLevel && currentLevel.id > 0 && (
         <div style={{ margin: '0 20px 12px', position: 'relative', zIndex: 1 }}>
-          <LeaderPanel levelId={currentLevel.id} compact={false} />
+          {/* B-015: pass this attempt's completion time so YOU Time shows Xs
+              (the local PB store has no time yet → would otherwise be a dash).
+              Failed runs (timer expired) show the full time limit, matching LEADER. */}
+          <LeaderPanel
+            levelId={currentLevel.id}
+            compact={false}
+            youTimeSecs={isComplete ? Math.round(timeElapsed) : currentLevel.timeLimit}
+          />
         </div>
       )}
 

@@ -85,3 +85,19 @@ describe('LeaderPanel YOU/LEADER flags (B-005)', () => {
     expect(container.textContent).not.toMatch(FLAG);
   });
 });
+
+describe('LeaderPanel YOU Time (B-015)', () => {
+  it('12. shows a dash when no completion time is passed (PB time is null)', async () => {
+    const { container } = render(<LeaderPanel levelId={101} />);
+    await waitFor(() => expect(container.textContent).toMatch(/Zephyrv/));
+    // getPlayerPB mock returns timeSecs: null and no youTimeSecs prop → dash.
+    expect(container.textContent).toContain('Time—');
+  });
+
+  it('13. renders the passed youTimeSecs as "Xs" in the YOU row', async () => {
+    const { container } = render(<LeaderPanel levelId={101} youTimeSecs={6} />);
+    await waitFor(() => expect(container.textContent).toMatch(/Zephyrv/));
+    expect(container.textContent).toContain('Time6s');
+    expect(container.textContent).not.toContain('Time—');
+  });
+});

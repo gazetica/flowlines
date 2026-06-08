@@ -35,9 +35,14 @@ function TierTag({ tier, t }: { tier: Tier | null; t: (k: string) => string }) {
 interface LeaderPanelProps {
   levelId: number;
   compact?: boolean; // true = smaller text for in-game use
+  // B-015: this attempt's completion time (seconds) from ResultScreen. The local
+  // PB store doesn't keep a time yet (getPlayerPB returns timeSecs: null), so the
+  // YOU Time row would otherwise always show a dash. Optional — the in-game compact
+  // panel omits it and keeps the dash, unchanged.
+  youTimeSecs?: number | null;
 }
 
-export function LeaderPanel({ levelId, compact = false }: LeaderPanelProps) {
+export function LeaderPanel({ levelId, compact = false, youTimeSecs }: LeaderPanelProps) {
   const { t } = useTranslation();
   const { alias, country } = useSettingsStore();
   const [leader, setLeader] = useState<LevelLeaderInfo | null>(null);
@@ -46,6 +51,9 @@ export function LeaderPanel({ levelId, compact = false }: LeaderPanelProps) {
   const [leaderTier, setLeaderTier] = useState<Tier | null>(null);
 
   const playerPB = getPlayerPB(levelId);
+  // B-015: prefer the completion time ResultScreen passes for this attempt; fall
+  // back to the stored PB time (null until campaignScores persists it — T-002).
+  const youTime = youTimeSecs ?? playerPB.timeSecs;
 
   useEffect(() => { loadLocalTier().then(setMyTier); }, []);
 
@@ -114,7 +122,7 @@ export function LeaderPanel({ levelId, compact = false }: LeaderPanelProps) {
         />
         <StatRow
           label="Time"
-          value={playerPB.timeSecs !== null ? `${playerPB.timeSecs}s` : '—'}
+          value={youTime != null ? `${youTime}s` : '—'}
           colour="var(--white)"
           fontSize={fs.stat}
         />
