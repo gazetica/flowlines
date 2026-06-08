@@ -22,8 +22,7 @@ const CAP_MS = 3 * 60 * 1000;              // 3 minutes between shows (time trig
 const COMPLETION_CAP = 5;                  // 5 completions (completion trigger)
 
 const OPTIONS: AdOptions = {
-  adId: AD_UNITS.INTERSTITIAL, // test interstitial unit from admob.ts — live in T-015
-  isTesting: true,
+  adId: AD_UNITS.INTERSTITIAL, // live interstitial unit from admob.ts (T-015)
 };
 
 // Whether a prepared interstitial is in hand (prepareInterstitial succeeded and

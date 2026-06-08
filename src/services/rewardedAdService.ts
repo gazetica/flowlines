@@ -14,8 +14,7 @@ import * as analytics from './analytics';
 export type RewardedOutcome = 'rewarded' | 'dismissed' | 'unavailable';
 
 const REWARD_OPTIONS: RewardAdOptions = {
-  adId: AD_UNITS.REWARDED, // test rewarded unit from admob.ts — swapped to live in T-015
-  isTesting: true,
+  adId: AD_UNITS.REWARDED, // live rewarded unit from admob.ts (T-015)
 };
 
 // Whether a prepared ad is currently in hand (prepareRewardVideoAd succeeded and
