@@ -21,6 +21,8 @@ import { useGameStore } from '../store/gameStore';
 import * as musicService from '../services/musicService';
 import { loadLocalTier, TIER_COLORS } from '../services/tierService';
 import type { Tier } from '../services/tierService';
+import { PRODUCT_IDS, restorePurchases } from '../services/billing';
+import { prefSetBool, PREF_KEYS } from '../services/preferences';
 
 // DEV-001: dev-only level-skip tools. Same gate as AboutScreen/consentService —
 // true in `npm run dev` AND in the on-device dev build (`VITE_DEV_TOOLS=true
@@ -56,6 +58,7 @@ export function SettingsScreen() {
     country,
     setCountry,
     removeAdsPurchased,
+    setRemoveAds,
   } = useSettingsStore();
   const [countryOpen, setCountryOpen] = useState(false);
   // F-001b: local player tier tag (PRO/EXPERT) shown next to the alias.
@@ -75,6 +78,17 @@ export function SettingsScreen() {
     await setMusicEnabled(v);
     if (v) musicService.play();
     else musicService.pause();
+  };
+
+  // T-019: restore non-consumable entitlements from Play (Remove Ads, Campaign 2/3).
+  const handleRestore = async () => {
+    const restored = await restorePurchases();
+    for (const p of restored) {
+      if (p.productId === PRODUCT_IDS.REMOVE_ADS) await setRemoveAds();
+      else if (p.productId === PRODUCT_IDS.CAMPAIGN2) await prefSetBool(PREF_KEYS.CAMPAIGN2_PURCHASED, true);
+      else if (p.productId === PRODUCT_IDS.CAMPAIGN3) await prefSetBool(PREF_KEYS.CAMPAIGN3_PURCHASED, true);
+    }
+    showToast(restored.length ? 'Purchases restored ✓' : 'No purchases to restore');
   };
 
   // DEV-001: level-skip + test-state reset (dev builds only).
@@ -220,7 +234,7 @@ export function SettingsScreen() {
         {/* F-001c (corr.4): Restore → placeholder toast (real flow in T-019). */}
         <div
           style={{ ...rowStyle, justifyContent: 'space-between', cursor: 'pointer' }}
-          onClick={() => showToast(t('campaign.placeholder_toast'))}
+          onClick={handleRestore}
         >
           <span style={labelStyle}>{t('settings.restore_purchases')}</span>
           <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: 'var(--muted)' }}>›</span>

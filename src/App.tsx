@@ -11,6 +11,7 @@ import { Capacitor } from '@capacitor/core';
 import { useSettingsStore } from './store/settingsStore';
 import { requestAndResolve } from './services/consentService';
 import { initAdmob } from './services/admob';
+import { initialiseBilling } from './services/billing';
 import * as analytics from './services/analytics';
 import * as musicService from './services/musicService';
 import { LanguageScreen } from './components/LanguageScreen';
@@ -62,6 +63,7 @@ export function App() {
       await requestAndResolve(); // UMP consent (form for EU; NOT_REQUIRED otherwise)
       await initAdmob(); // AdMob.initialize — strictly after consent resolves
     })();
+    void initialiseBilling(); // T-019: connect the Play Billing client (native only)
   }, []);
 
   // B-002: background music. Settings are hydrated before App renders (main.tsx

@@ -25,6 +25,9 @@ export const PREF_KEYS = {
 
   // IAP flags
   REMOVE_ADS:          'removeAdsPurchased',
+  // T-019: Early-Access campaign unlocks (read by campaignGateService.isPurchased).
+  CAMPAIGN2_PURCHASED: 'campaign2_purchased',
+  CAMPAIGN3_PURCHASED: 'campaign3_purchased',
 
   // Hint inventory (T-006 — unified hint currency, default 3 on fresh install)
   HINT_COUNT:          'hintCount',

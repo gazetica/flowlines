@@ -5,41 +5,108 @@
 // here are display-only with a "billing active in full release" note.
 
 import type React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useSettingsStore } from '../store/settingsStore';
 import { ParticleCanvas } from './ParticleCanvas';
 import { BottomNav } from './BottomNav';
+import {
+  PRODUCT_IDS,
+  queryProducts,
+  purchaseProduct,
+  restorePurchases,
+  consumePurchase,
+  type ProductDetail,
+} from '../services/billing';
+import { prefSetBool, PREF_KEYS } from '../services/preferences';
+import * as analytics from '../services/analytics';
 
 export function IAPScreen() {
   const { t } = useTranslation();
-  const { removeAdsPurchased } = useSettingsStore();
+  const { removeAdsPurchased, setRemoveAds, addHints } = useSettingsStore();
 
-  // F-001: brief toast for the placeholder Early-Access buttons.
   const [toast, setToast] = useState<string | null>(null);
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 1900);
   };
 
+  // T-019: real Play Billing. Fetch live product details on mount (price strings
+  // override the placeholders below); fall back to placeholders on web / no-fill.
+  const [details, setDetails] = useState<Record<string, ProductDetail>>({});
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    queryProducts().then((list) => {
+      const map: Record<string, ProductDetail> = {};
+      for (const p of list) map[p.productId] = p;
+      setDetails(map);
+    });
+  }, []);
+
+  const priceFor = (sku: string, fallback: string) => details[sku]?.price ?? fallback;
+  const valueFor = (sku: string, fallback: string) =>
+    details[sku] ? details[sku].priceAmountMicros / 1_000_000 : Number(fallback.replace(/[^0-9.]/g, '')) || 0;
+
+  // Generic purchase: launch the flow, run the success handler, fire analytics,
+  // toast. A user-cancelled flow is silent (no error toast).
+  const buy = async (sku: string, fallbackPrice: string, onSuccess: (token?: string) => Promise<void>) => {
+    if (busy || removeAdsPurchased && sku === PRODUCT_IDS.REMOVE_ADS) return;
+    setBusy(true);
+    const res = await purchaseProduct(sku);
+    setBusy(false);
+    if (res.success) {
+      await onSuccess(res.purchaseToken);
+      analytics.iapPurchase({ productId: sku, value: valueFor(sku, fallbackPrice) });
+      showToast('Purchase complete ✓');
+    } else if (res.error && res.error !== 'USER_CANCELED') {
+      showToast('Purchase failed');
+    }
+  };
+
+  const buyRemoveAds = () => buy(PRODUCT_IDS.REMOVE_ADS, '$2.99', async () => { await setRemoveAds(); });
+  const buyHintPack = () => buy(PRODUCT_IDS.HINT_PACK, '$0.99', async (token) => {
+    await addHints(5);
+    if (token) await consumePurchase(token); // consumable → consume so it can be re-bought
+  });
+  const buyCampaign2 = () => buy(PRODUCT_IDS.CAMPAIGN2, '$3.99', async () => { await prefSetBool(PREF_KEYS.CAMPAIGN2_PURCHASED, true); });
+  const buyCampaign3 = () => buy(PRODUCT_IDS.CAMPAIGN3, '$4.99', async () => { await prefSetBool(PREF_KEYS.CAMPAIGN3_PURCHASED, true); });
+
+  // Restore: re-apply entitlements for any owned non-consumables.
+  const handleRestore = async () => {
+    if (busy) return;
+    setBusy(true);
+    const restored = await restorePurchases();
+    setBusy(false);
+    for (const p of restored) {
+      if (p.productId === PRODUCT_IDS.REMOVE_ADS) await setRemoveAds();
+      else if (p.productId === PRODUCT_IDS.CAMPAIGN2) await prefSetBool(PREF_KEYS.CAMPAIGN2_PURCHASED, true);
+      else if (p.productId === PRODUCT_IDS.CAMPAIGN3) await prefSetBool(PREF_KEYS.CAMPAIGN3_PURCHASED, true);
+    }
+    showToast(restored.length ? 'Purchases restored ✓' : 'No purchases to restore');
+  };
+
   // F-001: Early-Access campaign placeholders (display-only until T-019).
   const EARLY_ACCESS = [
-    { key: 'pro', title: t('iap.pro_campaign_title'), desc: t('iap.pro_campaign_desc'), price: '$3.99', unlockKey: 'campaign.unlock_pro' },
-    { key: 'expert', title: t('iap.expert_campaign_title'), desc: t('iap.expert_campaign_desc'), price: '$4.99', unlockKey: 'campaign.unlock_expert' },
+    { key: 'pro', sku: PRODUCT_IDS.CAMPAIGN2, onBuy: buyCampaign2, title: t('iap.pro_campaign_title'), desc: t('iap.pro_campaign_desc'), price: '$3.99', unlockKey: 'campaign.unlock_pro' },
+    { key: 'expert', sku: PRODUCT_IDS.CAMPAIGN3, onBuy: buyCampaign3, title: t('iap.expert_campaign_title'), desc: t('iap.expert_campaign_desc'), price: '$4.99', unlockKey: 'campaign.unlock_expert' },
   ];
 
   const PRODUCTS = [
     {
       key: 'remove_ads',
+      sku: PRODUCT_IDS.REMOVE_ADS,
+      onBuy: buyRemoveAds,
       badge: t('iap.popular_badge'),
       title: t('iap.remove_ads_title'),
       desc: t('iap.remove_ads_desc'),
-      price: '$2.99', // placeholder — Sprint 4 fetches from Play Billing
+      price: '$2.99', // placeholder — overridden by live Play Billing price
       featured: true,
     },
     {
       key: 'hint_pack',
+      sku: PRODUCT_IDS.HINT_PACK,
+      onBuy: buyHintPack,
       badge: null,
       title: t('iap.hint_pack_title'),
       desc: t('iap.hint_pack_desc'),
@@ -73,15 +140,14 @@ export function IAPScreen() {
           <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 12 }}>{product.desc}</div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 18, color: 'var(--gold)' }}>
-              {product.key === 'remove_ads' && removeAdsPurchased ? t('settings.remove_ads_purchased') : product.price}
+              {product.key === 'remove_ads' && removeAdsPurchased ? t('settings.remove_ads_purchased') : priceFor(product.sku, product.price)}
             </span>
-            {/* T-020: iap_purchase analytics stub. Billing is display-only until
-                T-019, which will fire (in the Play Billing purchase-completion
-                callback) — analytics.iapPurchase({ productId: product.key,
-                value: <price parsed from the store product> }). */}
+            {/* T-019: real Play Billing purchase. analytics.iapPurchase fires in
+                buy() on success (see handlers above). */}
             <button
               className="btn-gold"
-              disabled={product.key === 'remove_ads' && removeAdsPurchased}
+              onClick={product.onBuy}
+              disabled={busy || (product.key === 'remove_ads' && removeAdsPurchased)}
               style={{ padding: '8px 16px', fontSize: 10, opacity: product.key === 'remove_ads' && removeAdsPurchased ? 0.5 : 1 }}
             >
               {product.key === 'remove_ads' && removeAdsPurchased ? '✓' : t('iap.btn_buy')}
@@ -107,10 +173,11 @@ export function IAPScreen() {
           <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 13, color: 'var(--white)', marginBottom: 4 }}>{ea.title}</div>
           <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 12 }}>{ea.desc}</div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 18, color: '#B36BFF' }}>{ea.price}</span>
+            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 18, color: '#B36BFF' }}>{priceFor(ea.sku, ea.price)}</span>
             <button
-              onClick={() => showToast(t('campaign.placeholder_toast'))}
-              style={{ padding: '8px 16px', fontSize: 10, fontFamily: "'Space Mono', monospace", letterSpacing: 1, borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 700, background: 'linear-gradient(135deg,#9333EA,#7C3AED)', color: '#fff' }}
+              onClick={ea.onBuy}
+              disabled={busy}
+              style={{ padding: '8px 16px', fontSize: 10, fontFamily: "'Space Mono', monospace", letterSpacing: 1, borderRadius: 8, border: 'none', cursor: busy ? 'default' : 'pointer', fontWeight: 700, background: 'linear-gradient(135deg,#9333EA,#7C3AED)', color: '#fff', opacity: busy ? 0.6 : 1 }}
             >
               {t(ea.unlockKey)}
             </button>
@@ -132,13 +199,15 @@ export function IAPScreen() {
       </div>
 
       <button
+        onClick={handleRestore}
+        disabled={busy}
         style={{
           display: 'block',
           width: '100%',
           background: 'none',
           border: 'none',
           padding: '14px 20px',
-          cursor: 'pointer',
+          cursor: busy ? 'default' : 'pointer',
           fontFamily: "'Space Mono', monospace",
           fontSize: 10,
           color: 'var(--muted)',
