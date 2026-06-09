@@ -203,7 +203,7 @@ export function HowToPlayScreen() {
 
         {page === 1 && (
           <div>
-            {['step3', 'step4'].map((key, i) => (
+            {['step3', 'step4', 'step5'].map((key, i) => (
               <div
                 key={key}
                 style={{

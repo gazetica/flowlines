@@ -13,6 +13,12 @@
   },
 
   "home": {
+    "daily_pill_title": "매일 3 보석 받기",
+    "daily_pill_sub": "매일 방문하여 무료 보석을 받으세요",
+    "pro_pill_title": "PRO",
+    "pro_pill_sub": "Level 100",
+    "expert_pill_title": "EXPERT",
+    "expert_pill_sub": "Level 200",
     "gems_label": "보석",
     "daily_reward": "+3 일일 보상!",
     "freePlayLabel": "자유 플레이",
@@ -42,9 +48,10 @@
   },
 
   "game": {
-    "rescue_5": "⏱ 시간 부족? 광고 → 5칸 공개",
-    "rescue_4": "⏱ 시간 부족? 광고 → 4칸 공개",
-    "rescue_3": "⏱ 시간 부족? 광고 → 3칸 공개",
+    "rescue_heading": "⏱ 시간 부족",
+    "rescue_sub_5": "광고 → 5칸 공개",
+    "rescue_sub_4": "광고 → 4칸 공개",
+    "rescue_sub_3": "광고 → 3칸 공개",
     "hud_timer": "시간",
     "hud_next": "다음",
     "hud_score": "점수",
@@ -158,6 +165,7 @@
   },
 
   "how_to_play": {
+    "step5": "시간이 부족하신가요? 짧은 광고를 보세요 — 다음 목표를 주황색으로 표시해 드려 레벨을 완료할 수 있습니다.",
     "step1": "뒤섞인 숫자 격자가 나타납니다. 순서대로 탭하세요 — HUD가 다음 목표를 알려줍니다.",
     "step2": "HUD에 NEXT가 표시됩니다 — 유일한 단서입니다. 격자를 살펴 직접 찾으세요. 빠를수록 높은 점수.",
     "step3": "잘못 탭하면? −100점. 정확도가 중요합니다. 격자는 3×3에서 7×7까지 커집니다 — 매번 더 살피기 어려워집니다.",
@@ -249,7 +257,7 @@
     "title": "데일리 챌린지",
     "instruction_1": "매일 3개의 데일리 챌린지를 모두 완료하세요.",
     "instruction_2": "순서대로 완료하세요 — 각 챌린지가 다음 챌린지를 잠금 해제합니다.",
-    "streak_goal": "7일 연속 달성하여 3 💎 보석을 받으세요.",
+    "streak_goal": "7일 연속 달성하여 7 💎 보석을 받으세요.",
     "day": "{{n}}일차",
     "claim": "받기",
     "claimed": "받음",
@@ -258,10 +266,10 @@
     "reward_gem_3": "+3 💎",
     "complete_to_claim": "모든 챌린지를 완료하여 받기",
     "complete_7": "7일을 완료하여 받기",
-    "gem_reward_label": "+1 젬",
+    "gem_reward_label": "+3 젬",
     "gem_reward_sub": "데일리 챌린지 보상",
     "claim_daily": "오늘의 보상 받기",
-    "claim_weekly": "주간 보상 3개 받기",
+    "claim_weekly": "주간 보상 7개 받기",
     "streak_label": "연속:"
   },
 

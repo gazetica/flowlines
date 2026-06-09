@@ -13,6 +13,12 @@
   },
 
   "home": {
+    "daily_pill_title": "3 TAGES-GEMS BEANSPRUCHEN",
+    "daily_pill_sub": "Täglich besuchen für deine kostenlosen Gems",
+    "pro_pill_title": "PRO",
+    "pro_pill_sub": "Level 100",
+    "expert_pill_title": "EXPERT",
+    "expert_pill_sub": "Level 200",
     "gems_label": "Edelsteine",
     "daily_reward": "+3 Tages-Edelst.!",
     "freePlayLabel": "FREIES SPIEL",
@@ -42,9 +48,10 @@
   },
 
   "game": {
-    "rescue_5": "⏱ Wenig Zeit? Werbung → 5 Felder enthüllen",
-    "rescue_4": "⏱ Wenig Zeit? Werbung → 4 Felder enthüllen",
-    "rescue_3": "⏱ Wenig Zeit? Werbung → 3 Felder enthüllen",
+    "rescue_heading": "⏱ WENIG ZEIT",
+    "rescue_sub_5": "Werbung → 5 Felder enthüllen",
+    "rescue_sub_4": "Werbung → 4 Felder enthüllen",
+    "rescue_sub_3": "Werbung → 3 Felder enthüllen",
     "hud_timer": "ZEIT",
     "hud_next": "NÄCHSTE",
     "hud_score": "PUNKTE",
@@ -158,6 +165,7 @@
   },
 
   "how_to_play": {
+    "step5": "Wenig Zeit? Kurze Werbung ansehen — wir markieren deine nächsten Ziele in Orange, damit du das Level abschließen kannst.",
     "step1": "Ein Raster aus gemischten Zahlen erscheint. Tippe sie der Reihe nach an — das HUD zeigt dein nächstes Ziel.",
     "step2": "Das HUD zeigt NEXT — das ist dein einziger Hinweis. Durchsuche das Raster und finde sie selbst. Schneller = höhere Punktzahl.",
     "step3": "Falsch getippt? −100 Punkte. Genauigkeit zählt. Die Raster wachsen von 3×3 bis 7×7 — jedes Mal schwerer zu überblicken.",
@@ -249,7 +257,7 @@
     "title": "TÄGLICHE CHALLENGE",
     "instruction_1": "Schließe jeden Tag alle 3 täglichen Challenges ab.",
     "instruction_2": "Schließe sie der Reihe nach ab – jede Challenge schaltet die nächste frei.",
-    "streak_goal": "Erreiche 7 Tage in Folge, um 3 💎 Edelsteine zu erhalten.",
+    "streak_goal": "Erreiche 7 Tage in Folge, um 7 💎 Edelsteine zu erhalten.",
     "day": "Tag {{n}}",
     "claim": "EINLÖSEN",
     "claimed": "EINGELÖST",
@@ -258,10 +266,10 @@
     "reward_gem_3": "+3 💎",
     "complete_to_claim": "Schließe alle Challenges ab, um einzulösen",
     "complete_7": "Schließe 7 Tage ab, um einzulösen",
-    "gem_reward_label": "+1 EDELSTEIN",
+    "gem_reward_label": "+3 EDELSTEINE",
     "gem_reward_sub": "Tägliche Challenge Belohnung",
     "claim_daily": "TÄGLICH EINLÖSEN",
-    "claim_weekly": "WÖCHENTLICH 3 EINLÖSEN",
+    "claim_weekly": "WÖCHENTLICH 7 EINLÖSEN",
     "streak_label": "Streak:"
   },
 

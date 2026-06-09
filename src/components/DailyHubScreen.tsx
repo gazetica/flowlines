@@ -507,7 +507,7 @@ function WeeklyClaimButton({ streakComplete, claimed, onClaim }: { streakComplet
           background: SKIN.cardBg, color: SKIN.success, cursor: 'default', fontWeight: 700,
         }}
       >
-        ✓ WEEKLY 3 💎 {i18n.t('daily.claimed')}
+        ✓ WEEKLY 7 💎 {i18n.t('daily.claimed')}
       </button>
     );
   }

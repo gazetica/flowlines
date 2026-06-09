@@ -430,8 +430,8 @@ export function GameScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rescueEligible]);
 
-  const rescueText =
-    tilesRemaining >= 5 ? t('game.rescue_5') : tilesRemaining === 4 ? t('game.rescue_4') : t('game.rescue_3');
+  const rescueSub =
+    tilesRemaining >= 5 ? t('game.rescue_sub_5') : tilesRemaining === 4 ? t('game.rescue_sub_4') : t('game.rescue_sub_3');
 
   const handleRescueTap = async () => {
     const reveal = Math.min(5, tilesRemaining);
@@ -650,26 +650,37 @@ export function GameScreen() {
           {/* F-005 Part 7: Rescue Flash banner — below the grid, above the hint cards.
               Tapping it watches a rescue ad and reveals min(5, remaining) amber tiles. */}
           {rescueBannerVisible && (
-            <button
-              onClick={handleRescueTap}
-              style={{
-                width: '100%',
-                height: 36,
-                marginBottom: 6,
-                background: 'rgba(7,17,31,0.92)',
-                border: '1px solid #FFD700',
-                borderRadius: 6,
-                color: '#FFD700',
-                fontFamily: "'Space Mono', monospace",
-                fontSize: 11,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              {rescueText}
-            </button>
+            <>
+              {/* F-006 Change 1: orange glow settles from bright to pale over 0.6s. */}
+              <style>{`@keyframes rescue-glow { 0% { box-shadow: 0 0 16px #FF8C00; } 100% { box-shadow: 0 0 6px rgba(255,140,0,0.4); } }`}</style>
+              <button
+                onClick={handleRescueTap}
+                style={{
+                  width: '100%',
+                  marginBottom: 6,
+                  background: 'rgba(7,17,31,0.95)',
+                  border: '1px solid rgba(255,140,0,0.4)',
+                  borderRadius: 8,
+                  padding: '10px 16px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 2,
+                  animation: 'rescue-glow 0.6s ease-out',
+                  boxShadow: '0 0 6px rgba(255,140,0,0.4)',
+                }}
+              >
+                {/* Hero line — gold, bold; constant for all tile counts. */}
+                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 14, fontWeight: 700, color: '#FFD700', letterSpacing: 1 }}>
+                  {t('game.rescue_heading')}
+                </span>
+                {/* Sub line — white; "Watch ad → reveal N tiles". */}
+                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: '#FFFFFF' }}>
+                  {rescueSub}
+                </span>
+              </button>
+            </>
           )}
 
           {/* Three-card row */}

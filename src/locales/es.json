@@ -13,6 +13,12 @@
   },
 
   "home": {
+    "daily_pill_title": "RECLAMAR 3 GEMAS DIARIAS",
+    "daily_pill_sub": "Visita cada día para tu recompensa de gemas",
+    "pro_pill_title": "PRO",
+    "pro_pill_sub": "Level 100",
+    "expert_pill_title": "EXPERT",
+    "expert_pill_sub": "Level 200",
     "gems_label": "Gemas",
     "daily_reward": "+3 Gemas diarias!",
     "freePlayLabel": "JUEGO LIBRE",
@@ -42,9 +48,10 @@
   },
 
   "game": {
-    "rescue_5": "⏱ ¿Poco tiempo? Anuncio → revelar 5 casillas",
-    "rescue_4": "⏱ ¿Poco tiempo? Anuncio → revelar 4 casillas",
-    "rescue_3": "⏱ ¿Poco tiempo? Anuncio → revelar 3 casillas",
+    "rescue_heading": "⏱ POCO TIEMPO",
+    "rescue_sub_5": "Anuncio → revelar 5 casillas",
+    "rescue_sub_4": "Anuncio → revelar 4 casillas",
+    "rescue_sub_3": "Anuncio → revelar 3 casillas",
     "hud_timer": "TIEMPO",
     "hud_next": "SIGUIENTE",
     "hud_score": "PUNTOS",
@@ -158,6 +165,7 @@
   },
 
   "how_to_play": {
+    "step5": "¿Poco tiempo? Ve un anuncio corto — resaltaremos tus próximos objetivos en ámbar para que puedas terminar el nivel.",
     "step1": "Aparece una cuadrícula de números mezclados. Tócalos en secuencia — el HUD muestra tu próximo objetivo.",
     "step2": "El HUD muestra NEXT — esa es tu única pista. Explora la cuadrícula y encuéntralo tú mismo. Más rápido = mayor puntuación.",
     "step3": "¿Toque incorrecto? −100 puntos. La precisión importa. Las cuadrículas crecen de 3×3 a 7×7 — más difíciles de explorar cada vez.",
@@ -249,7 +257,7 @@
     "title": "DESAFÍO DIARIO",
     "instruction_1": "Completa los 3 desafíos diarios cada día.",
     "instruction_2": "Completa en orden: cada desafío desbloquea el siguiente.",
-    "streak_goal": "Alcanza 7 días seguidos para reclamar 3 💎 gemas.",
+    "streak_goal": "Alcanza 7 días seguidos para reclamar 7 💎 gemas.",
     "day": "Día {{n}}",
     "claim": "RECLAMAR",
     "claimed": "RECLAMADO",
@@ -258,10 +266,10 @@
     "reward_gem_3": "+3 💎",
     "complete_to_claim": "Completa todos los desafíos para reclamar",
     "complete_7": "Completa 7 días para reclamar",
-    "gem_reward_label": "+1 GEMA",
+    "gem_reward_label": "+3 GEMAS",
     "gem_reward_sub": "Recompensa Desafío Diario",
     "claim_daily": "RECLAMAR DIARIO",
-    "claim_weekly": "RECLAMAR 3 SEMANAL",
+    "claim_weekly": "RECLAMAR 7 SEMANAL",
     "streak_label": "Racha:"
   },
 

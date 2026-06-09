@@ -13,6 +13,12 @@
   },
 
   "home": {
+    "daily_pill_title": "CLAIM 3 DAILY GEMS",
+    "daily_pill_sub": "Visit every day for your free gems",
+    "pro_pill_title": "PRO",
+    "pro_pill_sub": "Level 100",
+    "expert_pill_title": "EXPERT",
+    "expert_pill_sub": "Level 200",
     "gems_label": "Gems",
     "daily_reward": "+3 Daily Gems!",
     "freePlayLabel": "FREE PLAY",
@@ -42,9 +48,10 @@
   },
 
   "game": {
-    "rescue_5": "⏱ Low on time? Watch ad → reveal 5 tiles",
-    "rescue_4": "⏱ Low on time? Watch ad → reveal 4 tiles",
-    "rescue_3": "⏱ Low on time? Watch ad → reveal 3 tiles",
+    "rescue_heading": "⏱ LOW ON TIME",
+    "rescue_sub_5": "Watch ad → reveal 5 tiles",
+    "rescue_sub_4": "Watch ad → reveal 4 tiles",
+    "rescue_sub_3": "Watch ad → reveal 3 tiles",
     "hud_timer": "TIMER",
     "hud_next": "NEXT",
     "hud_score": "SCORE",
@@ -158,6 +165,7 @@
   },
 
   "how_to_play": {
+    "step5": "Running low on time? Watch a short ad — we'll highlight your next targets in amber so you can finish the level.",
     "step1": "A grid of shuffled numbers appears. Tap them in sequence — the HUD shows your next target.",
     "step2": "The HUD shows NEXT — that's your only clue. Scan the grid and find it yourself. Faster = higher score.",
     "step3": "Wrong tap? −100 points. Accuracy matters. Grids grow from 3×3 up to 7×7 — harder to scan every time.",
@@ -249,7 +257,7 @@
     "title": "DAILY CHALLENGE",
     "instruction_1": "Complete all 3 daily challenges every day.",
     "instruction_2": "Complete in order — each challenge unlocks the next.",
-    "streak_goal": "Reach 7 days in a row to claim 3 💎 gems.",
+    "streak_goal": "Reach 7 days in a row to claim 7 💎 gems.",
     "day": "Day {{n}}",
     "claim": "CLAIM",
     "claimed": "CLAIMED",
@@ -258,10 +266,10 @@
     "reward_gem_3": "+3 💎",
     "complete_to_claim": "Complete all challenges to claim",
     "complete_7": "Complete 7 days to claim",
-    "gem_reward_label": "+1 GEM",
+    "gem_reward_label": "+3 GEMS",
     "gem_reward_sub": "Daily Challenge Reward",
     "claim_daily": "CLAIM YOUR DAILY",
-    "claim_weekly": "CLAIM YOUR WEEKLY 3",
+    "claim_weekly": "CLAIM YOUR WEEKLY 7",
     "streak_label": "Streak:"
   },
 

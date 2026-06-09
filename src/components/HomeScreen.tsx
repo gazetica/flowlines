@@ -11,8 +11,6 @@ import { useSettingsStore } from '../store/settingsStore';
 import { useGameStore } from '../store/gameStore';
 import { ParticleCanvas } from './ParticleCanvas';
 import { BottomNav } from './BottomNav';
-import { loadLocalTier } from '../services/tierService';
-import type { Tier } from '../services/tierService';
 
 // T-006 Part 1.3: three equal SQUARE mode cards (replaces the old small
 // rectangular row). Endless/Speed go through the difficulty pre-screen; Free
@@ -43,11 +41,6 @@ export function HomeScreen() {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  // F-001c: tier-achievement cards (local tier from Preferences).
-  const [tier, setTier] = useState<Tier | null>(null);
-  useEffect(() => { loadLocalTier().then(setTier); }, []);
-  const proCompleted = tier === 'pro' || tier === 'expert';
-  const expertCompleted = tier === 'expert';
 
   // Best score across all campaign levels
   const campaignBest = Math.max(
@@ -253,84 +246,50 @@ export function HomeScreen() {
       {/* F-001c: tier achievement cards (taglines removed). Expert first, Pro below.
           flex:1 container fills the space between the mode cards and the footer. */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '16px 16px 0', position: 'relative', zIndex: 1 }}>
-        <AchievementCard
-          accent="#00f5ff"
-          bg="rgba(0,245,255,0.06)"
-          subColor="rgba(0,245,255,0.7)"
-          checkColor="#07111F"
-          title={t('home.win_expert_tag')}
-          sub={t('home.win_expert_sub')}
-          completed={expertCompleted}
-        />
-        <AchievementCard
-          accent="#9B59B6"
-          bg="rgba(155,89,182,0.08)"
-          subColor="rgba(155,89,182,0.7)"
-          checkColor="#FFFFFF"
-          title={t('home.win_pro_tag')}
-          sub={t('home.win_pro_sub')}
-          completed={proCompleted}
-        />
+        {/* F-006 Change 2: daily-gem claim info pill — cyan solid border, no dot/circle.
+            Informational only (no navigation). */}
+        <div
+          style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+            width: '80%', alignSelf: 'center', minHeight: 64, borderRadius: 999,
+            border: '1px solid #00f5ff', background: 'rgba(0,245,255,0.06)',
+            padding: '12px 22px', marginBottom: 12, textAlign: 'center',
+          }}
+        >
+          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 13, fontWeight: 700, color: '#FFD700', letterSpacing: 1 }}>
+            💎 {t('home.daily_pill_title')}
+          </div>
+          <div style={{ fontSize: 11, color: '#00f5ff' }}>{t('home.daily_pill_sub')}</div>
+        </div>
+
+        {/* F-006 Change 3: split PRO / EXPERT pill — gold solid border, centre divider,
+            no dot/circle. Both halves navigate to the Campaign screen. */}
+        <div
+          style={{
+            display: 'flex', width: '80%', alignSelf: 'center', minHeight: 64,
+            borderRadius: 24, border: '1px solid #FFD700', overflow: 'hidden', marginBottom: 12,
+          }}
+        >
+          <button
+            onClick={() => navigate('/campaign')}
+            style={{ flex: 1, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, padding: '10px' }}
+          >
+            <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 13, fontWeight: 700, color: '#9B59B6', letterSpacing: 1 }}>⚡ {t('home.pro_pill_title')}</div>
+            <div style={{ fontSize: 10, color: '#FFFFFF' }}>{t('home.pro_pill_sub')}</div>
+          </button>
+          <div style={{ width: 1, alignSelf: 'center', height: '60%', background: '#FFD700' }} />
+          <button
+            onClick={() => navigate('/campaign')}
+            style={{ flex: 1, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, padding: '10px' }}
+          >
+            <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 13, fontWeight: 700, color: '#00f5ff', letterSpacing: 1 }}>★ {t('home.expert_pill_title')}</div>
+            <div style={{ fontSize: 10, color: '#FFFFFF' }}>{t('home.expert_pill_sub')}</div>
+          </button>
+        </div>
       </div>
 
       {/* Bottom nav (shared component — T-004A Fix 6) */}
       <BottomNav active="home" />
-    </div>
-  );
-}
-
-// —— F-001c: tier achievement pill card ————————————————————————————————
-function AchievementCard({ accent, bg, subColor, checkColor, title, sub, completed }: {
-  accent: string;
-  bg: string;
-  subColor: string;
-  checkColor: string;
-  title: string;
-  sub: string;
-  completed: boolean;
-}) {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 14,
-        width: '80%', // F-001c (corr.2): narrower pill…
-        alignSelf: 'center', // …centred on screen
-        minHeight: 80,
-        borderRadius: 999, // full pill — half-circle ends
-        border: `2px dotted ${accent}`, // B-007: dotted pill border (PRO purple / EXPERT cyan)
-        background: bg,
-        padding: '12px 22px',
-        marginBottom: 12,
-      }}
-    >
-      {/* round checkbox */}
-      <div
-        style={{
-          width: 28,
-          height: 28,
-          borderRadius: '50%',
-          flexShrink: 0,
-          border: `2px solid ${accent}`,
-          background: completed ? accent : 'transparent',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: completed ? `0 0 10px ${accent}` : 'inset 0 1px 4px rgba(0,0,0,0.5)',
-        }}
-      >
-        {completed && <span style={{ color: checkColor, fontSize: 15, fontWeight: 700, lineHeight: 1 }}>✓</span>}
-      </div>
-
-      {/* title + subtitle */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 13, fontWeight: 700, color: accent, letterSpacing: 1 }}>{title}</div>
-        <div style={{ fontSize: 11, color: subColor, marginTop: 2 }}>{sub}</div>
-      </div>
-
-      {/* decorative tier accent */}
-      <div style={{ width: 10, height: 10, borderRadius: '50%', background: accent, flexShrink: 0, boxShadow: `0 0 8px ${accent}` }} />
     </div>
   );
 }

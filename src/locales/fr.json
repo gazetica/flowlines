@@ -13,6 +13,12 @@
   },
 
   "home": {
+    "daily_pill_title": "RÉCLAMER 3 GEMMES QUOTIDIENNES",
+    "daily_pill_sub": "Visitez chaque jour pour vos gemmes gratuites",
+    "pro_pill_title": "PRO",
+    "pro_pill_sub": "Level 100",
+    "expert_pill_title": "EXPERT",
+    "expert_pill_sub": "Level 200",
     "gems_label": "Gemmes",
     "daily_reward": "+3 Gemmes!",
     "freePlayLabel": "JEU LIBRE",
@@ -42,9 +48,10 @@
   },
 
   "game": {
-    "rescue_5": "⏱ Temps bas? Pub → révéler 5 cases",
-    "rescue_4": "⏱ Temps bas? Pub → révéler 4 cases",
-    "rescue_3": "⏱ Temps bas? Pub → révéler 3 cases",
+    "rescue_heading": "⏱ TEMPS BAS",
+    "rescue_sub_5": "Pub → révéler 5 cases",
+    "rescue_sub_4": "Pub → révéler 4 cases",
+    "rescue_sub_3": "Pub → révéler 3 cases",
     "hud_timer": "TEMPS",
     "hud_next": "SUIVANT",
     "hud_score": "SCORE",
@@ -158,6 +165,7 @@
   },
 
   "how_to_play": {
+    "step5": "Peu de temps? Regardez une courte pub — on surligne vos prochaines cibles en orange pour finir le niveau.",
     "step1": "Une grille de nombres mélangés apparaît. Touchez-les dans l'ordre — le HUD indique votre prochaine cible.",
     "step2": "Le HUD affiche NEXT — c'est votre seul indice. Parcourez la grille et trouvez-le vous-même. Plus vite = meilleur score.",
     "step3": "Mauvaise touche ? −100 points. La précision compte. Les grilles passent de 3×3 à 7×7 — de plus en plus dures à parcourir.",
@@ -249,7 +257,7 @@
     "title": "DÉFI QUOTIDIEN",
     "instruction_1": "Terminez les 3 défis quotidiens chaque jour.",
     "instruction_2": "Terminez dans l'ordre — chaque défi débloque le suivant.",
-    "streak_goal": "Atteignez 7 jours d'affilée pour réclamer 3 💎 gemmes.",
+    "streak_goal": "Atteignez 7 jours d'affilée pour réclamer 7 💎 gemmes.",
     "day": "Jour {{n}}",
     "claim": "RÉCLAMER",
     "claimed": "RÉCLAMÉ",
@@ -258,10 +266,10 @@
     "reward_gem_3": "+3 💎",
     "complete_to_claim": "Terminez tous les défis pour réclamer",
     "complete_7": "Terminez 7 jours pour réclamer",
-    "gem_reward_label": "+1 GEMME",
+    "gem_reward_label": "+3 GEMMES",
     "gem_reward_sub": "Récompense Défi Quotidien",
     "claim_daily": "RÉCLAMER QUOTIDIEN",
-    "claim_weekly": "RÉCLAMER 3 HEBDOMADAIRE",
+    "claim_weekly": "RÉCLAMER 7 HEBDOMADAIRE",
     "streak_label": "Série :"
   },
 
