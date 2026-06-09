@@ -13,6 +13,8 @@
   },
 
   "home": {
+    "gems_label": "Gemas",
+    "daily_reward": "+3 Gemas diárias!",
     "freePlayLabel": "JOGO LIVRE",
     "freePlaySub": "Sua grade. Suas regras.",
     "play_now": "JOGAR AGORA",
@@ -40,6 +42,9 @@
   },
 
   "game": {
+    "rescue_5": "⏱ Pouco tempo? Anúncio → revelar 5 casas",
+    "rescue_4": "⏱ Pouco tempo? Anúncio → revelar 4 casas",
+    "rescue_3": "⏱ Pouco tempo? Anúncio → revelar 3 casas",
     "hud_timer": "TEMPO",
     "hud_next": "PRÓXIMO",
     "hud_score": "PONTOS",
@@ -54,7 +59,7 @@
     "remove_ads": "REMOVER ANÚNCIOS",
     "remove_ads_sub": "Jogue sem interrupções",
     "watch_ad": "VER ANÚNCIO",
-    "watch_ad_sub": "Ganhe 1 dica grátis",
+    "watch_ad_sub": "+3 gemas grátis",
     "use_hint": "USAR DICA",
     "hints_left": "×{{count}} restantes",
     "get_more_hints": "OBTER MAIS DICAS",
@@ -129,8 +134,8 @@
     "popular_badge": "MAIS POPULAR",
     "remove_ads_title": "Remover anúncios para sempre",
     "remove_ads_desc": "Sem intersticiais. Sem anúncios antes das dicas. Jogue livremente, sempre.",
-    "hint_pack_title": "Pacote de dicas · 5 dicas",
-    "hint_pack_desc": "Pule o anúncio. Use as dicas direto. Consumível — 5 usos.",
+    "hint_pack_title": "Pacote de Dicas · 20 Gemas",
+    "hint_pack_desc": "20 Gemas de Dica — jogue sem limites",
     "btn_buy": "COMPRAR AGORA",
     "btn_buy_short": "COMPRAR",
     "restore": "RESTAURAR COMPRAS ANTERIORES",
@@ -239,6 +244,8 @@
   },
 
   "daily": {
+    "gems_awarded": "+3 Gemas!",
+    "weekly_bonus": "+7 Bônus semanal!",
     "title": "DESAFIO DIÁRIO",
     "instruction_1": "Complete os 3 desafios diários todos os dias.",
     "instruction_2": "Complete em ordem — cada desafio desbloqueia o próximo.",

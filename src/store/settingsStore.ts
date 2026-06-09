@@ -57,6 +57,7 @@ interface SettingsState {
   dailyStreak: number;
   lastPlayedDate: string; // ISO date string 'YYYY-MM-DD' or '' (any-mode last play)
   lastDailyCompletionDate: string; // 'YYYY-MM-DD' all-3-daily submitted, or ''
+  lastDailyRewardDate: string; // F-005: 'YYYY-MM-DD' UTC the daily-visit gems were granted, or ''
   completedLevels: CompletedLevels;
   bestScores: BestScores;
   bestTimes: BestTimes; // T-002: PB time per level (parallel to bestScores)
@@ -79,10 +80,15 @@ interface SettingsState {
 
   setRemoveAds: () => Promise<void>;
 
-  // Hint inventory (T-006)
+  // Hint inventory (T-006). F-005: the balance is the "gem" economy in the UI (💎);
+  // addGems is the gem-economy-facing alias for crediting the same hintCount balance.
   setHintCount: (n: number) => Promise<void>;
   addHints: (n: number) => Promise<void>;
+  addGems: (n: number) => Promise<void>; // F-005: credit n gems (== hintCount balance)
   consumeHint: () => boolean; // false if 0 available (no decrement); true + decrement otherwise
+  // F-005: grant the once-per-UTC-day daily-visit reward (3 gems). Returns true if
+  // it was granted now (new day), false if already claimed today. Pass today's UTC date.
+  claimDailyGems: (today: string) => Promise<boolean>;
 
   recordLevelComplete: (levelId: number, stars: number, score: number, mode: string) => Promise<void>;
   // T-002: store a PB completion time (seconds) under `${mode}_${levelId}`.
@@ -149,6 +155,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   dailyStreak: 0,
   lastPlayedDate: '',
   lastDailyCompletionDate: '',
+  lastDailyRewardDate: '',
   completedLevels: {},
   bestScores: {},
   bestTimes: {},
@@ -169,6 +176,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       dailyStreak,
       lastPlayedDate,
       lastDailyCompletionDate,
+      lastDailyRewardDate,
       completedLevels,
       bestScores,
       bestTimes,
@@ -186,6 +194,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       prefGetNumber(PREF_KEYS.DAILY_STREAK, 0),
       prefGet(PREF_KEYS.LAST_PLAYED_DATE),
       prefGet(PREF_KEYS.LAST_DAILY_COMPLETION_DATE),
+      prefGet(PREF_KEYS.LAST_DAILY_REWARD_DATE),
       prefGetJSON<CompletedLevels>(PREF_KEYS.COMPLETED_LEVELS, {}),
       prefGetJSON<BestScores>(PREF_KEYS.BEST_SCORES, {}),
       prefGetJSON<BestTimes>(PREF_KEYS.BEST_TIMES, {}),
@@ -205,6 +214,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       dailyStreak,
       lastPlayedDate: lastPlayedDate ?? '',
       lastDailyCompletionDate: lastDailyCompletionDate ?? '',
+      lastDailyRewardDate: lastDailyRewardDate ?? '',
       completedLevels,
       bestScores,
       bestTimes,
@@ -272,6 +282,23 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     const next = get().hintCount + n;
     set({ hintCount: next });
     await prefSetNumber(PREF_KEYS.HINT_COUNT, next);
+  },
+  // F-005: gem-economy alias — credits the same hintCount balance shown as 💎.
+  addGems: async (n) => {
+    const next = get().hintCount + n;
+    set({ hintCount: next });
+    await prefSetNumber(PREF_KEYS.HINT_COUNT, next);
+  },
+  // F-005 Part 2: once-per-UTC-day daily-visit reward (3 gems). Idempotent per day.
+  claimDailyGems: async (today) => {
+    if (get().lastDailyRewardDate === today) return false; // already claimed today
+    const next = get().hintCount + 3;
+    set({ hintCount: next, lastDailyRewardDate: today });
+    await Promise.all([
+      prefSetNumber(PREF_KEYS.HINT_COUNT, next),
+      prefSet(PREF_KEYS.LAST_DAILY_REWARD_DATE, today),
+    ]);
+    return true;
   },
   // Synchronous (returns the can-use result immediately so the UI can branch);
   // the Preferences write-through is fire-and-forget.

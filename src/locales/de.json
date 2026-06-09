@@ -13,6 +13,8 @@
   },
 
   "home": {
+    "gems_label": "Edelsteine",
+    "daily_reward": "+3 Tages-Edelst.!",
     "freePlayLabel": "FREIES SPIEL",
     "freePlaySub": "Dein Raster. Deine Regeln.",
     "play_now": "JETZT SPIELEN",
@@ -40,6 +42,9 @@
   },
 
   "game": {
+    "rescue_5": "⏱ Wenig Zeit? Werbung → 5 Felder enthüllen",
+    "rescue_4": "⏱ Wenig Zeit? Werbung → 4 Felder enthüllen",
+    "rescue_3": "⏱ Wenig Zeit? Werbung → 3 Felder enthüllen",
     "hud_timer": "ZEIT",
     "hud_next": "NÄCHSTE",
     "hud_score": "PUNKTE",
@@ -54,7 +59,7 @@
     "remove_ads": "WERBUNG ENTFERNEN",
     "remove_ads_sub": "Spiele ohne Unterbrechungen",
     "watch_ad": "WERBUNG ANSEHEN",
-    "watch_ad_sub": "1 Tipp gratis erhalten",
+    "watch_ad_sub": "+3 Edelsteine gratis",
     "use_hint": "TIPP NUTZEN",
     "hints_left": "×{{count}} übrig",
     "get_more_hints": "MEHR TIPPS HOLEN",
@@ -129,8 +134,8 @@
     "popular_badge": "AM BELIEBTESTEN",
     "remove_ads_title": "Werbung dauerhaft entfernen",
     "remove_ads_desc": "Keine Interstitials. Keine Werbung vor Tipps. Spiele immer ungestört.",
-    "hint_pack_title": "Tipp-Paket · 5 Tipps",
-    "hint_pack_desc": "Überspringe die Werbung. Nutze Tipps direkt. Verbrauchbar — 5 Nutzungen.",
+    "hint_pack_title": "Tipp-Paket · 20 Edelsteine",
+    "hint_pack_desc": "20 Hinweis-Edelsteine — spiele ohne Grenzen",
     "btn_buy": "JETZT KAUFEN",
     "btn_buy_short": "KAUFEN",
     "restore": "FRÜHERE KÄUFE WIEDERHERSTELLEN",
@@ -239,6 +244,8 @@
   },
 
   "daily": {
+    "gems_awarded": "+3 Edelsteine!",
+    "weekly_bonus": "+7 Wöchenl. Bonus!",
     "title": "TÄGLICHE CHALLENGE",
     "instruction_1": "Schließe jeden Tag alle 3 täglichen Challenges ab.",
     "instruction_2": "Schließe sie der Reihe nach ab – jede Challenge schaltet die nächste frei.",

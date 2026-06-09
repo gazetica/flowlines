@@ -79,6 +79,48 @@ describe('settingsStore — bestTimes (T-002)', () => {
   });
 });
 
+describe('settingsStore — gem economy (F-005)', () => {
+  beforeEach(() => {
+    useSettingsStore.setState({ hintCount: 0, lastDailyRewardDate: '' });
+  });
+
+  it('1. claimDailyGems grants +3 gems on a new UTC day', async () => {
+    const granted = await useSettingsStore.getState().claimDailyGems('2026-06-09');
+    expect(granted).toBe(true);
+    expect(useSettingsStore.getState().hintCount).toBe(3);
+    expect(useSettingsStore.getState().lastDailyRewardDate).toBe('2026-06-09');
+  });
+
+  it('2. claimDailyGems does NOT award twice on the same day', async () => {
+    await useSettingsStore.getState().claimDailyGems('2026-06-09');
+    const second = await useSettingsStore.getState().claimDailyGems('2026-06-09');
+    expect(second).toBe(false);
+    expect(useSettingsStore.getState().hintCount).toBe(3); // still 3, not 6
+  });
+
+  it('3. claimDailyGems awards again on a different day', async () => {
+    await useSettingsStore.getState().claimDailyGems('2026-06-09');
+    const next = await useSettingsStore.getState().claimDailyGems('2026-06-10');
+    expect(next).toBe(true);
+    expect(useSettingsStore.getState().hintCount).toBe(6);
+  });
+
+  it('4. addGems(3) credits the daily-challenge / rewarded-ad amount', async () => {
+    await useSettingsStore.getState().addGems(3);
+    expect(useSettingsStore.getState().hintCount).toBe(3);
+  });
+
+  it('5. addGems(7) credits the weekly-bonus amount', async () => {
+    await useSettingsStore.getState().addGems(7);
+    expect(useSettingsStore.getState().hintCount).toBe(7);
+  });
+
+  it('6. addGems(20) credits the IAP Hint Pack amount', async () => {
+    await useSettingsStore.getState().addGems(20);
+    expect(useSettingsStore.getState().hintCount).toBe(20);
+  });
+});
+
 describe('nextDailyStreak — daily streak logic (T-006)', () => {
   const today = '2026-06-04';
 

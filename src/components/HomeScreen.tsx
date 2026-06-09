@@ -28,9 +28,21 @@ const MODE_CARDS: { key: ModeCardKey; icon: string; labelKey: string; sub: strin
 export function HomeScreen() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { completedLevels, bestScores, dailyStreak } = useSettingsStore();
+  const { completedLevels, bestScores, dailyStreak, hintCount, claimDailyGems } = useSettingsStore();
   // Gold border flash on tap before navigating (T-006 Part 1.3).
   const [flashCard, setFlashCard] = useState<ModeCardKey | null>(null);
+  // F-005 Part 2: once-per-UTC-day daily-visit gem reward. On mount, claim it; if it
+  // was granted now (new day), float a "+3 💎" over the gem card for ~1.5s.
+  const [gemFloat, setGemFloat] = useState(false);
+  useEffect(() => {
+    const today = new Date().toISOString().slice(0, 10); // UTC YYYY-MM-DD
+    claimDailyGems(today).then((granted) => {
+      if (!granted) return;
+      setGemFloat(true);
+      setTimeout(() => setGemFloat(false), 1600);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // F-001c: tier-achievement cards (local tier from Preferences).
   const [tier, setTier] = useState<Tier | null>(null);
   useEffect(() => { loadLocalTier().then(setTier); }, []);
@@ -103,15 +115,18 @@ export function HomeScreen() {
         </p>
       </div>
 
-      {/* Stats row */}
+      {/* Stats row — Best Score · Day Streak · Gems (F-005 Part 2). */}
+      <style>{`@keyframes home-gemFloat { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-34px); } }`}</style>
       <div style={{ display: 'flex', justifyContent: 'center', gap: 12, padding: '0 24px 20px', position: 'relative', zIndex: 1 }}>
         {[
           { label: t('home.best_score'), value: campaignBest.toLocaleString() },
           { label: t('home.day_streak'), value: `${dailyStreak > 0 ? '🔥 ' : ''}${dailyStreak}` },
+          { label: t('home.gems_label'), value: `💎 ${hintCount}`, gem: true },
         ].map((stat) => (
           <div
             key={stat.label}
             style={{
+              position: 'relative',
               background: 'rgba(10,26,46,0.8)',
               border: '1px solid rgba(30,139,195,0.25)',
               borderRadius: 8,
@@ -124,6 +139,19 @@ export function HomeScreen() {
               {stat.value}
             </div>
             <div style={{ fontSize: 11, color: 'var(--muted)' }}>{stat.label}</div>
+            {/* F-005: +3 💎 float rises from the gem card on the daily award. */}
+            {stat.gem && gemFloat && (
+              <div
+                style={{
+                  position: 'absolute', top: -6, left: 0, right: 0, textAlign: 'center',
+                  fontFamily: "'Space Mono', monospace", fontSize: 16, fontWeight: 700, color: 'var(--gold)',
+                  textShadow: '0 0 8px rgba(255,215,0,0.6)', animation: 'home-gemFloat 1.5s ease-out forwards',
+                  pointerEvents: 'none', zIndex: 5,
+                }}
+              >
+                {t('home.daily_reward')}
+              </div>
+            )}
           </div>
         ))}
       </div>

@@ -13,6 +13,8 @@
   },
 
   "home": {
+    "gems_label": "Gemas",
+    "daily_reward": "+3 Gemas diarias!",
     "freePlayLabel": "JUEGO LIBRE",
     "freePlaySub": "Tu cuadrícula. Tus reglas.",
     "play_now": "JUGAR AHORA",
@@ -40,6 +42,9 @@
   },
 
   "game": {
+    "rescue_5": "⏱ ¿Poco tiempo? Anuncio → revelar 5 casillas",
+    "rescue_4": "⏱ ¿Poco tiempo? Anuncio → revelar 4 casillas",
+    "rescue_3": "⏱ ¿Poco tiempo? Anuncio → revelar 3 casillas",
     "hud_timer": "TIEMPO",
     "hud_next": "SIGUIENTE",
     "hud_score": "PUNTOS",
@@ -54,7 +59,7 @@
     "remove_ads": "QUITAR ANUNCIOS",
     "remove_ads_sub": "Juega sin interrupciones",
     "watch_ad": "VER ANUNCIO",
-    "watch_ad_sub": "Consigue 1 pista gratis",
+    "watch_ad_sub": "+3 gemas gratis",
     "use_hint": "USAR PISTA",
     "hints_left": "×{{count}} restantes",
     "get_more_hints": "CONSEGUIR MÁS PISTAS",
@@ -129,8 +134,8 @@
     "popular_badge": "MÁS POPULAR",
     "remove_ads_title": "Quitar anuncios para siempre",
     "remove_ads_desc": "Sin intersticiales. Sin anuncios antes de las pistas. Juega libremente, siempre.",
-    "hint_pack_title": "Paquete de pistas · 5 pistas",
-    "hint_pack_desc": "Sáltate el anuncio. Usa las pistas directamente. Consumible — 5 usos.",
+    "hint_pack_title": "Paquete de Pistas · 20 Gemas",
+    "hint_pack_desc": "20 Gemas de Pista — juega sin límites",
     "btn_buy": "COMPRAR AHORA",
     "btn_buy_short": "COMPRAR",
     "restore": "RESTAURAR COMPRAS ANTERIORES",
@@ -239,6 +244,8 @@
   },
 
   "daily": {
+    "gems_awarded": "+3 Gemas!",
+    "weekly_bonus": "+7 Bono semanal!",
     "title": "DESAFÍO DIARIO",
     "instruction_1": "Completa los 3 desafíos diarios cada día.",
     "instruction_2": "Completa en orden: cada desafío desbloquea el siguiente.",

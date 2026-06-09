@@ -24,7 +24,7 @@ import * as analytics from '../services/analytics';
 
 export function IAPScreen() {
   const { t } = useTranslation();
-  const { removeAdsPurchased, setRemoveAds, addHints } = useSettingsStore();
+  const { removeAdsPurchased, setRemoveAds, addGems } = useSettingsStore();
 
   const [toast, setToast] = useState<string | null>(null);
   const showToast = (msg: string) => {
@@ -66,7 +66,7 @@ export function IAPScreen() {
 
   const buyRemoveAds = () => buy(PRODUCT_IDS.REMOVE_ADS, '$2.99', async () => { await setRemoveAds(); });
   const buyHintPack = () => buy(PRODUCT_IDS.HINT_PACK, '$0.99', async (token) => {
-    await addHints(5);
+    await addGems(20); // F-005 Part 6: Hint Pack now grants 20 gems (was 5)
     if (token) await consumePurchase(token); // consumable → consume so it can be re-bought
   });
   const buyCampaign2 = () => buy(PRODUCT_IDS.CAMPAIGN2, '$3.99', async () => { await prefSetBool(PREF_KEYS.CAMPAIGN2_PURCHASED, true); });

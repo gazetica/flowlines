@@ -75,12 +75,14 @@ export function DailyHubScreen() {
   const lastDailyCompletionDate = useSettingsStore((s) => s.lastDailyCompletionDate);
   const setLastDailyCompletionDate = useSettingsStore((s) => s.setLastDailyCompletionDate);
   const setDailyStreak = useSettingsStore((s) => s.setDailyStreak);
-  const addHints = useSettingsStore((s) => s.addHints);
+  const addGems = useSettingsStore((s) => s.addGems);
 
   const [scores, setScores] = useState<LocalDailyScores | null>(null);
   const [claimed, setClaimed] = useState(false);
   const [weeklyClaimed, setWeeklyClaimedState] = useState(false);
-  const [reward, setReward] = useState<string | null>(null);
+  // F-005: reward flash carries a `weekly` flag so the +7 weekly bonus renders a
+  // visually distinct (gold-bg / navy-text) toast vs the normal gold-text float.
+  const [reward, setReward] = useState<{ label: string; weekly: boolean } | null>(null);
 
   // Reload local scores + today's & this-week's claim status on mount (covers
   // returning from a game: React Router remounts this screen, so the effect
@@ -117,30 +119,31 @@ export function DailyHubScreen() {
     navigate('/game');
   };
 
-  const flashReward = (label: string) => {
-    setReward(label);
+  const flashReward = (label: string, weekly = false) => {
+    setReward({ label, weekly });
     setTimeout(() => setReward(null), 1300);
   };
 
-  // Issue 13: one daily diamond per day. Award +1 hint, persist the claim flag
-  // (keyed by date), and mark today complete for the streak map's gold state.
+  // F-005 Part 3: the once-per-day daily-completion reward (all 3 challenges done)
+  // now grants +3 gems (was +1 hint). Persist the claim flag (keyed by date) and
+  // mark today complete for the streak map's gold state.
   const claim = async () => {
     if (!allDone || claimed) return; // defensive — covers replay after claim
-    await addHints(1);
+    await addGems(3);
     await setDailyDiamondClaimed();
     await setLastDailyCompletionDate(today);
     setClaimed(true);
-    flashReward(i18n.t('daily.reward_gem_1'));
+    flashReward(i18n.t('daily.gems_awarded'));
   };
 
-  // T-008 Part 2: weekly diamond — once per ISO week, requires a full 7-day
-  // streak. Awards +3 hints, then resets the streak (map returns to future).
+  // F-005 Part 4: weekly bonus — a full 7-day streak (streak % 7 === 0) grants
+  // +7 gems (was +3 hints) with a distinct gold-bg toast, then resets the streak.
   const weeklyClaim = async () => {
     if (weeklyClaimed || dailyStreak < 7) return; // defensive
-    await addHints(3);
+    await addGems(7);
     await setWeeklyDiamondClaimed();
     setWeeklyClaimedState(true);
-    flashReward(i18n.t('daily.reward_gem_3'));
+    flashReward(i18n.t('daily.weekly_bonus'), true);
     await setDailyStreak(0); // streak resets — nodes derive from dailyStreak
   };
 
@@ -184,11 +187,25 @@ export function DailyHubScreen() {
         <div
           style={{
             position: 'absolute', top: '40%', left: 0, right: 0, textAlign: 'center', zIndex: 40,
-            fontFamily: "'Space Mono', monospace", fontSize: 30, color: SKIN.gold,
-            textShadow: SKIN.goldGlow, animation: 'dh-floatUp 1.3s ease-out forwards', pointerEvents: 'none',
+            animation: 'dh-floatUp 1.3s ease-out forwards', pointerEvents: 'none',
           }}
         >
-          {reward}
+          {reward.weekly ? (
+            // F-005 Part 4: distinct weekly-bonus toast — gold background, navy text.
+            <span style={{
+              fontFamily: "'Space Mono', monospace", fontSize: 22, fontWeight: 700,
+              color: '#07111F', background: '#FFD700', borderRadius: 10, padding: '10px 18px',
+              boxShadow: '0 0 18px rgba(255,215,0,0.6)',
+            }}>
+              {reward.label}
+            </span>
+          ) : (
+            <span style={{
+              fontFamily: "'Space Mono', monospace", fontSize: 30, color: SKIN.gold, textShadow: SKIN.goldGlow,
+            }}>
+              {reward.label}
+            </span>
+          )}
         </div>
       )}
 

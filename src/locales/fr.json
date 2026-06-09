@@ -13,6 +13,8 @@
   },
 
   "home": {
+    "gems_label": "Gemmes",
+    "daily_reward": "+3 Gemmes!",
     "freePlayLabel": "JEU LIBRE",
     "freePlaySub": "Ta grille. Tes règles.",
     "play_now": "JOUER",
@@ -40,6 +42,9 @@
   },
 
   "game": {
+    "rescue_5": "⏱ Temps bas? Pub → révéler 5 cases",
+    "rescue_4": "⏱ Temps bas? Pub → révéler 4 cases",
+    "rescue_3": "⏱ Temps bas? Pub → révéler 3 cases",
     "hud_timer": "TEMPS",
     "hud_next": "SUIVANT",
     "hud_score": "SCORE",
@@ -54,7 +59,7 @@
     "remove_ads": "SUPPRIMER LES PUBS",
     "remove_ads_sub": "Jouez sans interruptions",
     "watch_ad": "REGARDER UNE PUB",
-    "watch_ad_sub": "1 indice gratuit",
+    "watch_ad_sub": "+3 gemmes gratuites",
     "use_hint": "UTILISER INDICE",
     "hints_left": "×{{count}} restants",
     "get_more_hints": "PLUS D'INDICES",
@@ -129,8 +134,8 @@
     "popular_badge": "LE PLUS POPULAIRE",
     "remove_ads_title": "Supprimer les pubs pour toujours",
     "remove_ads_desc": "Pas d'interstitiels. Pas de pub avant les indices. Jouez librement, toujours.",
-    "hint_pack_title": "Pack d'indices · 5 indices",
-    "hint_pack_desc": "Sautez la pub. Utilisez les indices directement. Consommable — 5 utilisations.",
+    "hint_pack_title": "Pack d'indices · 20 Gemmes",
+    "hint_pack_desc": "20 Gemmes d'indice — jouez sans limites",
     "btn_buy": "ACHETER",
     "btn_buy_short": "ACHAT",
     "restore": "RESTAURER LES ACHATS PRÉCÉDENTS",
@@ -239,6 +244,8 @@
   },
 
   "daily": {
+    "gems_awarded": "+3 Gemmes!",
+    "weekly_bonus": "+7 Bonus hebdo!",
     "title": "DÉFI QUOTIDIEN",
     "instruction_1": "Terminez les 3 défis quotidiens chaque jour.",
     "instruction_2": "Terminez dans l'ordre — chaque défi débloque le suivant.",

@@ -37,6 +37,8 @@ export const PREF_KEYS = {
   LAST_PLAYED_DATE:    'lastPlayedDate',
   // T-006: date all 3 daily challenges were last submitted ('YYYY-MM-DD').
   LAST_DAILY_COMPLETION_DATE: 'lastDailyCompletionDate',
+  // F-005: date the daily-visit gem reward was last granted ('YYYY-MM-DD' UTC).
+  LAST_DAILY_REWARD_DATE: 'lastDailyRewardDate',
   COMPLETED_LEVELS:    'completedLevels',   // JSON: { [levelId]: starsEarned }
   BEST_SCORES:         'bestScores',        // JSON: { [mode_levelId]: score }
   // T-002: PB completion time per level, stored alongside BEST_SCORES so the

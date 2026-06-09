@@ -23,6 +23,7 @@ import { LeaderPanel } from './LeaderPanel';
 import { BuyHintModal } from './BuyHintModal';
 import { Capacitor } from '@capacitor/core';
 import { loadRewarded, showRewarded } from '../services/rewardedAdService';
+import { showRescueAd, isRescueEligible } from '../services/rescueAdService';
 import { initAppLifecycle, removeAppLifecycle } from '../services/appLifecycle';
 import * as soundService from '../services/soundService';
 import * as musicService from '../services/musicService';
@@ -35,13 +36,20 @@ export function GameScreen() {
   const navigate = useNavigate();
   const phaserRef = useRef<Phaser.Game | null>(null);
   const particleCanvasRef = useRef<HTMLCanvasElement>(null);
-  const { status, currentLevel, mode, score, runId, startLevel, tickTimer, endGame, engine, timed } =
+  const { status, currentLevel, mode, score, runId, startLevel, tickTimer, endGame, engine, timed,
+    grid, timeElapsed, rescueTileIds, rescueBannerShown, markRescueBannerShown } =
     useGameStore();
 
   // T-006 Part 2.3: hint inventory + BuyHintModal (renamed T-008).
   const hintCount = useSettingsStore((s) => s.hintCount);
   const consumeHint = useSettingsStore((s) => s.consumeHint);
+  const addGems = useSettingsStore((s) => s.addGems); // F-005 Part 5
   const removeAdsPurchased = useSettingsStore((s) => s.removeAdsPurchased); // T-017 AC6
+
+  // F-005 Part 7: Rescue Flash banner local visibility (one per attempt). The
+  // once-per-attempt guard lives in gameStore (rescueBannerShown); this stays true
+  // while the banner is on screen and is cleared on tap / new attempt.
+  const [rescueBannerVisible, setRescueBannerVisible] = useState(false);
   const [hintModalOpen, setHintModalOpen] = useState(false);
   // F-001c (corr.3): cyan hint overlay — stays on the target tile until the
   // player taps it correctly (then removed instantly). `value` is the hinted
@@ -155,8 +163,10 @@ export function GameScreen() {
   }, []);
 
   // T-017 AC7: reset the per-session hint count whenever a new level/run starts.
+  // F-005: also hide any rescue banner left over from the previous attempt.
   useEffect(() => {
     setSessionHints(0);
+    setRescueBannerVisible(false);
   }, [runId]);
 
   // Highlight the current target tile (gold) for ~5s via the existing
@@ -238,6 +248,7 @@ export function GameScreen() {
 
     if (outcome === 'rewarded') {
       applyHintToTile();
+      void addGems(3); // F-005 Part 5: +3 gems per rewarded watch (was a free hint only)
       setSessionHints((n) => n + 1);
     } else if (outcome === 'unavailable') {
       showToast(t('game.toast_no_ad'));
@@ -396,6 +407,67 @@ export function GameScreen() {
     if (hint && hint.value !== expectedNext) setHint(null);
   }, [expectedNext, hint]);
 
+  // —— F-005 Part 7: Rescue Flash ——————————————————————————————————————
+  // Eligibility — ALL conditions must hold (grid > 3×3, timed level with a >15s
+  // limit, in the final third of the clock, ≥3 tiles left, no Remove Ads, and the
+  // banner not already shown this attempt).
+  const gridSize = currentLevel?.grid ?? 0;
+  const tilesRemaining = grid.reduce((acc, row) => acc + row.filter((cell) => !cell.tapped).length, 0);
+  const timeRemaining = timeLimit - timeElapsed;
+  const rescueEligible = isRescueEligible({
+    playing: status === 'playing',
+    timed,
+    removeAdsPurchased,
+    gridSize,
+    timeLimit,
+    timeRemaining,
+    tilesRemaining,
+    bannerShown: rescueBannerShown,
+  });
+
+  // Show the banner once eligibility is first met; mark it shown so a later dip
+  // back below the threshold never re-shows it (one banner per attempt).
+  useEffect(() => {
+    if (rescueEligible) {
+      setRescueBannerVisible(true);
+      markRescueBannerShown();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rescueEligible]);
+
+  const rescueText =
+    tilesRemaining >= 5 ? t('game.rescue_5') : tilesRemaining === 4 ? t('game.rescue_4') : t('game.rescue_3');
+
+  const handleRescueTap = async () => {
+    const reveal = Math.min(5, tilesRemaining);
+    setRescueBannerVisible(false); // banner never shows twice in an attempt
+    useGameStore.getState().pauseGame();
+    await showRescueAd(reveal);
+    useGameStore.getState().resumeGame();
+  };
+
+  // On-screen rects for the amber rescue tiles (untapped only — they drop off as the
+  // player taps them). Same grid geometry as the cyan hint overlay (window dims + n).
+  const rescueRects: { left: number; top: number; size: number; value: number }[] = [];
+  if (rescueTileIds.length && status === 'playing' && gridSize) {
+    const screenW = window.innerWidth;
+    const screenH = window.innerHeight;
+    const rTileSize = Math.floor(Math.min(screenW - 48, screenH * 0.65) / gridSize) - 4;
+    const rGap = 4;
+    const rGridPixelSize = gridSize * (rTileSize + rGap) - rGap;
+    const rStartX = (screenW - rGridPixelSize) / 2;
+    const rStartY = screenH * 0.2;
+    for (const value of rescueTileIds) {
+      for (let r = 0; r < grid.length; r++) {
+        for (let c = 0; c < (grid[r]?.length ?? 0); c++) {
+          if (grid[r][c].value === value && !grid[r][c].tapped) {
+            rescueRects.push({ left: rStartX + c * (rTileSize + rGap), top: rStartY + r * (rTileSize + rGap), size: rTileSize, value });
+          }
+        }
+      }
+    }
+  }
+
   return (
     <div
       style={{
@@ -439,6 +511,35 @@ export function GameScreen() {
           }}
         />
       )}
+
+      {/* F-005 Part 7: amber rescue tiles — revealed numbers (white on amber),
+          pulsing gold glow. pointer-events:none so taps pass through to Phaser. */}
+      <style>{`@keyframes rescue-pulse { 0%,100% { box-shadow: 0 0 8px rgba(255,215,0,0.5); } 50% { box-shadow: 0 0 18px rgba(255,215,0,0.95); } }`}</style>
+      {rescueRects.map((rect) => (
+        <div
+          key={rect.value}
+          style={{
+            position: 'absolute',
+            left: rect.left,
+            top: rect.top,
+            width: rect.size,
+            height: rect.size,
+            background: '#FF8C00',
+            borderRadius: 6,
+            border: '1px solid #FFD700',
+            zIndex: 4,
+            pointerEvents: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            animation: 'rescue-pulse 1.5s ease-in-out infinite',
+          }}
+        >
+          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: Math.floor(rect.size * 0.38), fontWeight: 700, color: '#FFFFFF' }}>
+            {rect.value}
+          </span>
+        </div>
+      ))}
 
       {/* HUD overlay — glassmorphism bar (T-009c: 2-row grid so the three labels
           align on one line and the three values share a baseline). The TIMER value
@@ -550,6 +651,31 @@ export function GameScreen() {
             zIndex: 10,
           }}
         >
+          {/* F-005 Part 7: Rescue Flash banner — below the grid, above the hint cards.
+              Tapping it watches a rescue ad and reveals min(5, remaining) amber tiles. */}
+          {rescueBannerVisible && (
+            <button
+              onClick={handleRescueTap}
+              style={{
+                width: '100%',
+                height: 36,
+                marginBottom: 6,
+                background: 'rgba(7,17,31,0.92)',
+                border: '1px solid #FFD700',
+                borderRadius: 6,
+                color: '#FFD700',
+                fontFamily: "'Space Mono', monospace",
+                fontSize: 11,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {rescueText}
+            </button>
+          )}
+
           {/* Three-card row */}
           <div style={{ display: 'flex', flexDirection: 'row', gap: 6, margin: '6px 0', width: '100%' }}>
             {/* Left card — rotating promo (GET MORE HINTS / REMOVE ADS) */}

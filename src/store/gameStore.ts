@@ -58,6 +58,13 @@ interface GameState {
   hintUsed: boolean;
   hintActive: boolean;
 
+  // F-005 Rescue Flash — a SEPARATE system from the cyan hint above. Amber tiles
+  // revealed after watching a rescue ad. rescueTileIds holds the tile VALUES to
+  // reveal (the next N untapped, in tap-sequence order). All reset on each attempt.
+  rescueFlashActive: boolean;
+  rescueTileIds: number[];
+  rescueBannerShown: boolean; // one banner per attempt (resets on (re)start)
+
   // Daily challenge
   dailyDate: string; // 'YYYY-MM-DD' of the active daily challenge
   // T-005: which of the 3 daily challenges is active (null = not a daily round).
@@ -80,6 +87,10 @@ interface GameState {
   resumeGame: () => void;
   useHint: () => void;
   deactivateHint: () => void;
+  // F-005: mark the rescue banner as shown for this attempt (one per attempt).
+  markRescueBannerShown: () => void;
+  // F-005: reveal the next `tileCount` untapped tiles (in tap-sequence order) as amber.
+  activateRescueFlash: (tileCount: number) => void;
   endGame: (reason: 'complete' | 'expired') => void;
   resetGame: () => void;
 }
@@ -98,6 +109,9 @@ export const useGameStore = create<GameState>((set, get) => ({
   timeElapsed: 0,
   hintUsed: false,
   hintActive: false,
+  rescueFlashActive: false,
+  rescueTileIds: [],
+  rescueBannerShown: false,
   dailyDate: '',
   currentChallengeIndex: null,
   difficulty: 'easy',
@@ -136,6 +150,9 @@ export const useGameStore = create<GameState>((set, get) => ({
       timeElapsed: 0,
       hintUsed: false,
       hintActive: false,
+      rescueFlashActive: false,
+      rescueTileIds: [],
+      rescueBannerShown: false,
       difficulty: diff,
       timed: true,
     });
@@ -188,6 +205,9 @@ export const useGameStore = create<GameState>((set, get) => ({
       timeElapsed: 0,
       hintUsed: false,
       hintActive: false,
+      rescueFlashActive: false,
+      rescueTileIds: [],
+      rescueBannerShown: false,
       dailyDate: getTodayDateString(),
       currentChallengeIndex: challengeIndex,
       difficulty: config.difficulty,
@@ -224,6 +244,9 @@ export const useGameStore = create<GameState>((set, get) => ({
       timeElapsed: 0,
       hintUsed: false,
       hintActive: false,
+      rescueFlashActive: false,
+      rescueTileIds: [],
+      rescueBannerShown: false,
       difficulty,
       timed: timerSecs !== null,
     });
@@ -276,6 +299,21 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   deactivateHint: () => {
     set({ hintActive: false });
+  },
+
+  markRescueBannerShown: () => {
+    set({ rescueBannerShown: true });
+  },
+
+  // F-005: reveal the next `tileCount` untapped tiles in tap-sequence order. Works
+  // for all difficulties via engine.getSequence() (easy=asc, pro=desc, expert=random).
+  activateRescueFlash: (tileCount) => {
+    const { engine, grid } = get();
+    if (!engine) return;
+    const tappedByValue = new Map<number, boolean>();
+    for (const row of grid) for (const cell of row) tappedByValue.set(cell.value, cell.tapped);
+    const untappedInOrder = engine.getSequence().filter((v) => tappedByValue.get(v) === false);
+    set({ rescueTileIds: untappedInOrder.slice(0, Math.max(0, tileCount)), rescueFlashActive: true });
   },
 
   endGame: (reason) => {
@@ -341,6 +379,9 @@ export const useGameStore = create<GameState>((set, get) => ({
       currentChallengeIndex: null,
       hintUsed: false,
       hintActive: false,
+      rescueFlashActive: false,
+      rescueTileIds: [],
+      rescueBannerShown: false,
     });
   },
 }));

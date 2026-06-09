@@ -13,6 +13,8 @@
   },
 
   "home": {
+    "gems_label": "Gems",
+    "daily_reward": "+3 Daily Gems!",
     "freePlayLabel": "FREE PLAY",
     "freePlaySub": "Your grid. Your rules.",
     "play_now": "PLAY NOW",
@@ -40,6 +42,9 @@
   },
 
   "game": {
+    "rescue_5": "⏱ Low on time? Watch ad → reveal 5 tiles",
+    "rescue_4": "⏱ Low on time? Watch ad → reveal 4 tiles",
+    "rescue_3": "⏱ Low on time? Watch ad → reveal 3 tiles",
     "hud_timer": "TIMER",
     "hud_next": "NEXT",
     "hud_score": "SCORE",
@@ -54,7 +59,7 @@
     "remove_ads": "REMOVE ADS",
     "remove_ads_sub": "Play without interruptions",
     "watch_ad": "WATCH AD",
-    "watch_ad_sub": "Get 1 hint free",
+    "watch_ad_sub": "+3 gems free",
     "use_hint": "USE HINT",
     "hints_left": "×{{count}} left",
     "get_more_hints": "GET MORE HINTS",
@@ -129,8 +134,8 @@
     "popular_badge": "MOST POPULAR",
     "remove_ads_title": "Remove Ads Forever",
     "remove_ads_desc": "No interstitials. No ads before hints. Play freely, always.",
-    "hint_pack_title": "Hint Pack · 5 Hints",
-    "hint_pack_desc": "Skip the ad. Use hints directly. Consumable — 5 uses.",
+    "hint_pack_title": "Hint Pack · 20 Gems",
+    "hint_pack_desc": "20 Hint Gems — play without limits",
     "btn_buy": "BUY NOW",
     "btn_buy_short": "BUY",
     "restore": "RESTORE PREVIOUS PURCHASES",
@@ -239,6 +244,8 @@
   },
 
   "daily": {
+    "gems_awarded": "+3 Gems!",
+    "weekly_bonus": "+7 Weekly Bonus!",
     "title": "DAILY CHALLENGE",
     "instruction_1": "Complete all 3 daily challenges every day.",
     "instruction_2": "Complete in order — each challenge unlocks the next.",
