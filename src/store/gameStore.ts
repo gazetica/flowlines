@@ -26,6 +26,17 @@ import * as analytics from '../services/analytics';
 export type GameMode = 'campaign' | 'daily' | 'endless' | 'speed' | 'freeplay';
 export type GameStatus = 'idle' | 'playing' | 'paused' | 'complete' | 'failed';
 
+// F-008: handle for the 3-2-1 resume-countdown interval. Module-level (not React
+// state) so it survives store updates and can be cleared from several actions; only
+// the visible number (resumeCountdown) lives in the store.
+let resumeIntervalId: ReturnType<typeof setInterval> | null = null;
+function clearResumeInterval(): void {
+  if (resumeIntervalId !== null) {
+    clearInterval(resumeIntervalId);
+    resumeIntervalId = null;
+  }
+}
+
 interface GameState {
   // Current session
   currentLevelId: number;
@@ -57,6 +68,12 @@ interface GameState {
   // (the countdown is React-driven, not in the locked Phaser GameScene). Reset to the
   // level's timeLimit on each (re)start. The rescue threshold reads this directly.
   timeRemaining: number;
+
+  // F-008: 3-2-1 resume countdown shown after a rewarded ad (rescue/gem) closes,
+  // before the timer resumes. null = not counting; 3/2/1 = active. The round stays
+  // 'paused' (timer frozen) for the whole ad + countdown so a short level can't
+  // expire while the player is in the ad / reading the reward.
+  resumeCountdown: number | null;
 
   // Hint
   hintUsed: boolean;
@@ -90,6 +107,13 @@ interface GameState {
   setTimeRemaining: (t: number) => void; // F-005-FIX: real countdown value from TimerComponent
   pauseGame: () => void;
   resumeGame: () => void;
+  // F-008: pause/resume the live countdown around rewarded ads. pauseTimer mirrors
+  // pauseGame (status → paused freezes TimerComponent). startResumeCountdown runs the
+  // visible 3→2→1 and calls resumeTimer at 0; resumeTimer is the single terminal
+  // resume (clears the countdown interval and returns a paused round to 'playing').
+  pauseTimer: () => void;
+  resumeTimer: () => void;
+  startResumeCountdown: () => void;
   useHint: () => void;
   deactivateHint: () => void;
   // F-005: mark the rescue banner as shown for this attempt (one per attempt).
@@ -113,6 +137,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   wrongTaps: 0,
   timeElapsed: 0,
   timeRemaining: 0,
+  resumeCountdown: null,
   hintUsed: false,
   hintActive: false,
   rescueFlashActive: false,
@@ -155,6 +180,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       wrongTaps: 0,
       timeElapsed: 0,
       timeRemaining: level.timeLimit,
+      resumeCountdown: null,
       hintUsed: false,
       hintActive: false,
       rescueFlashActive: false,
@@ -211,6 +237,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       wrongTaps: 0,
       timeElapsed: 0,
       timeRemaining: dailyLevel.timeLimit,
+      resumeCountdown: null,
       hintUsed: false,
       hintActive: false,
       rescueFlashActive: false,
@@ -251,6 +278,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       wrongTaps: 0,
       timeElapsed: 0,
       timeRemaining: synthLevel.timeLimit,
+      resumeCountdown: null,
       hintUsed: false,
       hintActive: false,
       rescueFlashActive: false,
@@ -304,6 +332,46 @@ export const useGameStore = create<GameState>((set, get) => ({
   resumeGame: () => {
     const { status } = get();
     if (status === 'paused') set({ status: 'playing' });
+  },
+
+  // F-008 FIX 1 Part A: freeze the live countdown before a rewarded ad shows. Same
+  // mechanism the pause modal uses (status → paused makes TimerComponent clear its
+  // interval), so the clock cannot tick — or expire — while the ad is on screen.
+  pauseTimer: () => {
+    const { status } = get();
+    if (status === 'playing') set({ status: 'paused' });
+  },
+
+  // F-008 FIX 1: the single terminal resume. Clears any running countdown interval,
+  // hides the overlay, and un-pauses a paused round. It deliberately does NOT revive
+  // a round that ended (complete/failed) — only resumeCountdown is cleared then.
+  resumeTimer: () => {
+    clearResumeInterval();
+    const { status } = get();
+    if (status === 'paused') set({ status: 'playing', resumeCountdown: null });
+    else set({ resumeCountdown: null });
+  },
+
+  // F-008 FIX 1 Part B/C: after an ad closes, run the 3→2→1 overlay then resume.
+  // Idempotent — a countdown already in flight is never restarted or extended (guards
+  // against a double-invocation leaving two intervals running, the FIX 2 freeze class).
+  startResumeCountdown: () => {
+    if (get().resumeCountdown !== null) return;
+    clearResumeInterval();
+    set({ resumeCountdown: 3 });
+    resumeIntervalId = setInterval(() => {
+      const current = get().resumeCountdown;
+      if (current === null) {
+        clearResumeInterval();
+        return;
+      }
+      if (current <= 1) {
+        clearResumeInterval();
+        get().resumeTimer(); // → resumeCountdown null + status back to playing
+      } else {
+        set({ resumeCountdown: current - 1 });
+      }
+    }, 1000);
   },
 
   useHint: () => {
@@ -379,6 +447,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   resetGame: () => {
+    clearResumeInterval();
     set({
       status: 'idle',
       engine: null,
@@ -388,6 +457,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       wrongTaps: 0,
       timeElapsed: 0,
       timeRemaining: 0,
+      resumeCountdown: null,
       difficulty: 'easy',
       timed: true,
       currentChallengeIndex: null,

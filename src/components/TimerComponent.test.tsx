@@ -148,6 +148,56 @@ describe('TimerComponent', () => {
       advanceSeconds(10);
       expect(onTick).not.toHaveBeenCalled();
     });
+
+    // F-008 FIX 1: the live getPaused gate must freeze the clock even when the `paused`
+    // prop is false and the interval is still running — the case where a rewarded ad
+    // held the WebView in the background and the pause-commit that would clear the
+    // interval never ran. No decrement, no onTick, no onExpire while it returns true.
+    it('getPaused()=true freezes the countdown even with paused prop false', () => {
+      const onTick = vi.fn();
+      const onExpire = vi.fn();
+      render(
+        <TimerComponent
+          durationSeconds={5}
+          onTick={onTick}
+          onExpire={onExpire}
+          paused={false}
+          getPaused={() => true}
+        />
+      );
+      advanceSeconds(10); // interval fires, but every tick is gated off
+      expect(screen.getByText('5')).toBeInTheDocument();
+      expect(onTick).not.toHaveBeenCalled();
+      expect(onExpire).not.toHaveBeenCalled();
+    });
+
+    it('resumes ticking when getPaused() flips back to false', () => {
+      const onTick = vi.fn();
+      let frozen = true;
+      const { rerender } = render(
+        <TimerComponent
+          durationSeconds={30}
+          onTick={onTick}
+          onExpire={vi.fn()}
+          paused={false}
+          getPaused={() => frozen}
+        />
+      );
+      advanceSeconds(5); // gated — stays at 30
+      expect(screen.getByText('30')).toBeInTheDocument();
+      frozen = false;
+      rerender(
+        <TimerComponent
+          durationSeconds={30}
+          onTick={onTick}
+          onExpire={vi.fn()}
+          paused={false}
+          getPaused={() => frozen}
+        />
+      );
+      advanceSeconds(2); // now ticks: 30 -> 28
+      expect(screen.getByText('28')).toBeInTheDocument();
+    });
   });
 
   // ---------------------------------------------------------------------

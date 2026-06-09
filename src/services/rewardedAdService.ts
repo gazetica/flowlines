@@ -6,9 +6,10 @@
 // constant (no hardcoded / live IDs) but does not modify it. The ad is preloaded
 // on game-screen mount and reloaded after every show, so it is ready on tap.
 
-import { AdMob } from '@capacitor-community/admob';
+import { AdMob, RewardAdPluginEvents } from '@capacitor-community/admob';
 import type { RewardAdOptions } from '@capacitor-community/admob';
 import { AD_UNITS } from './admob';
+import { useGameStore } from '../store/gameStore';
 import * as analytics from './analytics';
 
 export type RewardedOutcome = 'rewarded' | 'dismissed' | 'unavailable';
@@ -16,6 +17,30 @@ export type RewardedOutcome = 'rewarded' | 'dismissed' | 'unavailable';
 const REWARD_OPTIONS: RewardAdOptions = {
   adId: AD_UNITS.REWARDED, // live rewarded unit from admob.ts (T-015)
 };
+
+// F-008 FIX 1: a promise that resolves once the rewarded ad is actually DISMISSED
+// (leaves the screen). AdMob.showRewardVideoAd() resolves on REWARD, which can fire
+// while the end card is still up — resuming then would run the caller's 3-2-1 overlay
+// behind the ad and let the clock tick under it. By also awaiting Dismissed we hand
+// control back only after the ad is gone. The listener is removed as soon as it fires
+// (no accumulation across watches); a safety timeout guarantees we never hang paused.
+function awaitAdDismissed(): Promise<void> {
+  return new Promise<void>((resolve) => {
+    let settled = false;
+    let handle: { remove: () => void } | undefined;
+    const done = () => {
+      if (settled) return;
+      settled = true;
+      handle?.remove();
+      resolve();
+    };
+    AdMob.addListener(RewardAdPluginEvents.Dismissed, done).then((h) => {
+      handle = h;
+      if (settled) h.remove();
+    });
+    setTimeout(done, 30000); // safety net — never leave the game paused forever
+  });
+}
 
 // Whether a prepared ad is currently in hand (prepareRewardVideoAd succeeded and
 // has not yet been shown).
@@ -41,21 +66,33 @@ export async function loadRewarded(): Promise<void> {
  * Always reloads the next ad afterwards.
  */
 export async function showRewarded(): Promise<RewardedOutcome> {
+  // F-008 FIX 1 Part A: freeze the live countdown before the ad takes over the screen
+  // so a short level cannot expire mid-watch. Idempotent (mirrors pauseGame). The
+  // RESUME is intentionally NOT done here — it is owned by the caller's 3-2-1
+  // countdown (GameScreen.startResumeCountdown → resumeTimer), so the overlay is
+  // never skipped and non-countdown callers can't be left frozen.
+  useGameStore.getState().pauseTimer();
   if (!prepared) {
     await loadRewarded();
     if (!prepared) return 'unavailable';
   }
-  let outcome: RewardedOutcome;
+  // Register the dismiss listener BEFORE showing so we never miss the event.
+  const dismissed = awaitAdDismissed();
+  let shown = false;
+  let rewarded = false;
   try {
-    const result = await AdMob.showRewardVideoAd();
-    outcome = result ? 'rewarded' : 'dismissed';
-    if (outcome === 'rewarded') analytics.adImpression('rewarded'); // T-020 (AC6)
+    const result = await AdMob.showRewardVideoAd(); // resolves on REWARD, not dismiss
+    shown = true;
+    rewarded = !!result;
+    if (rewarded) analytics.adImpression('rewarded'); // T-020 (AC6)
   } catch (err) {
     console.warn('[rewardedAdService] show failed:', err);
-    outcome = 'unavailable';
   } finally {
     prepared = false;
     void loadRewarded(); // preload the next one for the following tap
   }
-  return outcome;
+  // F-008 FIX 1: only hand back to the caller (which starts the 3-2-1 resume overlay)
+  // after the ad has actually left the screen.
+  if (shown) await dismissed;
+  return shown ? (rewarded ? 'rewarded' : 'dismissed') : 'unavailable';
 }

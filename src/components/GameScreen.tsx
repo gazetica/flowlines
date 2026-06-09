@@ -37,7 +37,8 @@ export function GameScreen() {
   const phaserRef = useRef<Phaser.Game | null>(null);
   const particleCanvasRef = useRef<HTMLCanvasElement>(null);
   const { status, currentLevel, mode, score, runId, startLevel, tickTimer, endGame, engine, timed,
-    grid, timeRemaining, setTimeRemaining, rescueTileIds, rescueBannerShown, markRescueBannerShown } =
+    grid, timeRemaining, setTimeRemaining, rescueTileIds, rescueBannerShown, markRescueBannerShown,
+    resumeCountdown } =
     useGameStore();
 
   // T-006 Part 2.3: hint inventory + BuyHintModal (renamed T-008).
@@ -236,25 +237,37 @@ export function GameScreen() {
     // F-005-FIX: the rewarded WATCH AD is an opt-in gem source available to ALL
     // players — including Remove Ads owners (the old AC6 instant-grant shortcut is
     // gone). Only auto interstitials are suppressed by removeAdsPurchased.
-    // AC3/AC4/AC5: play the preloaded rewarded ad (timer paused while it shows).
-    useGameStore.getState().pauseGame();
+    // F-008 FIX 1: freeze the clock for the whole ad. pauseTimer flips status→paused;
+    // TimerComponent's per-tick live check (getPaused) then refuses to decrement even if
+    // a background-suspended WebView interval keeps firing during the ad. The round is
+    // un-paused only at the END of the 3-2-1 countdown, so it can't expire under the ad.
+    useGameStore.getState().pauseTimer();
     const outcome = await showRewarded();
-    useGameStore.getState().resumeGame();
 
     if (outcome === 'rewarded') {
-      applyHintToTile();
-      void addGems(3); // F-005 Part 5: +3 gems per rewarded watch (was a free hint only)
-      setSessionHints((n) => n + 1);
+      // F-008 FIX 2: defer the reward state writes onto a fresh JS task (setTimeout 0).
+      // showRewarded resolves from the AdMob bridge as the native ad activity is
+      // tearing down; applying Zustand updates synchronously on that tick is what made
+      // the hint-card subtree unmount and "freeze". A 0ms hop runs them on a clean
+      // React cycle after the ad activity is fully gone.
+      setTimeout(() => {
+        applyHintToTile();
+        void addGems(3); // F-005 Part 5: +3 gems per rewarded watch (was a free hint only)
+        setSessionHints((n) => n + 1);
+      }, 0);
     } else if (outcome === 'unavailable') {
       showToast(t('game.toast_no_ad'));
     }
     // 'dismissed' → no highlight, no penalty, no toast (AC5)
+
+    // F-008 FIX 1 Part B: 3-2-1 overlay, then resumeTimer() (fires at count 0).
+    useGameStore.getState().startResumeCountdown();
   };
 
   // T-007 Fix 4: left card → pause the timer, then go to the IAP screen. The
   // pause keeps timeElapsed frozen in the store; on return the screen remounts
   // 'paused' and the resume-on-mount effect below picks the game back up, with
-  // the timer continuing from where it left off (see resumeDuration).
+  // the timer continuing from where it left off (see timerDuration).
   const handleBuyNav = () => {
     useGameStore.getState().pauseGame();
     navigate('/iap');
@@ -436,9 +449,12 @@ export function GameScreen() {
   const handleRescueTap = async () => {
     const reveal = Math.min(5, tilesRemaining);
     setRescueBannerVisible(false); // banner never shows twice in an attempt
-    useGameStore.getState().pauseGame();
+    // F-008 FIX 1: freeze the clock for the whole rescue ad (per-tick live pause check
+    // in TimerComponent makes this robust to a background-ticking WebView); resume only
+    // after the 3-2-1 overlay. (showRescueAd reveals the amber tiles on reward.)
+    useGameStore.getState().pauseTimer();
     await showRescueAd(reveal);
-    useGameStore.getState().resumeGame();
+    useGameStore.getState().startResumeCountdown();
   };
 
   // On-screen rects for the amber rescue tiles (untapped only — they drop off as the
@@ -485,7 +501,9 @@ export function GameScreen() {
 
       {/* Phaser canvas container (z-index 1, above background, below HUD) */}
       {/* F-001b: tier-coloured play-area border (Pro purple / Expert cyan); none for C1. */}
-      <div id="phaser-container" style={{ position: 'absolute', inset: 0, zIndex: 1, border: tierColor ? `2px solid ${tierColor}` : 'none', boxShadow: tierColor ? `inset 0 0 24px ${tierColor}33` : 'none' }} />
+      {/* F-008 FIX 1 Part B: tiles non-interactive during the resume countdown so a
+          stray tap during 3-2-1 can't register on the grid. */}
+      <div id="phaser-container" style={{ position: 'absolute', inset: 0, zIndex: 1, border: tierColor ? `2px solid ${tierColor}` : 'none', boxShadow: tierColor ? `inset 0 0 24px ${tierColor}33` : 'none', pointerEvents: resumeCountdown !== null ? 'none' : 'auto' }} />
 
       {/* F-001c (corr.3): cyan hint highlight — stays on the target tile until the
           correct tap, then removed instantly (no fade). */}
@@ -573,6 +591,12 @@ export function GameScreen() {
               key={runId}
               durationSeconds={resumeDuration}
               paused={isPaused || status !== 'playing'}
+              // F-008 FIX 1: live, render-independent pause check. The `paused` prop
+              // clears the interval, but that depends on a React commit that does NOT
+              // happen while a rewarded ad holds the WebView in the background — so a
+              // stale/burst interval could still drain the clock. This reads the store
+              // synchronously every tick and refuses to decrement unless truly playing.
+              getPaused={() => useGameStore.getState().status !== 'playing'}
               onTick={(remaining) => {
                 tickTimer(timeLimit - remaining);
                 setTimeRemaining(remaining); // F-005-FIX: real countdown value → store (rescue threshold)
@@ -582,7 +606,13 @@ export function GameScreen() {
                 // no new timer created.
                 soundService.playTick(remaining <= 10);
               }}
-              onExpire={() => endGame('expired')}
+              onExpire={() => {
+                // F-008 FIX 2: only end on a genuine in-play expiry. If a stray timer
+                // tick lands while the round is paused for an ad / resume countdown, it
+                // must not flip status to 'failed' — that no-op'd the post-ad resume and
+                // left the hint cards (gated on status==='playing') unmounted (the freeze).
+                if (useGameStore.getState().status === 'playing') endGame('expired');
+              }}
             />
           ) : (
             <span>∞</span>
@@ -777,6 +807,32 @@ export function GameScreen() {
       {/* F-002: pause overlay (Android back during play). Resume / Restart / Quit. */}
       {pauseOpen && (
         <PauseModal onResume={resumePause} onRestart={restartFromPause} onQuit={quitFromPause} />
+      )}
+
+      {/* F-008 FIX 1 Part B: 3-2-1 resume countdown overlay shown after a rewarded ad
+          closes, before the timer resumes. Sits above ALL game UI; its full-screen
+          backdrop also intercepts taps so the grid stays non-interactive. */}
+      {resumeCountdown !== null && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 9999,
+            background: 'rgba(7,17,31,0.92)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 12,
+          }}
+        >
+          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 14, color: '#FFFFFF', letterSpacing: 1 }}>
+            {t('game.resuming_in')}
+          </span>
+          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 48, fontWeight: 700, color: '#FFD700', textShadow: '0 0 16px rgba(255,215,0,0.4)' }}>
+            {resumeCountdown}
+          </span>
+        </div>
       )}
 
     </div>

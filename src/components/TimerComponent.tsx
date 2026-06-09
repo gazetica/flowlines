@@ -15,6 +15,12 @@ interface TimerProps {
   onTick: (remaining: number) => void; // fires every second, remaining = seconds left
   onExpire: () => void; // fires once when timer reaches 0
   paused: boolean; // true = frozen, false = counting
+  // F-008: optional live, render-independent pause check. When provided and it returns
+  // true, a tick is skipped (no decrement, no onTick/onExpire) even if the interval is
+  // still running. This covers the case where the `paused` prop changed but the React
+  // commit that would clear the interval never ran — e.g. while a rewarded ad held the
+  // WebView in the background. Reading it inside the tick is immune to render timing.
+  getPaused?: () => boolean;
 }
 
 export function TimerComponent({
@@ -22,11 +28,13 @@ export function TimerComponent({
   onTick,
   onExpire,
   paused,
+  getPaused,
 }: TimerProps) {
   const [remaining, setRemaining] = useState(durationSeconds);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const onTickRef = useRef(onTick);
   const onExpireRef = useRef(onExpire);
+  const getPausedRef = useRef(getPaused);
 
   // Keep callback refs fresh without restarting the timer.
   useEffect(() => {
@@ -35,6 +43,9 @@ export function TimerComponent({
   useEffect(() => {
     onExpireRef.current = onExpire;
   }, [onExpire]);
+  useEffect(() => {
+    getPausedRef.current = getPaused;
+  }, [getPaused]);
 
   // Reset remaining when durationSeconds changes (rule 6).
   useEffect(() => {
@@ -50,6 +61,10 @@ export function TimerComponent({
     }
 
     intervalRef.current = setInterval(() => {
+      // F-008: live pause gate — skip the tick entirely if the game is not actively
+      // playing right now. Render-independent, so a background/burst interval that
+      // outlived a missed pause-commit cannot drain the clock during an ad.
+      if (getPausedRef.current?.()) return;
       setRemaining((prev) => {
         if (prev <= 1) {
           // Boundary: stop, fire onExpire exactly once, never go negative.

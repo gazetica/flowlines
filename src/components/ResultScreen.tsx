@@ -287,7 +287,7 @@ export function ResultScreen() {
 
       {/* Breakdown */}
       {breakdown && isComplete && (
-        <div style={{ margin: '12px 20px', background: 'rgba(10,26,46,0.75)', border: '1px solid rgba(30,139,195,0.2)', borderRadius: 10, overflow: 'hidden', position: 'relative', zIndex: 1 }}>
+        <div style={{ margin: '12px 20px', background: 'rgba(10,26,46,0.75)', border: '1px solid rgba(30,139,195,0.2)', borderRadius: 10, position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', height: 'auto', flexShrink: 0 }}>
           {[
             [t('result.base_score'), breakdown.base],
             // Untimed Free Play has no time/speed bonus — hide those rows.
@@ -305,7 +305,7 @@ export function ResultScreen() {
               <span style={{ fontFamily: "'Space Mono', monospace", color: 'var(--white)' }}>{typeof value === 'number' ? value.toLocaleString() : value}</span>
             </div>
           ))}
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 16px', fontSize: 14, fontWeight: 600 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 16px', paddingBottom: 8, fontSize: 14, fontWeight: 600 }}>
             <span style={{ color: 'var(--white)' }}>{t('result.total')}</span>
             <span style={{ fontFamily: "'Space Mono', monospace", color: 'var(--gold)', textShadow: '0 0 8px rgba(255,215,0,0.4)' }}>{displayScore.toLocaleString()}</span>
           </div>

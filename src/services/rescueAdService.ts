@@ -7,7 +7,7 @@
 // "WATCH AD" button) — different state, different purpose. Do NOT merge them.
 // It reuses the same AdMob rewarded ad-unit constant (AD_UNITS.REWARDED) only.
 
-import { AdMob } from '@capacitor-community/admob';
+import { AdMob, RewardAdPluginEvents } from '@capacitor-community/admob';
 import type { RewardAdOptions } from '@capacitor-community/admob';
 import { AD_UNITS } from './admob';
 import { useGameStore } from '../store/gameStore';
@@ -16,6 +16,27 @@ import * as analytics from './analytics';
 const RESCUE_OPTIONS: RewardAdOptions = {
   adId: AD_UNITS.REWARDED, // same live rewarded unit as the hint ad (separate flow)
 };
+
+// F-008 FIX 1: resolve once the rescue ad is actually DISMISSED (see the matching note
+// in rewardedAdService) so the caller's 3-2-1 resume overlay runs after the ad is gone,
+// not behind it. Listener removed on fire; safety timeout prevents a permanent pause.
+function awaitAdDismissed(): Promise<void> {
+  return new Promise<void>((resolve) => {
+    let settled = false;
+    let handle: { remove: () => void } | undefined;
+    const done = () => {
+      if (settled) return;
+      settled = true;
+      handle?.remove();
+      resolve();
+    };
+    AdMob.addListener(RewardAdPluginEvents.Dismissed, done).then((h) => {
+      handle = h;
+      if (settled) h.remove();
+    });
+    setTimeout(done, 30000);
+  });
+}
 
 /**
  * Rescue Flash banner eligibility — ALL conditions must hold. Pure + side-effect-free
@@ -63,9 +84,16 @@ export function activateRescueFlash(tileCount: number): void {
  * gone). Native-only; AdMob has no web implementation, so this no-ops on web.
  */
 export async function showRescueAd(tileCount: number): Promise<void> {
+  // F-008 FIX 1 Part A: freeze the live countdown before the rescue ad shows (mirrors
+  // the gem WATCH AD). Resume is owned by the caller's 3-2-1 countdown in GameScreen,
+  // so it is deliberately not called here.
+  useGameStore.getState().pauseTimer();
+  const dismissed = awaitAdDismissed(); // register before showing
+  let shown = false;
   try {
     await AdMob.prepareRewardVideoAd(RESCUE_OPTIONS);
-    const result = await AdMob.showRewardVideoAd();
+    const result = await AdMob.showRewardVideoAd(); // resolves on REWARD, not dismiss
+    shown = true;
     if (result) {
       analytics.adImpression('rewarded'); // it is a rewarded ad (rescue flow)
       activateRescueFlash(tileCount);
@@ -74,4 +102,7 @@ export async function showRescueAd(tileCount: number): Promise<void> {
   } catch (err) {
     console.warn('[rescueAdService] showRescueAd failed:', err);
   }
+  // F-008 FIX 1: return only after the ad has left the screen, so the caller's resume
+  // countdown overlay is shown to the player rather than running behind the ad.
+  if (shown) await dismissed;
 }
