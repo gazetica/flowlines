@@ -656,12 +656,15 @@ export function GameScreen() {
               <button
                 onClick={handleRescueTap}
                 style={{
-                  width: '100%',
-                  marginBottom: 6,
+                  // F-007 FIX 1: pill at 80% width (−20%), centred horizontally (margin
+                  // auto) and vertically in the gap (equal 8px top/bottom) between the
+                  // grid above and the three hint cards below.
+                  width: '80%',
+                  margin: '8px auto',
                   background: 'rgba(7,17,31,0.95)',
                   border: '1px solid rgba(255,140,0,0.4)',
-                  borderRadius: 8,
-                  padding: '10px 16px',
+                  borderRadius: 50,
+                  padding: '10px 20px',
                   cursor: 'pointer',
                   display: 'flex',
                   flexDirection: 'column',

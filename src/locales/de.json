@@ -98,6 +98,12 @@
     "best_config": "★ Bester (diese Konfig.):"
   },
 
+  "leader": {
+    "you": "DU",
+    "leader": "ANFÜHRER",
+    "score": "Punkte",
+    "time": "Zeit"
+  },
   "leaderboard": {
     "title": "RANGLISTE",
     "tab_daily": "TÄGLICH",

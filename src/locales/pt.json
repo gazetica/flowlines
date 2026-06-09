@@ -98,6 +98,12 @@
     "best_config": "★ Melhor (esta config.):"
   },
 
+  "leader": {
+    "you": "VOCÊ",
+    "leader": "LÍDER",
+    "score": "Pontos",
+    "time": "Tempo"
+  },
   "leaderboard": {
     "title": "PLACAR",
     "tab_daily": "DIÁRIO",

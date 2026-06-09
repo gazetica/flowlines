@@ -251,8 +251,8 @@ export function HomeScreen() {
         <div
           style={{
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-            width: '80%', alignSelf: 'center', minHeight: 64, borderRadius: 999,
-            border: '1px solid #00f5ff', background: 'rgba(0,245,255,0.06)',
+            width: '80%', alignSelf: 'center', minHeight: 64, borderRadius: 50,
+            border: '1.5px dashed #00f5ff', background: 'rgba(0,245,255,0.06)',
             padding: '12px 22px', marginBottom: 12, textAlign: 'center',
           }}
         >
@@ -267,7 +267,7 @@ export function HomeScreen() {
         <div
           style={{
             display: 'flex', width: '80%', alignSelf: 'center', minHeight: 64,
-            borderRadius: 24, border: '1px solid #FFD700', overflow: 'hidden', marginBottom: 12,
+            borderRadius: 50, border: '1.5px dashed #FFD700', overflow: 'hidden', marginBottom: 12,
           }}
         >
           <button

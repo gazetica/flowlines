@@ -98,6 +98,12 @@
     "best_config": "★ Best (this config):"
   },
 
+  "leader": {
+    "you": "YOU",
+    "leader": "LEADER",
+    "score": "Score",
+    "time": "Time"
+  },
   "leaderboard": {
     "title": "LEADERBOARD",
     "tab_daily": "DAILY",

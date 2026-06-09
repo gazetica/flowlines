@@ -99,7 +99,7 @@ export function LeaderPanel({ levelId, compact = false, youTimeSecs }: LeaderPan
             marginBottom: 3,
           }}
         >
-          YOU
+          {t('leader.you')}
         </div>
         <div
           style={{
@@ -115,13 +115,13 @@ export function LeaderPanel({ levelId, compact = false, youTimeSecs }: LeaderPan
           {aliasFlag(country) && `${aliasFlag(country)} `}{alias || 'Player'}<TierTag tier={myTier} t={t} />
         </div>
         <StatRow
-          label="Score"
+          label={t('leader.score')}
           value={playerPB.score > 0 ? playerPB.score.toLocaleString() : '—'}
           colour={leaderAhead ? 'var(--white)' : 'var(--success)'}
           fontSize={fs.stat}
         />
         <StatRow
-          label="Time"
+          label={t('leader.time')}
           value={youTime != null ? `${youTime}s` : '—'}
           colour="var(--white)"
           fontSize={fs.stat}
@@ -146,7 +146,7 @@ export function LeaderPanel({ levelId, compact = false, youTimeSecs }: LeaderPan
             marginBottom: 3,
           }}
         >
-          LEADER
+          {t('leader.leader')}
         </div>
         {loading ? (
           <div style={{ fontSize: fs.alias, color: 'var(--muted)', fontFamily: "'Space Mono', monospace" }}>—</div>
@@ -166,12 +166,12 @@ export function LeaderPanel({ levelId, compact = false, youTimeSecs }: LeaderPan
               {aliasFlag(leader.country) && `${aliasFlag(leader.country)} `}{leader.alias}<TierTag tier={leaderTier} t={t} />
             </div>
             <StatRow
-              label="Score"
+              label={t('leader.score')}
               value={leader.score.toLocaleString()}
               colour={leaderAhead ? 'var(--gold)' : 'var(--white)'}
               fontSize={fs.stat}
             />
-            <StatRow label="Time" value={`${leader.timeSecs}s`} colour="var(--white)" fontSize={fs.stat} />
+            <StatRow label={t('leader.time')} value={`${leader.timeSecs}s`} colour="var(--white)" fontSize={fs.stat} />
           </>
         ) : (
           <div style={{ fontSize: fs.alias, color: 'var(--muted)', fontFamily: "'Space Mono', monospace" }}>{t('leaderboard.empty')}</div>

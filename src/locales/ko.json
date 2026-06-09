@@ -98,6 +98,12 @@
     "best_config": "★ 최고 (이 설정):"
   },
 
+  "leader": {
+    "you": "나",
+    "leader": "리더",
+    "score": "점수",
+    "time": "시간"
+  },
   "leaderboard": {
     "title": "순위표",
     "tab_daily": "데일리",

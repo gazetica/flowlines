@@ -91,13 +91,14 @@ describe('LeaderPanel YOU Time (B-015)', () => {
     const { container } = render(<LeaderPanel levelId={101} />);
     await waitFor(() => expect(container.textContent).toMatch(/Zephyrv/));
     // getPlayerPB mock returns timeSecs: null and no youTimeSecs prop → dash.
-    expect(container.textContent).toContain('Time—');
+    // F-007: the Time label is now t('leader.time'); the mock returns the key verbatim.
+    expect(container.textContent).toContain('leader.time—');
   });
 
   it('13. renders the passed youTimeSecs as "Xs" in the YOU row', async () => {
     const { container } = render(<LeaderPanel levelId={101} youTimeSecs={6} />);
     await waitFor(() => expect(container.textContent).toMatch(/Zephyrv/));
-    expect(container.textContent).toContain('Time6s');
-    expect(container.textContent).not.toContain('Time—');
+    expect(container.textContent).toContain('leader.time6s');
+    expect(container.textContent).not.toContain('leader.time—');
   });
 });
