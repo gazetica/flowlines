@@ -53,6 +53,10 @@ interface GameState {
 
   // Timer
   timeElapsed: number;
+  // F-005-FIX: authoritative remaining seconds, written from the TimerComponent tick
+  // (the countdown is React-driven, not in the locked Phaser GameScene). Reset to the
+  // level's timeLimit on each (re)start. The rescue threshold reads this directly.
+  timeRemaining: number;
 
   // Hint
   hintUsed: boolean;
@@ -83,6 +87,7 @@ interface GameState {
   startFreePlay: (config: { gridSize: number; difficulty: Difficulty; timerSecs: number | null }) => void;
   tapCell: (row: number, col: number) => TapResult | null;
   tickTimer: (elapsed: number) => void;
+  setTimeRemaining: (t: number) => void; // F-005-FIX: real countdown value from TimerComponent
   pauseGame: () => void;
   resumeGame: () => void;
   useHint: () => void;
@@ -107,6 +112,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   tapTimestamps: [],
   wrongTaps: 0,
   timeElapsed: 0,
+  timeRemaining: 0,
   hintUsed: false,
   hintActive: false,
   rescueFlashActive: false,
@@ -148,6 +154,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       tapTimestamps: [],
       wrongTaps: 0,
       timeElapsed: 0,
+      timeRemaining: level.timeLimit,
       hintUsed: false,
       hintActive: false,
       rescueFlashActive: false,
@@ -203,6 +210,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       tapTimestamps: [],
       wrongTaps: 0,
       timeElapsed: 0,
+      timeRemaining: dailyLevel.timeLimit,
       hintUsed: false,
       hintActive: false,
       rescueFlashActive: false,
@@ -242,6 +250,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       tapTimestamps: [],
       wrongTaps: 0,
       timeElapsed: 0,
+      timeRemaining: synthLevel.timeLimit,
       hintUsed: false,
       hintActive: false,
       rescueFlashActive: false,
@@ -281,6 +290,10 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   tickTimer: (elapsed) => {
     set({ timeElapsed: elapsed });
+  },
+
+  setTimeRemaining: (t) => {
+    set({ timeRemaining: t });
   },
 
   pauseGame: () => {
@@ -374,6 +387,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       tapTimestamps: [],
       wrongTaps: 0,
       timeElapsed: 0,
+      timeRemaining: 0,
       difficulty: 'easy',
       timed: true,
       currentChallengeIndex: null,

@@ -22,13 +22,15 @@ const RESCUE_OPTIONS: RewardAdOptions = {
  * so GameScreen and the unit tests share one source of truth (F-005 Part 7).
  *  1. grid larger than 3×3      2. level time limit > 15s
  *  3. in the final third of the clock (timeRemaining ≤ floor(timeLimit * 0.33))
- *  4. ≥ 3 tiles left            5. Remove Ads NOT owned
- *  6. banner not already shown this attempt   7. timer is ON (not untimed Free Play)
+ *  4. ≥ 3 tiles left            5. banner not already shown this attempt
+ *  6. timer is ON (not untimed Free Play)
+ * F-005-FIX: the Remove Ads gate was REMOVED — rescue (a player-initiated, opt-in
+ * rewarded ad) must be available to ALL players, including Remove-Ads owners. Only
+ * auto interstitials are suppressed by removeAdsPurchased.
  */
 export function isRescueEligible(p: {
   playing: boolean;
   timed: boolean;
-  removeAdsPurchased: boolean;
   gridSize: number;
   timeLimit: number;
   timeRemaining: number;
@@ -38,7 +40,6 @@ export function isRescueEligible(p: {
   return (
     p.playing &&
     p.timed &&
-    !p.removeAdsPurchased &&
     p.gridSize > 3 &&
     p.timeLimit > 15 &&
     p.timeRemaining <= Math.floor(p.timeLimit * 0.33) &&

@@ -8,11 +8,11 @@ import { describe, it, expect } from 'vitest';
 import { isRescueEligible } from './rescueAdService';
 
 // A fully-eligible baseline: 5×5, 60s level, in the final third (≤20s left), 8
-// tiles remaining, no Remove Ads, banner not yet shown, timed + playing.
+// tiles remaining, banner not yet shown, timed + playing.
+// F-005-FIX: removeAdsPurchased is no longer a parameter — rescue is available to all.
 const OK = {
   playing: true,
   timed: true,
-  removeAdsPurchased: false,
   gridSize: 5,
   timeLimit: 60,
   timeRemaining: 18,
@@ -37,8 +37,10 @@ describe('isRescueEligible (F-005 Part 7)', () => {
     expect(isRescueEligible({ ...OK, tilesRemaining: 2 })).toBe(false);
   });
 
-  it('11. NOT eligible when Remove Ads is purchased', () => {
-    expect(isRescueEligible({ ...OK, removeAdsPurchased: true })).toBe(false);
+  it('11. F-005-FIX: eligibility IGNORES Remove Ads — banner shows for paid users too', () => {
+    // removeAdsPurchased is no longer part of the rule; the baseline (which carries no
+    // such field) is eligible, proving Remove-Ads owners still get the rescue banner.
+    expect(isRescueEligible(OK)).toBe(true);
   });
 
   it('12. NOT eligible when the banner was already shown this attempt', () => {

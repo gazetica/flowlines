@@ -126,11 +126,14 @@ export function HomeScreen() {
           <div
             key={stat.label}
             style={{
+              // F-005-FIX: all three stat cards equal width (flex:1) in one row.
+              flex: 1,
+              minWidth: 0,
               position: 'relative',
               background: 'rgba(10,26,46,0.8)',
               border: '1px solid rgba(30,139,195,0.25)',
               borderRadius: 8,
-              padding: '10px 20px',
+              padding: '10px 8px',
               textAlign: 'center',
               boxShadow: 'inset 0 1px 0 rgba(79,174,224,0.08)',
             }}

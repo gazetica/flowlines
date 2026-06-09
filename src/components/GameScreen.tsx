@@ -37,14 +37,13 @@ export function GameScreen() {
   const phaserRef = useRef<Phaser.Game | null>(null);
   const particleCanvasRef = useRef<HTMLCanvasElement>(null);
   const { status, currentLevel, mode, score, runId, startLevel, tickTimer, endGame, engine, timed,
-    grid, timeElapsed, rescueTileIds, rescueBannerShown, markRescueBannerShown } =
+    grid, timeRemaining, setTimeRemaining, rescueTileIds, rescueBannerShown, markRescueBannerShown } =
     useGameStore();
 
   // T-006 Part 2.3: hint inventory + BuyHintModal (renamed T-008).
   const hintCount = useSettingsStore((s) => s.hintCount);
   const consumeHint = useSettingsStore((s) => s.consumeHint);
   const addGems = useSettingsStore((s) => s.addGems); // F-005 Part 5
-  const removeAdsPurchased = useSettingsStore((s) => s.removeAdsPurchased); // T-017 AC6
 
   // F-005 Part 7: Rescue Flash banner local visibility (one per attempt). The
   // once-per-attempt guard lives in gameStore (rescueBannerShown); this stays true
@@ -234,13 +233,9 @@ export function GameScreen() {
       return;
     }
 
-    // AC6: Remove Ads purchased → grant the hint directly, no ad shown.
-    if (removeAdsPurchased) {
-      applyHintToTile();
-      setSessionHints((n) => n + 1);
-      return;
-    }
-
+    // F-005-FIX: the rewarded WATCH AD is an opt-in gem source available to ALL
+    // players — including Remove Ads owners (the old AC6 instant-grant shortcut is
+    // gone). Only auto interstitials are suppressed by removeAdsPurchased.
     // AC3/AC4/AC5: play the preloaded rewarded ad (timer paused while it shows).
     useGameStore.getState().pauseGame();
     const outcome = await showRewarded();
@@ -413,11 +408,11 @@ export function GameScreen() {
   // banner not already shown this attempt).
   const gridSize = currentLevel?.grid ?? 0;
   const tilesRemaining = grid.reduce((acc, row) => acc + row.filter((cell) => !cell.tapped).length, 0);
-  const timeRemaining = timeLimit - timeElapsed;
+  // F-005-FIX: read the real countdown from the store (set by TimerComponent.onTick),
+  // and no longer gate on removeAdsPurchased (rescue is opt-in, available to all).
   const rescueEligible = isRescueEligible({
     playing: status === 'playing',
     timed,
-    removeAdsPurchased,
     gridSize,
     timeLimit,
     timeRemaining,
@@ -580,6 +575,7 @@ export function GameScreen() {
               paused={isPaused || status !== 'playing'}
               onTick={(remaining) => {
                 tickTimer(timeLimit - remaining);
+                setTimeRemaining(remaining); // F-005-FIX: real countdown value → store (rescue threshold)
                 // B-002e AC4/AC5: clock tick every second; the same asset at rate
                 // 1.5 when <=10s left (matches the timer's existing danger / red-
                 // pulse threshold). onTick is the existing per-second callback —
