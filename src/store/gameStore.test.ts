@@ -26,6 +26,42 @@ describe('gameStore — timeRemaining (F-005-FIX)', () => {
     useGameStore.getState().setTimeRemaining(17);
     expect(useGameStore.getState().timeRemaining).toBe(17);
   });
+
+  // F-009: time-extension reward = setTimeRemaining(current + 15).
+  it('time extension adds +15 via setTimeRemaining(current + 15)', () => {
+    useGameStore.getState().setTimeRemaining(10);
+    const before = useGameStore.getState().timeRemaining;
+    useGameStore.getState().setTimeRemaining(before + 15);
+    expect(useGameStore.getState().timeRemaining).toBe(25);
+  });
+});
+
+// F-009: the three one-use-per-attempt ad flags (GET A CLUE / LOW ON TIME / WATCH AD gem).
+describe('gameStore — one-use ad flags (F-009)', () => {
+  it('markCluePillUsed / markTimePillUsed / markGemAdUsed set their flags', () => {
+    useGameStore.getState().startLevel(1, 'campaign'); // fresh attempt → all false
+    expect(useGameStore.getState().cluePillUsed).toBe(false);
+    expect(useGameStore.getState().timePillUsed).toBe(false);
+    expect(useGameStore.getState().gemAdUsed).toBe(false);
+
+    useGameStore.getState().markCluePillUsed();
+    useGameStore.getState().markTimePillUsed();
+    useGameStore.getState().markGemAdUsed();
+    expect(useGameStore.getState().cluePillUsed).toBe(true);
+    expect(useGameStore.getState().timePillUsed).toBe(true);
+    expect(useGameStore.getState().gemAdUsed).toBe(true);
+  });
+
+  it('all three flags reset on a new attempt (startLevel)', () => {
+    useGameStore.getState().markCluePillUsed();
+    useGameStore.getState().markTimePillUsed();
+    useGameStore.getState().markGemAdUsed();
+    // A fresh attempt must clear every flag so all three ads are usable again.
+    useGameStore.getState().startLevel(1, 'campaign');
+    expect(useGameStore.getState().cluePillUsed).toBe(false);
+    expect(useGameStore.getState().timePillUsed).toBe(false);
+    expect(useGameStore.getState().gemAdUsed).toBe(false);
+  });
 });
 
 // F-008 FIX 1: pause/resume the live countdown around rewarded ads, with a 3-2-1

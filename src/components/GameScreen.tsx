@@ -23,7 +23,8 @@ import { LeaderPanel } from './LeaderPanel';
 import { BuyHintModal } from './BuyHintModal';
 import { Capacitor } from '@capacitor/core';
 import { loadRewarded, showRewarded } from '../services/rewardedAdService';
-import { showRescueAd, isRescueEligible } from '../services/rescueAdService';
+import { showClueAd, isClueEligible } from '../services/rescueAdService';
+import { showTimeExtensionAd, isTimeExtensionEligible } from '../services/timeExtensionAdService';
 import { initAppLifecycle, removeAppLifecycle } from '../services/appLifecycle';
 import * as soundService from '../services/soundService';
 import * as musicService from '../services/musicService';
@@ -37,7 +38,7 @@ export function GameScreen() {
   const phaserRef = useRef<Phaser.Game | null>(null);
   const particleCanvasRef = useRef<HTMLCanvasElement>(null);
   const { status, currentLevel, mode, score, runId, startLevel, tickTimer, endGame, engine, timed,
-    grid, timeRemaining, setTimeRemaining, rescueTileIds, rescueBannerShown, markRescueBannerShown,
+    grid, timeRemaining, setTimeRemaining, rescueTileIds, cluePillUsed, timePillUsed, gemAdUsed,
     resumeCountdown } =
     useGameStore();
 
@@ -46,20 +47,17 @@ export function GameScreen() {
   const consumeHint = useSettingsStore((s) => s.consumeHint);
   const addGems = useSettingsStore((s) => s.addGems); // F-005 Part 5
 
-  // F-005 Part 7: Rescue Flash banner local visibility (one per attempt). The
-  // once-per-attempt guard lives in gameStore (rescueBannerShown); this stays true
-  // while the banner is on screen and is cleared on tap / new attempt.
-  const [rescueBannerVisible, setRescueBannerVisible] = useState(false);
   const [hintModalOpen, setHintModalOpen] = useState(false);
+  // F-009: cumulative bonus seconds fed to TimerComponent (LOW ON TIME +15s reward),
+  // and a transient flag that floats "+15s" over the HUD timer for ~1.5s.
+  const [timeBonus, setTimeBonus] = useState(0);
+  const [timeFloat, setTimeFloat] = useState(false);
   // F-001c (corr.3): cyan hint overlay — stays on the target tile until the
   // player taps it correctly (then removed instantly). `value` is the hinted
   // target; clearing is driven by expectedNext advancing past it (see effect).
   const [hint, setHint] = useState<{ left: number; top: number; size: number; value: number } | null>(null);
   // T-008 Part 3.4: brief in-game toast (e.g. ad dismissed / unavailable).
   const [toast, setToast] = useState<string | null>(null);
-  // T-017 AC7: max 3 rewarded hints per game session (resets each new level/run).
-  const MAX_SESSION_HINTS = 3;
-  const [sessionHints, setSessionHints] = useState(0);
 
   // F-002: pause modal on Android back button during active play. pauseOpenRef
   // mirrors the state so the (once-registered) back listener reads it without a
@@ -162,11 +160,12 @@ export function GameScreen() {
     if (Capacitor.isNativePlatform()) void loadRewarded();
   }, []);
 
-  // T-017 AC7: reset the per-session hint count whenever a new level/run starts.
-  // F-005: also hide any rescue banner left over from the previous attempt.
+  // F-009: clear the local time-extension bonus/float on every new attempt. The
+  // one-use flags (cluePillUsed / timePillUsed / gemAdUsed) live in gameStore and are
+  // reset there by the start actions.
   useEffect(() => {
-    setSessionHints(0);
-    setRescueBannerVisible(false);
+    setTimeBonus(0);
+    setTimeFloat(false);
   }, [runId]);
 
   // Highlight the current target tile (gold) for ~5s via the existing
@@ -221,22 +220,13 @@ export function GameScreen() {
     useGameStore.getState().resumeGame();
   };
 
-  // Middle "WATCH AD" card = the T-017 rewarded-hint button. Tap → (cap check) →
-  // if Remove Ads is owned, grant the highlight instantly (AC6); otherwise pause
-  // and play the preloaded rewarded ad. Highlight the next tile only when the ad
-  // is watched to completion (AC4); a skip/dismiss grants nothing and applies no
-  // penalty (AC5); no fill shows a "No ad available" toast (no crash). The gem
-  // "USE HINT" card and inventory are unaffected.
+  // Middle "WATCH AD" card = the rewarded gem button. F-009: limited to ONE use per
+  // attempt (gemAdUsed). Pause the timer, play the preloaded rewarded ad, and only on a
+  // completed watch grant the highlight + gems and mark the button used. Skip/dismiss
+  // grants nothing; no fill shows a toast. The gem "USE HINT" card/inventory is unaffected.
   const handleWatchAd = async () => {
-    if (status !== 'playing') return;
-    if (sessionHints >= MAX_SESSION_HINTS) {
-      showToast(t('game.toast_no_hints'));
-      return;
-    }
+    if (status !== 'playing' || gemAdUsed) return; // F-009: one use per attempt
 
-    // F-005-FIX: the rewarded WATCH AD is an opt-in gem source available to ALL
-    // players — including Remove Ads owners (the old AC6 instant-grant shortcut is
-    // gone). Only auto interstitials are suppressed by removeAdsPurchased.
     // F-008 FIX 1: freeze the clock for the whole ad. pauseTimer flips status→paused;
     // TimerComponent's per-tick live check (getPaused) then refuses to decrement even if
     // a background-suspended WebView interval keeps firing during the ad. The round is
@@ -252,13 +242,13 @@ export function GameScreen() {
       // React cycle after the ad activity is fully gone.
       setTimeout(() => {
         applyHintToTile();
-        void addGems(3); // F-005 Part 5: +3 gems per rewarded watch (was a free hint only)
-        setSessionHints((n) => n + 1);
+        void addGems(3); // F-005 Part 5: +3 gems per rewarded watch
+        useGameStore.getState().markGemAdUsed(); // F-009: one use per attempt
       }, 0);
     } else if (outcome === 'unavailable') {
       showToast(t('game.toast_no_ad'));
     }
-    // 'dismissed' → no highlight, no penalty, no toast (AC5)
+    // 'dismissed' → no highlight, no penalty, no toast
 
     // F-008 FIX 1 Part B: 3-2-1 overlay, then resumeTimer() (fires at count 0).
     useGameStore.getState().startResumeCountdown();
@@ -415,45 +405,52 @@ export function GameScreen() {
     if (hint && hint.value !== expectedNext) setHint(null);
   }, [expectedNext, hint]);
 
-  // —— F-005 Part 7: Rescue Flash ——————————————————————————————————————
-  // Eligibility — ALL conditions must hold (grid > 3×3, timed level with a >15s
-  // limit, in the final third of the clock, ≥3 tiles left, no Remove Ads, and the
-  // banner not already shown this attempt).
+  // —— F-009: Two-pill rescue (GET A CLUE @ 66.66% + LOW ON TIME @ 33.33%) ————————
   const gridSize = currentLevel?.grid ?? 0;
   const tilesRemaining = grid.reduce((acc, row) => acc + row.filter((cell) => !cell.tapped).length, 0);
-  // F-005-FIX: read the real countdown from the store (set by TimerComponent.onTick),
-  // and no longer gate on removeAdsPurchased (rescue is opt-in, available to all).
-  const rescueEligible = isRescueEligible({
-    playing: status === 'playing',
-    timed,
-    gridSize,
-    timeLimit,
-    timeRemaining,
-    tilesRemaining,
-    bannerShown: rescueBannerShown,
+  // Common gate shared by both pills' thresholds: a timed, >3×3, >15s level in play.
+  const pillsBase = status === 'playing' && timed && gridSize > 3 && timeLimit > 15;
+  // Whether each threshold has been reached (independent of the used flags).
+  const clueThresholdReached = pillsBase && timeRemaining <= Math.floor(timeLimit * 0.6667);
+  const timeThresholdReached = pillsBase && timeRemaining <= Math.floor(timeLimit * 0.3333);
+  // Active (tappable) eligibility — the pure service rules incl. the not-yet-used flag.
+  const clueActive = isClueEligible({
+    playing: status === 'playing', timed, gridSize, timeLimit, timeRemaining, tilesRemaining, used: cluePillUsed,
   });
+  const timeActive = isTimeExtensionEligible({
+    playing: status === 'playing', timed, gridSize, timeLimit, timeRemaining, used: timePillUsed,
+  });
+  // Visibility: the clue pill shows once its threshold is reached and it's either active
+  // or already used (greyed). The time pill is NEVER shown before its 33.33% threshold.
+  const clueVisible = clueThresholdReached && (clueActive || cluePillUsed);
+  const timeVisible = timeThresholdReached && (timeActive || timePillUsed);
+  const pillsRowVisible = clueVisible || timeVisible;
 
-  // Show the banner once eligibility is first met; mark it shown so a later dip
-  // back below the threshold never re-shows it (one banner per attempt).
-  useEffect(() => {
-    if (rescueEligible) {
-      setRescueBannerVisible(true);
-      markRescueBannerShown();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rescueEligible]);
+  const clueSub =
+    tilesRemaining >= 5 ? t('game.clue_pill_sub_5') : tilesRemaining === 4 ? t('game.clue_pill_sub_4') : t('game.clue_pill_sub_3');
 
-  const rescueSub =
-    tilesRemaining >= 5 ? t('game.rescue_sub_5') : tilesRemaining === 4 ? t('game.rescue_sub_4') : t('game.rescue_sub_3');
-
-  const handleRescueTap = async () => {
+  // GET A CLUE: pause, show ad (reveals amber tiles + marks cluePillUsed on reward),
+  // then the F-008 3-2-1 resume overlay. Guarded so a used pill can't fire.
+  const handleClueTap = async () => {
+    if (!clueActive) return;
     const reveal = Math.min(5, tilesRemaining);
-    setRescueBannerVisible(false); // banner never shows twice in an attempt
-    // F-008 FIX 1: freeze the clock for the whole rescue ad (per-tick live pause check
-    // in TimerComponent makes this robust to a background-ticking WebView); resume only
-    // after the 3-2-1 overlay. (showRescueAd reveals the amber tiles on reward.)
     useGameStore.getState().pauseTimer();
-    await showRescueAd(reveal);
+    await showClueAd(reveal);
+    useGameStore.getState().startResumeCountdown();
+  };
+
+  // LOW ON TIME: pause, show ad (+15s + marks timePillUsed on reward). On a rewarded
+  // watch, mirror the +15s onto the on-screen timer (bonus prop) and float "+15s" over
+  // the HUD, then run the resume countdown.
+  const handleTimeTap = async () => {
+    if (!timeActive) return;
+    useGameStore.getState().pauseTimer();
+    const rewarded = await showTimeExtensionAd();
+    if (rewarded) {
+      setTimeBonus((b) => b + 15); // extend the visible countdown by +15s
+      setTimeFloat(true);
+      setTimeout(() => setTimeFloat(false), 1500);
+    }
     useGameStore.getState().startResumeCountdown();
   };
 
@@ -584,12 +581,27 @@ export function GameScreen() {
         <div style={HUD_LABEL}>{t('game.hud_score')}</div>
 
         {/* Values row — baseline-aligned. TIMER & SCORE 22px white; NEXT 28px gold. */}
-        <div className="hud-timer-value" style={{ fontFamily: "'Space Mono',monospace", fontSize: '22px', lineHeight: 1, color: '#F0F4FF' }}>
+        <div className="hud-timer-value" style={{ position: 'relative', fontFamily: "'Space Mono',monospace", fontSize: '22px', lineHeight: 1, color: '#F0F4FF' }}>
+          {/* F-009: "+15s" float rises from the timer on a LOW ON TIME reward (1.5s). */}
+          <style>{`@keyframes time-ext-float { 0% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -34px); } }`}</style>
+          {timeFloat && (
+            <span
+              style={{
+                position: 'absolute', left: '50%', top: -6, transform: 'translateX(-50%)',
+                fontFamily: "'Space Mono', monospace", fontSize: 20, fontWeight: 700, color: '#FFD700',
+                textShadow: '0 0 8px rgba(255,215,0,0.6)', animation: 'time-ext-float 1.5s ease-out forwards',
+                pointerEvents: 'none', whiteSpace: 'nowrap', zIndex: 12,
+              }}
+            >
+              {t('game.time_extended')}
+            </span>
+          )}
           {/* T-004B P2: untimed Free Play shows ∞ and never expires. */}
           {timed ? (
             <TimerComponent
               key={runId}
               durationSeconds={resumeDuration}
+              bonusSeconds={timeBonus} // F-009: LOW ON TIME +15s extension
               paused={isPaused || status !== 'playing'}
               // F-008 FIX 1: live, render-independent pause check. The `paused` prop
               // clears the interval, but that depends on a React commit that does NOT
@@ -677,43 +689,67 @@ export function GameScreen() {
             zIndex: 10,
           }}
         >
-          {/* F-005 Part 7: Rescue Flash banner — below the grid, above the hint cards.
-              Tapping it watches a rescue ad and reveals min(5, remaining) amber tiles. */}
-          {rescueBannerVisible && (
-            <>
-              {/* F-006 Change 1: orange glow settles from bright to pale over 0.6s. */}
-              <style>{`@keyframes rescue-glow { 0% { box-shadow: 0 0 16px #FF8C00; } 100% { box-shadow: 0 0 6px rgba(255,140,0,0.4); } }`}</style>
-              <button
-                onClick={handleRescueTap}
-                style={{
-                  // F-007 FIX 1: pill at 80% width (−20%), centred horizontally (margin
-                  // auto) and vertically in the gap (equal 8px top/bottom) between the
-                  // grid above and the three hint cards below.
-                  width: '80%',
-                  margin: '8px auto',
-                  background: 'rgba(7,17,31,0.95)',
-                  border: '1px solid rgba(255,140,0,0.4)',
-                  borderRadius: 50,
-                  padding: '10px 20px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: 2,
-                  animation: 'rescue-glow 0.6s ease-out',
-                  boxShadow: '0 0 6px rgba(255,140,0,0.4)',
-                }}
-              >
-                {/* Hero line — gold, bold; constant for all tile counts. */}
-                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 14, fontWeight: 700, color: '#FFD700', letterSpacing: 1 }}>
-                  {t('game.rescue_heading')}
-                </span>
-                {/* Sub line — white; "Watch ad → reveal N tiles". */}
-                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: '#FFFFFF' }}>
-                  {rescueSub}
-                </span>
-              </button>
-            </>
+          {/* F-009 Part 2: two-pill rescue row — below the grid, above the hint cards.
+              Left = GET A CLUE (cyan, 66.66% threshold, reveal N amber tiles); right =
+              LOW ON TIME (gold, 33.33% threshold, +15s). Each pill spans flex:1; the
+              right pill is never rendered before its 33.33% threshold. A used pill stays
+              visible but greyed (faded dashed border, "Already used", not tappable). */}
+          {pillsRowVisible && (
+            <div style={{ display: 'flex', flexDirection: 'row', gap: 6, margin: '6px 0', width: '100%' }}>
+              {/* Left pill — GET A CLUE */}
+              {clueVisible && (
+                <button
+                  onClick={handleClueTap}
+                  style={{
+                    flex: 1,
+                    background: 'rgba(7,17,31,0.95)',
+                    border: `1.5px dashed ${cluePillUsed ? 'rgba(0,245,255,0.3)' : '#00f5ff'}`,
+                    borderRadius: 50,
+                    padding: '8px 12px',
+                    cursor: cluePillUsed ? 'default' : 'pointer',
+                    pointerEvents: cluePillUsed ? 'none' : 'auto',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 2,
+                  }}
+                >
+                  <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, fontWeight: 700, color: cluePillUsed ? 'rgba(0,245,255,0.3)' : '#00f5ff', letterSpacing: 1 }}>
+                    💡 {t('game.clue_pill_title')}
+                  </span>
+                  <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: cluePillUsed ? 'rgba(255,255,255,0.3)' : '#FFFFFF' }}>
+                    {cluePillUsed ? t('game.pill_used') : clueSub}
+                  </span>
+                </button>
+              )}
+
+              {/* Right pill — LOW ON TIME (hidden before its 33.33% threshold) */}
+              {timeVisible && (
+                <button
+                  onClick={handleTimeTap}
+                  style={{
+                    flex: 1,
+                    background: 'rgba(7,17,31,0.95)',
+                    border: `1.5px dashed ${timePillUsed ? 'rgba(255,215,0,0.3)' : '#FFD700'}`,
+                    borderRadius: 50,
+                    padding: '8px 12px',
+                    cursor: timePillUsed ? 'default' : 'pointer',
+                    pointerEvents: timePillUsed ? 'none' : 'auto',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 2,
+                  }}
+                >
+                  <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, fontWeight: 700, color: timePillUsed ? 'rgba(255,215,0,0.3)' : '#FFD700', letterSpacing: 1 }}>
+                    ⏱ {t('game.time_pill_title')}
+                  </span>
+                  <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: timePillUsed ? 'rgba(255,255,255,0.3)' : '#FFFFFF' }}>
+                    {timePillUsed ? t('game.pill_used') : t('game.time_pill_sub')}
+                  </span>
+                </button>
+              )}
+            </div>
           )}
 
           {/* Three-card row */}
@@ -742,13 +778,20 @@ export function GameScreen() {
               </div>
             </button>
 
-            {/* Middle card — WATCH AD (rewarded → +1 hint) */}
+            {/* Middle card — WATCH AD (rewarded → +3 gems). F-009: one use per attempt;
+                greyed + non-tappable once gemAdUsed, label → "Ad used". */}
             <button
               onClick={handleWatchAd}
-              style={{ ...HINT_CARD_BASE, border: '1px solid rgba(46,204,113,0.3)' }}
+              style={{
+                ...HINT_CARD_BASE,
+                border: `1px solid ${gemAdUsed ? 'rgba(46,204,113,0.15)' : 'rgba(46,204,113,0.3)'}`,
+                opacity: gemAdUsed ? 0.4 : 1,
+                cursor: gemAdUsed ? 'default' : 'pointer',
+                pointerEvents: gemAdUsed ? 'none' : 'auto',
+              }}
             >
               <span style={{ fontSize: 20 }}>📺</span>
-              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: SKIN.white, letterSpacing: 0.3 }}>{t('game.watch_ad')}</span>
+              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: SKIN.white, letterSpacing: 0.3 }}>{gemAdUsed ? t('game.watch_ad_used') : t('game.watch_ad')}</span>
               <span style={{ fontSize: 8, color: SKIN.muted }}>{t('game.watch_ad_sub')}</span>
             </button>
 

@@ -84,7 +84,12 @@ interface GameState {
   // reveal (the next N untapped, in tap-sequence order). All reset on each attempt.
   rescueFlashActive: boolean;
   rescueTileIds: number[];
-  rescueBannerShown: boolean; // one banner per attempt (resets on (re)start)
+  // F-009: per-attempt one-use flags for the three rewarded ads (reset on (re)start).
+  // cluePillUsed → GET A CLUE pill (amber reveal); timePillUsed → LOW ON TIME pill
+  // (+15s); gemAdUsed → the WATCH AD gem button. Each ad is usable once per attempt.
+  cluePillUsed: boolean;
+  timePillUsed: boolean;
+  gemAdUsed: boolean;
 
   // Daily challenge
   dailyDate: string; // 'YYYY-MM-DD' of the active daily challenge
@@ -117,7 +122,10 @@ interface GameState {
   useHint: () => void;
   deactivateHint: () => void;
   // F-005: mark the rescue banner as shown for this attempt (one per attempt).
-  markRescueBannerShown: () => void;
+  // F-009: mark each rewarded ad as used for this attempt (one use each).
+  markCluePillUsed: () => void;
+  markTimePillUsed: () => void;
+  markGemAdUsed: () => void;
   // F-005: reveal the next `tileCount` untapped tiles (in tap-sequence order) as amber.
   activateRescueFlash: (tileCount: number) => void;
   endGame: (reason: 'complete' | 'expired') => void;
@@ -142,7 +150,9 @@ export const useGameStore = create<GameState>((set, get) => ({
   hintActive: false,
   rescueFlashActive: false,
   rescueTileIds: [],
-  rescueBannerShown: false,
+  cluePillUsed: false,
+  timePillUsed: false,
+  gemAdUsed: false,
   dailyDate: '',
   currentChallengeIndex: null,
   difficulty: 'easy',
@@ -185,7 +195,9 @@ export const useGameStore = create<GameState>((set, get) => ({
       hintActive: false,
       rescueFlashActive: false,
       rescueTileIds: [],
-      rescueBannerShown: false,
+      cluePillUsed: false,
+      timePillUsed: false,
+      gemAdUsed: false,
       difficulty: diff,
       timed: true,
     });
@@ -242,7 +254,9 @@ export const useGameStore = create<GameState>((set, get) => ({
       hintActive: false,
       rescueFlashActive: false,
       rescueTileIds: [],
-      rescueBannerShown: false,
+      cluePillUsed: false,
+      timePillUsed: false,
+      gemAdUsed: false,
       dailyDate: getTodayDateString(),
       currentChallengeIndex: challengeIndex,
       difficulty: config.difficulty,
@@ -283,7 +297,9 @@ export const useGameStore = create<GameState>((set, get) => ({
       hintActive: false,
       rescueFlashActive: false,
       rescueTileIds: [],
-      rescueBannerShown: false,
+      cluePillUsed: false,
+      timePillUsed: false,
+      gemAdUsed: false,
       difficulty,
       timed: timerSecs !== null,
     });
@@ -382,8 +398,14 @@ export const useGameStore = create<GameState>((set, get) => ({
     set({ hintActive: false });
   },
 
-  markRescueBannerShown: () => {
-    set({ rescueBannerShown: true });
+  markCluePillUsed: () => {
+    set({ cluePillUsed: true });
+  },
+  markTimePillUsed: () => {
+    set({ timePillUsed: true });
+  },
+  markGemAdUsed: () => {
+    set({ gemAdUsed: true });
   },
 
   // F-005: reveal the next `tileCount` untapped tiles in tap-sequence order. Works
@@ -465,7 +487,9 @@ export const useGameStore = create<GameState>((set, get) => ({
       hintActive: false,
       rescueFlashActive: false,
       rescueTileIds: [],
-      rescueBannerShown: false,
+      cluePillUsed: false,
+      timePillUsed: false,
+      gemAdUsed: false,
     });
   },
 }));

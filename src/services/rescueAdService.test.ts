@@ -1,58 +1,57 @@
 // rescueAdService.test.ts
-// Numtap | Gazetica Studio | Sprint 5 | Task F-005 (Part 7 — Rescue Flash)
+// Numtap | Gazetica Studio | Sprint 5 | Task F-009 (GET A CLUE pill)
 //
-// Pure eligibility rule for the Rescue Flash banner (isRescueEligible). All 7
-// conditions must hold; each test flips exactly one to confirm it gates the banner.
+// Pure eligibility rule for the GET A CLUE pill (isClueEligible, was isRescueEligible).
+// All conditions must hold; each test flips exactly one to confirm it gates the pill.
+// F-009 threshold change: final TWO-THIRDS of the clock (≤ floor(timeLimit*0.6667)),
+// and the one-use flag is now `used` (was `bannerShown`).
 
 import { describe, it, expect } from 'vitest';
-import { isRescueEligible } from './rescueAdService';
+import { isClueEligible } from './rescueAdService';
 
-// A fully-eligible baseline: 5×5, 60s level, in the final third (≤20s left), 8
-// tiles remaining, banner not yet shown, timed + playing.
-// F-005-FIX: removeAdsPurchased is no longer a parameter — rescue is available to all.
+// A fully-eligible baseline: 5×5, 60s level, at the 66.66% threshold (≤40s left),
+// 8 tiles remaining, clue pill not yet used, timed + playing.
 const OK = {
   playing: true,
   timed: true,
   gridSize: 5,
   timeLimit: 60,
-  timeRemaining: 18,
+  timeRemaining: 40, // floor(60*0.6667) = 40
   tilesRemaining: 8,
-  bannerShown: false,
+  used: false,
 };
 
-describe('isRescueEligible (F-005 Part 7)', () => {
-  it('7. eligible when all conditions are true', () => {
-    expect(isRescueEligible(OK)).toBe(true);
+describe('isClueEligible (F-009 GET A CLUE)', () => {
+  it('eligible when all conditions are true (at the 66.66% threshold)', () => {
+    expect(isClueEligible(OK)).toBe(true);
   });
 
-  it('8. NOT eligible on a 3×3 grid', () => {
-    expect(isRescueEligible({ ...OK, gridSize: 3 })).toBe(false);
+  it('NOT eligible before the 66.66% threshold (still above two-thirds)', () => {
+    expect(isClueEligible({ ...OK, timeRemaining: 41 })).toBe(false);
   });
 
-  it('9. NOT eligible when timeLimit <= 15s', () => {
-    expect(isRescueEligible({ ...OK, timeLimit: 15, timeRemaining: 4 })).toBe(false);
+  it('NOT eligible on a 3×3 grid', () => {
+    expect(isClueEligible({ ...OK, gridSize: 3 })).toBe(false);
   });
 
-  it('10. NOT eligible when fewer than 3 tiles remain', () => {
-    expect(isRescueEligible({ ...OK, tilesRemaining: 2 })).toBe(false);
+  it('NOT eligible when timeLimit <= 15s', () => {
+    expect(isClueEligible({ ...OK, timeLimit: 15, timeRemaining: 9 })).toBe(false);
   });
 
-  it('11. F-005-FIX: eligibility IGNORES Remove Ads — banner shows for paid users too', () => {
-    // removeAdsPurchased is no longer part of the rule; the baseline (which carries no
-    // such field) is eligible, proving Remove-Ads owners still get the rescue banner.
-    expect(isRescueEligible(OK)).toBe(true);
+  it('NOT eligible when fewer than 3 tiles remain', () => {
+    expect(isClueEligible({ ...OK, tilesRemaining: 2 })).toBe(false);
   });
 
-  it('12. NOT eligible when the banner was already shown this attempt', () => {
-    expect(isRescueEligible({ ...OK, bannerShown: true })).toBe(false);
+  it('NOT eligible once the clue pill was already used this attempt (greyed)', () => {
+    expect(isClueEligible({ ...OK, used: true })).toBe(false);
   });
 
-  // Extra guards: the time-threshold and timer-on conditions.
-  it('13. NOT eligible before the final third of the clock', () => {
-    expect(isRescueEligible({ ...OK, timeRemaining: 30 })).toBe(false); // floor(60*0.33)=19
+  it('eligibility IGNORES Remove Ads — pill shows for paid users too', () => {
+    // removeAdsPurchased is not part of the rule; the baseline carries no such field.
+    expect(isClueEligible(OK)).toBe(true);
   });
 
-  it('14. NOT eligible when the timer is off (untimed Free Play)', () => {
-    expect(isRescueEligible({ ...OK, timed: false })).toBe(false);
+  it('NOT eligible when the timer is off (untimed Free Play)', () => {
+    expect(isClueEligible({ ...OK, timed: false })).toBe(false);
   });
 });

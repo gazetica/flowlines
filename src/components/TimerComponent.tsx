@@ -21,6 +21,10 @@ interface TimerProps {
   // commit that would clear the interval never ran — e.g. while a rewarded ad held the
   // WebView in the background. Reading it inside the tick is immune to render timing.
   getPaused?: () => boolean;
+  // F-009: a cumulative bonus-seconds counter. Each time it INCREASES, the delta is
+  // added to the current remaining (e.g. the LOW ON TIME +15s reward), without
+  // restarting the countdown. Decreases are ignored. Defaults to 0.
+  bonusSeconds?: number;
 }
 
 export function TimerComponent({
@@ -29,12 +33,14 @@ export function TimerComponent({
   onExpire,
   paused,
   getPaused,
+  bonusSeconds = 0,
 }: TimerProps) {
   const [remaining, setRemaining] = useState(durationSeconds);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const onTickRef = useRef(onTick);
   const onExpireRef = useRef(onExpire);
   const getPausedRef = useRef(getPaused);
+  const bonusRef = useRef(bonusSeconds);
 
   // Keep callback refs fresh without restarting the timer.
   useEffect(() => {
@@ -50,7 +56,17 @@ export function TimerComponent({
   // Reset remaining when durationSeconds changes (rule 6).
   useEffect(() => {
     setRemaining(durationSeconds);
+    bonusRef.current = bonusSeconds; // re-baseline bonus to the new countdown
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [durationSeconds]);
+
+  // F-009: when bonusSeconds increases, add the delta to the live remaining (e.g. the
+  // LOW ON TIME +15s). Does not restart the countdown; ignores decreases.
+  useEffect(() => {
+    const delta = bonusSeconds - bonusRef.current;
+    bonusRef.current = bonusSeconds;
+    if (delta > 0) setRemaining((r) => r + delta);
+  }, [bonusSeconds]);
 
   // Interval management (rules 1, 2, 3, 4, 5).
   useEffect(() => {
