@@ -157,8 +157,17 @@ export function SettingsScreen() {
             value={alias}
             onChange={(e) => setAlias(e.target.value)}
             // B-023: on commit (blur), re-label ALL of this player's historical scores
-            // to the new alias via their permanent UID. Silent + fire-and-forget.
-            onBlur={() => { void migrateAliasInSupabase(playerUid, useSettingsStore.getState().alias); }}
+            // to the new alias via their permanent UID. B-025: await the result and log
+            // any failed tables for debugging — stays silent to the player (they already
+            // see the new alias in the UI; a partial leaderboard migration is not shown).
+            onBlur={() => {
+              void (async () => {
+                const result = await migrateAliasInSupabase(playerUid, useSettingsStore.getState().alias);
+                if (!result.success) {
+                  console.error('[Settings] Alias migration partial failure:', result.failedTables);
+                }
+              })();
+            }}
             placeholder={t('settings.alias_placeholder')}
             maxLength={16}
             style={{

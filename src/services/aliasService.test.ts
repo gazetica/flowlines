@@ -9,6 +9,9 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 // Capture every Supabase table operation so we can assert on payloads / filters.
 const inserted: Record<string, unknown[]> = {};
 const updated: { table: string; values: Record<string, unknown>; eqCol: string; eqVal: unknown }[] = [];
+// B-025: per-table error injection — when set, that table's update().eq() resolves with
+// an { error } (mirrors a Supabase permission/RLS failure) instead of success.
+const updateErrors: Record<string, { message: string }> = {};
 
 // In-memory Preferences so setBestTime's write-through (inside submitCampaignScore)
 // never touches a real native bridge.
@@ -33,7 +36,7 @@ vi.mock('./supabase', () => ({
       update: (values: Record<string, unknown>) => ({
         eq: (eqCol: string, eqVal: unknown) => {
           updated.push({ table, values, eqCol, eqVal });
-          return Promise.resolve({ error: null });
+          return Promise.resolve({ error: updateErrors[table] ?? null });
         },
       }),
     }),
@@ -61,6 +64,7 @@ describe('B-023 — player_uid on score submission (test 6)', () => {
 describe('B-023 — migrateAliasInSupabase (test 7)', () => {
   beforeEach(() => {
     updated.length = 0;
+    for (const k of Object.keys(updateErrors)) delete updateErrors[k];
   });
 
   it('updates alias on all three tables, filtered by player_uid', async () => {
@@ -77,5 +81,32 @@ describe('B-023 — migrateAliasInSupabase (test 7)', () => {
   it('no-ops (no update calls) when playerUid is empty', async () => {
     await migrateAliasInSupabase('', 'NewName');
     expect(updated).toHaveLength(0);
+  });
+});
+
+describe('B-025 — migrateAliasInSupabase error handling', () => {
+  beforeEach(() => {
+    updated.length = 0;
+    for (const k of Object.keys(updateErrors)) delete updateErrors[k];
+  });
+
+  it('1. returns { success: true, failedTables: [] } when all three updates succeed', async () => {
+    const result = await migrateAliasInSupabase('NT4K7M2Q', 'NewName');
+    expect(result).toEqual({ success: true, failedTables: [] });
+  });
+
+  it('2. returns success:false + the failed table when campaign_scores update errors', async () => {
+    updateErrors['campaign_scores'] = { message: 'permission denied for table campaign_scores' };
+    const result = await migrateAliasInSupabase('NT4K7M2Q', 'NewName');
+    expect(result.success).toBe(false);
+    expect(result.failedTables).toEqual(['campaign_scores']);
+  });
+
+  it('3. still attempts the other two tables when one fails (not fail-fast)', async () => {
+    updateErrors['campaign_scores'] = { message: 'permission denied' };
+    await migrateAliasInSupabase('NT4K7M2Q', 'NewName');
+    // All three were attempted despite campaign_scores failing.
+    const attempted = updated.map((u) => u.table).sort();
+    expect(attempted).toEqual(['campaign_scores', 'daily_scores', 'scores']);
   });
 });
