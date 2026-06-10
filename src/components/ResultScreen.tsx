@@ -197,6 +197,9 @@ export function ResultScreen() {
   const displayScore = Math.max(0, score);
 
   const handleNextLevel = () => {
+    // F-011 FIX 1: a new game is starting — re-enable the canvas that was made
+    // non-interactive when the previous game ended (see setGameCanvasInteractive).
+    setGameCanvasInteractive(true);
     if (nextLevelId) {
       startLevel(nextLevelId, 'campaign');
       navigate('/game');
@@ -206,6 +209,7 @@ export function ResultScreen() {
   };
 
   const handlePlayAgain = () => {
+    setGameCanvasInteractive(true); // F-011 FIX 1: restore canvas interaction for the new game
     // Free Play has no level id — restart with the same config.
     if (mode === 'freeplay') {
       startFreePlay({ gridSize: currentLevel.grid, difficulty, timerSecs: timed ? currentLevel.timeLimit : null });
@@ -219,6 +223,12 @@ export function ResultScreen() {
     <div style={{ position: 'relative', width: '100vw', height: '100vh', background: 'var(--navy)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <div className="bg-dots" />
       <ParticleCanvas />
+
+      {/* F-011 FIX 2: scrollable content region. Everything above the action buttons
+          (header, stars, score, full breakdown, LeaderPanel, promo) lives here so no
+          row can be clipped on any screen size / content combination. The action
+          buttons + BottomNav stay OUTSIDE this region (always visible, no scroll). */}
+      <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch', position: 'relative', zIndex: 1, paddingBottom: 16 }}>
 
       {/* Header */}
       <div className="glass" style={{ textAlign: 'center', padding: '48px 20px 16px', borderBottom: '1px solid rgba(30,139,195,0.2)', position: 'relative', zIndex: 2 }}>
@@ -345,10 +355,13 @@ export function ResultScreen() {
         />
       </div>
 
+      </div>{/* end F-011 scroll region */}
+
       {/* Action card(s) — T-004A Fix 5. Campaign (with a next level): gold NEXT
           LEVEL primary + dark PLAY AGAIN secondary. All other cases: gold PLAY
-          AGAIN. HOME/BOARD live in the standard footer below — no duplication. */}
-      <div style={{ padding: '0 20px 12px', position: 'relative', zIndex: 1, marginTop: 'auto' }}>
+          AGAIN. HOME/BOARD live in the standard footer below — no duplication.
+          F-011 FIX 2: flexShrink:0 + outside the scroll region → always visible. */}
+      <div style={{ padding: '0 20px 12px', position: 'relative', zIndex: 1, flexShrink: 0 }}>
         {mode === 'daily' ? (
           <button
             className="btn-gold"
@@ -412,6 +425,30 @@ export function ResultScreen() {
       <BottomNav />
     </div>
   );
+}
+
+// —— F-011 FIX 1: game-canvas focus/interaction release ————————————————————
+// Phaser keeps DOM focus on its <canvas> after a game ends. On the Result screen that
+// focus trap swallows the Android back button (key/back events never reach React /
+// Capacitor). GameScreen calls this with `false` on the complete/failed transition to
+// blur the canvas and stop it receiving pointer events; the Result NEXT LEVEL / PLAY
+// AGAIN handlers call it with `true` so the next game's canvas is interactive again.
+// The blur MUST come from React (GameScene.ts is locked). Lives here (Phaser-free module)
+// so the unit tests can import it without pulling Phaser into the test bundle.
+// NOTE: target the Phaser canvas specifically — GameScreen also renders a decorative
+// #particle-canvas that appears FIRST in the DOM, so a bare querySelector('canvas')
+// would blur that inert one instead of Phaser's. Fall back to the first canvas when
+// #phaser-container is absent (e.g. a fresh game canvas not yet mounted).
+export function setGameCanvasInteractive(enabled: boolean): void {
+  const canvas = (document.querySelector('#phaser-container canvas') ??
+    document.querySelector('canvas')) as HTMLElement | null;
+  if (!canvas) return;
+  if (enabled) {
+    canvas.style.pointerEvents = 'auto';
+  } else {
+    canvas.blur();
+    canvas.style.pointerEvents = 'none';
+  }
 }
 
 // —— B-004: campaign-boundary gate check ————————————————————————————————

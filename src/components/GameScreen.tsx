@@ -20,6 +20,7 @@ import { useSettingsStore } from '../store/settingsStore';
 import { TimerComponent } from './TimerComponent';
 import { GameScene } from '../scenes/GameScene';
 import { LeaderPanel } from './LeaderPanel';
+import { setGameCanvasInteractive } from './ResultScreen';
 import { BuyHintModal } from './BuyHintModal';
 import { Capacitor } from '@capacitor/core';
 import { loadRewarded, showRewarded } from '../services/rewardedAdService';
@@ -381,6 +382,12 @@ export function GameScreen() {
   // the completion (recording lives there now to avoid double-recording).
   useEffect(() => {
     if (status === 'complete' || status === 'failed') {
+      // F-011 FIX 1: release Phaser's DOM focus from the game canvas the moment the
+      // game ends. Otherwise the canvas keeps focus and swallows the Android back
+      // button on the Result screen (key/back events never reach React/Capacitor).
+      // Done from React — GameScene.ts is locked. The next game (NEXT LEVEL / PLAY
+      // AGAIN) re-enables the canvas via setGameCanvasInteractive(true).
+      setGameCanvasInteractive(false);
       // Short delay so the player sees the final board before the transition.
       const id = setTimeout(() => navigate('/result'), 600);
       return () => clearTimeout(id);

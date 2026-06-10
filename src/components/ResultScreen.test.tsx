@@ -51,7 +51,7 @@ vi.mock('../services/campaignScores', () => ({ submitCampaignScore: async () => 
 vi.mock('../services/dailyScores', () => ({ autoSubmitDailyIfComplete: async () => {} }));
 vi.mock('../services/freePlayPB', () => ({ getFreePlayPB: async () => 0, setFreePlayPB: async () => {} }));
 
-import { ResultScreen, CampaignLockedMessage, isCampaignLocked } from './ResultScreen';
+import { ResultScreen, CampaignLockedMessage, isCampaignLocked, setGameCanvasInteractive } from './ResultScreen';
 import { LevelManager } from '../game/LevelManager';
 
 // A complete-campaign game state pinned to `levelId` (uses the real level config).
@@ -160,6 +160,52 @@ describe('ResultScreen boundary render (B-004)', () => {
     render(<ResultScreen />);
     expect(await screen.findByText(/result\.btn_next_level/)).toBeInTheDocument();
     expect(screen.queryByText(/Campaign .* Locked/)).toBeNull();
+  });
+});
+
+describe('F-011 — game canvas focus release', () => {
+  // Inject a single <canvas> (ParticleCanvas is mocked to null, so this is the only
+  // one querySelector('canvas') can find) and clean it up after each test.
+  let canvas: HTMLCanvasElement;
+  beforeEach(() => {
+    canvas = document.createElement('canvas');
+    document.body.appendChild(canvas);
+  });
+  afterEach(() => {
+    canvas.remove();
+  });
+
+  it('1. release (complete/failed) sets canvas pointerEvents to none', () => {
+    canvas.style.pointerEvents = 'auto';
+    setGameCanvasInteractive(false); // what GameScreen does on status complete/failed
+    expect(canvas.style.pointerEvents).toBe('none');
+  });
+
+  it('2. release blurs the focused canvas (frees the back-button focus trap)', () => {
+    canvas.tabIndex = 0;
+    canvas.focus();
+    expect(document.activeElement).toBe(canvas);
+    setGameCanvasInteractive(false);
+    expect(document.activeElement).not.toBe(canvas);
+    expect(canvas.style.pointerEvents).toBe('none');
+  });
+
+  it('3. NEXT LEVEL restores canvas pointerEvents to auto', async () => {
+    canvas.style.pointerEvents = 'none'; // left disabled by the previous game's end
+    H.game = campaignState(99); // next = 100 (non-boundary) → NEXT LEVEL renders
+    render(<ResultScreen />);
+    const btn = await screen.findByText(/result\.btn_next_level/);
+    btn.click();
+    expect(canvas.style.pointerEvents).toBe('auto');
+  });
+
+  it('4. PLAY AGAIN restores canvas pointerEvents to auto', async () => {
+    canvas.style.pointerEvents = 'none';
+    H.game = campaignState(99);
+    render(<ResultScreen />);
+    const btn = await screen.findByText(/result\.btn_play_again/);
+    btn.click();
+    expect(canvas.style.pointerEvents).toBe('auto');
   });
 });
 
