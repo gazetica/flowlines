@@ -125,6 +125,9 @@
 
   "settings": {
     "title": "설정",
+    "player_identity_title": "플레이어 ID",
+    "uid_label": "UID",
+    "uid_permanent": "영구적 · 변경 불가",
     "section_audio": "오디오",
     "sound_effects": "효과음",
     "music": "음악",

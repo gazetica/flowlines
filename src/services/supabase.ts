@@ -6,6 +6,7 @@
 // never hardcoded, never committed.
 
 import { createClient } from '@supabase/supabase-js';
+import { useSettingsStore } from '../store/settingsStore';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
@@ -49,10 +50,14 @@ export interface SubmitScoreParams {
  */
 export async function submitScore(params: SubmitScoreParams): Promise<ScoreRow | null> {
   const { alias, score, mode, gridSize, levelId, country } = params;
+  // B-023: stamp the permanent player identity on every scores-table row so alias
+  // migration (aliasService.migrateAliasInSupabase) can re-label all historical rows.
+  const { playerUid } = useSettingsStore.getState();
 
   const { data, error } = await supabase
     .from('scores')
     .insert({
+      player_uid: playerUid,
       alias: alias || 'Player',
       score,
       mode,
@@ -128,11 +133,13 @@ export async function fetchPlayerRank(tab: LeaderboardTab, playerScore: number):
 // —— T-005 leaderboard RPCs ————————————————————————————————————————————
 
 export interface CampaignLeaderRow {
+  player_uid: string; // B-023: returned by the updated get_campaign_leaderboard RPC
   alias: string;
   country: string;
   total_campaign_score: number;
 }
 export interface AllTimeLeaderRow {
+  player_uid: string; // B-023: returned by the updated get_alltime_leaderboard RPC
   alias: string;
   country: string;
   alltime_score: number;

@@ -13,10 +13,13 @@ const H = vi.hoisted(() => ({
   leader: null as null | { alias: string; score: number; timeSecs: number; country: string },
 }));
 
+// B-023: the store now carries a permanent playerUid. LeaderPanel must NOT render it
+// (UID is a leaderboard/settings concept only) — test 8 asserts its absence.
+const TEST_UID = 'NT4K7M2Q';
 vi.mock('../store/settingsStore', () => ({
   useSettingsStore: Object.assign(
-    () => ({ alias: H.alias, country: H.country }),
-    { getState: () => ({ alias: H.alias, country: H.country, bestScores: {} }) }
+    () => ({ alias: H.alias, country: H.country, playerUid: TEST_UID }),
+    { getState: () => ({ alias: H.alias, country: H.country, playerUid: TEST_UID, bestScores: {} }) }
   ),
 }));
 vi.mock('../services/campaignScores', () => ({
@@ -83,6 +86,18 @@ describe('LeaderPanel YOU/LEADER flags (B-005)', () => {
     const { container } = render(<LeaderPanel levelId={101} />);
     await waitFor(() => expect(container.textContent).toMatch(/Mahendra/));
     expect(container.textContent).not.toMatch(FLAG);
+  });
+});
+
+describe('LeaderPanel UID absence (B-023 — test 8)', () => {
+  it('14. never renders the player UID in the in-play / result LeaderPanel', async () => {
+    H.country = 'IN';
+    H.leader = { alias: 'Mahendra', score: 100, timeSecs: 5, country: 'IN' };
+    const { container } = render(<LeaderPanel levelId={101} />);
+    await waitFor(() => expect(container.textContent).toMatch(/Zephyrv/));
+    // UID must not leak into the YOU or LEADER rows.
+    expect(container.textContent).not.toContain(TEST_UID);
+    expect(container.textContent).not.toMatch(/NT[A-Z0-9]{6}/);
   });
 });
 

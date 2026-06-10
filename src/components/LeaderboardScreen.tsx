@@ -21,6 +21,7 @@ import type { Tier } from '../services/tierService';
 
 type Tab = 'campaign' | 'daily' | 'alltime';
 interface Row {
+  playerUid: string; // B-023: permanent identity (shown in the UID column)
   alias: string;
   country: string;
   score: number;
@@ -38,7 +39,7 @@ const MEDALS = ['🥇', '🥈', '🥉'];
 
 export function LeaderboardScreen() {
   const { t } = useTranslation();
-  const { alias, country, bestScores } = useSettingsStore();
+  const { alias, country, playerUid, bestScores } = useSettingsStore();
   const [tab, setTab] = useState<Tab>('alltime');
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,19 +52,22 @@ export function LeaderboardScreen() {
   useEffect(() => { loadLocalTier().then(setMyTier); }, []);
 
   // Player's index within the fetched (top-50) list, or -1 when not present.
-  const playerIndex = alias ? rows.findIndex((r) => r.alias === alias) : -1;
+  // B-023: match on the permanent UID (alias is now a mutable display label); fall
+  // back to alias only when a row predates UIDs (player_uid empty).
+  const isMyRow = (r: Row): boolean => (r.playerUid && playerUid ? r.playerUid === playerUid : !!alias && r.alias === alias);
+  const playerIndex = rows.findIndex(isMyRow);
   const playerInList = playerIndex >= 0;
 
   useEffect(() => {
     setLoading(true);
     const load = async (): Promise<Row[]> => {
       if (tab === 'campaign') {
-        return (await fetchCampaignLeaderboard()).map((r) => ({ alias: r.alias, country: r.country, score: r.total_campaign_score }));
+        return (await fetchCampaignLeaderboard()).map((r) => ({ playerUid: r.player_uid ?? '', alias: r.alias, country: r.country, score: r.total_campaign_score }));
       }
       if (tab === 'daily') {
-        return (await fetchDailyLeaderboard(getTodayDateString())).map((r) => ({ alias: r.alias, country: r.country, score: r.totalScore }));
+        return (await fetchDailyLeaderboard(getTodayDateString())).map((r) => ({ playerUid: r.playerUid, alias: r.alias, country: r.country, score: r.totalScore }));
       }
-      return (await fetchAllTimeLeaderboard()).map((r) => ({ alias: r.alias, country: r.country, score: r.alltime_score }));
+      return (await fetchAllTimeLeaderboard()).map((r) => ({ playerUid: r.player_uid ?? '', alias: r.alias, country: r.country, score: r.alltime_score }));
     };
     // Best-effort local score for this tab (Supabase is read-only and exposes no
     // out-of-top-50 rank RPC, so the pinned row uses locally-known scores).
@@ -125,7 +129,7 @@ export function LeaderboardScreen() {
       ) : (
         rows.map((row, i) => {
           const rank = i + 1;
-          const isMe = row.alias === alias;
+          const isMe = isMyRow(row);
           const rowTier: Tier | null = isMe ? myTier : tierMap[row.alias] ?? null;
           return (
             <div
@@ -146,6 +150,13 @@ export function LeaderboardScreen() {
               <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 13, width: 28, textAlign: 'center', color: RANK_COLOURS[rank] ?? 'var(--muted)' }}>
                 {rank <= 3 ? MEDALS[rank - 1] : `#${rank}`}
               </span>
+              {/* B-023: permanent UID between rank and flag — Space Mono, muted cyan
+                  (brighter for the current player's own row). */}
+              {row.playerUid && (
+                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: isMe ? 'rgba(0,245,255,0.95)' : 'rgba(0,245,255,0.6)' }}>
+                  {row.playerUid}
+                </span>
+              )}
               <span style={{ fontSize: 20 }}>{countryFlag(row.country)}</span>
               <span style={{ flex: 1, fontSize: 14, color: isMe ? 'var(--gold)' : 'var(--white)' }}>
                 {isMe ? `${row.alias} (${t('leaderboard.you')})` : row.alias}
@@ -179,6 +190,12 @@ export function LeaderboardScreen() {
             <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 13, width: 44, textAlign: 'center', color: 'var(--gold)' }}>
               {playerScore != null ? '50+' : '—'}
             </span>
+            {/* B-023: own UID — brighter cyan to distinguish the player's pinned row. */}
+            {playerUid && (
+              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: 'rgba(0,245,255,0.95)' }}>
+                {playerUid}
+              </span>
+            )}
             <span style={{ fontSize: 20 }}>{countryFlag(country)}</span>
             <span style={{ flex: 1, fontSize: 14, color: 'var(--gold)' }}>{alias || 'Player'}{myTier && <span style={{ color: TIER_COLORS[myTier] }}> {t(myTier === 'expert' ? 'tier.expert_tag' : 'tier.pro_tag')}</span>}</span>
             <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 14, color: playerScore != null ? 'var(--gold)' : 'var(--muted)' }}>

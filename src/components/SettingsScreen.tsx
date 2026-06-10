@@ -21,6 +21,7 @@ import { loadLocalTier, TIER_COLORS } from '../services/tierService';
 import type { Tier } from '../services/tierService';
 import { PRODUCT_IDS, restorePurchases } from '../services/billing';
 import { prefSetBool, PREF_KEYS } from '../services/preferences';
+import { migrateAliasInSupabase } from '../services/aliasService';
 
 const LANGUAGES: { code: Language; label: string }[] = [
   { code: 'en', label: 'English' },
@@ -47,6 +48,7 @@ export function SettingsScreen() {
     setAlias,
     country,
     setCountry,
+    playerUid,
     removeAdsPurchased,
     setRemoveAds,
   } = useSettingsStore();
@@ -120,6 +122,20 @@ export function SettingsScreen() {
         </div>
       </Section>
 
+      {/* PLAYER IDENTITY (B-023) — permanent NTxxxxxx UID, display-only. */}
+      <Section label={t('settings.player_identity_title')}>
+        <div style={rowStyle}>
+          <span style={labelStyle}>{t('settings.uid_label')}</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: "'Space Mono', monospace", fontSize: 16, fontWeight: 700, color: '#FFD700' }}>
+            {playerUid || '—'}
+            <span style={{ fontSize: 13 }}>🔒</span>
+          </span>
+        </div>
+        <div style={{ padding: '0 20px 12px', fontSize: 11, color: 'rgba(238,244,255,0.6)' }}>
+          {t('settings.uid_permanent')}
+        </div>
+      </Section>
+
       {/* PROFILE */}
       <Section label={t('settings.section_profile')}>
         {/* F-001c: tier tag row ABOVE the alias input — hidden entirely if none. */}
@@ -140,6 +156,9 @@ export function SettingsScreen() {
             type="text"
             value={alias}
             onChange={(e) => setAlias(e.target.value)}
+            // B-023: on commit (blur), re-label ALL of this player's historical scores
+            // to the new alias via their permanent UID. Silent + fire-and-forget.
+            onBlur={() => { void migrateAliasInSupabase(playerUid, useSettingsStore.getState().alias); }}
             placeholder={t('settings.alias_placeholder')}
             maxLength={16}
             style={{

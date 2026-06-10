@@ -22,6 +22,9 @@ export const PREF_KEYS = {
   HAPTICS_ENABLED:     'hapticsEnabled',
   ALIAS:               'alias',
   COUNTRY:             'country',          // T-005: ISO 3166-1 alpha-2 (or 'XX')
+  // B-023: permanent auto-generated player identity (NTxxxxxx). Generated once on
+  // first launch and never changed — the true leaderboard identity (alias is a label).
+  PLAYER_UID:          'playerUid',
 
   // IAP flags
   REMOVE_ADS:          'removeAdsPurchased',

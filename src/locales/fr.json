@@ -125,6 +125,9 @@
 
   "settings": {
     "title": "PARAMÈTRES",
+    "player_identity_title": "IDENTITÉ DU JOUEUR",
+    "uid_label": "UID",
+    "uid_permanent": "Permanent · Non modifiable",
     "section_audio": "AUDIO",
     "sound_effects": "Effets sonores",
     "music": "Musique",

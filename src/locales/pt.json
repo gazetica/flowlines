@@ -125,6 +125,9 @@
 
   "settings": {
     "title": "CONFIGURAÇÕES",
+    "player_identity_title": "IDENTIDADE DO JOGADOR",
+    "uid_label": "UID",
+    "uid_permanent": "Permanente · Não pode ser alterado",
     "section_audio": "ÁUDIO",
     "sound_effects": "Efeitos sonoros",
     "music": "Música",

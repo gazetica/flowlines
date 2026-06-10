@@ -46,6 +46,10 @@ interface SettingsState {
   hapticsEnabled: boolean;
   alias: string;
   country: string; // T-005: ISO 3166-1 alpha-2 (or 'XX' = prefer not to say)
+  // B-023: permanent player identity (NTxxxxxx). Generated once on first launch,
+  // persisted to Preferences, and NEVER changed (no setter). The alias is a display
+  // label; this UID is the true leaderboard identity.
+  playerUid: string;
 
   // IAP
   removeAdsPurchased: boolean;
@@ -102,6 +106,14 @@ interface SettingsState {
 // T-006: default hint inventory granted to a fresh install.
 export const DEFAULT_HINT_COUNT = 3;
 
+// B-023: generate a permanent player UID — "NT" + 6 chars from [A-Z0-9] (8 total).
+// Called once on first launch when no playerUid exists in Preferences.
+export function generatePlayerUid(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const random = Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  return `NT${random}`;
+}
+
 /**
  * Pure daily-streak transition (T-006). Given the date all-3 challenges were last
  * completed, today's date, and the current streak, returns the new streak count.
@@ -150,6 +162,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   hapticsEnabled: true,
   alias: '',
   country: 'XX',
+  playerUid: '', // B-023: filled on first hydrate (generated if absent)
   removeAdsPurchased: false,
   hintCount: DEFAULT_HINT_COUNT,
   dailyStreak: 0,
@@ -181,6 +194,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       bestScores,
       bestTimes,
       country,
+      storedUid,
     ] = await Promise.all([
       prefGetBool(PREF_KEYS.LANGUAGE_SELECTED, false),
       prefGetBool(PREF_KEYS.ONBOARDING_SHOWN, false),
@@ -199,7 +213,16 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       prefGetJSON<BestScores>(PREF_KEYS.BEST_SCORES, {}),
       prefGetJSON<BestTimes>(PREF_KEYS.BEST_TIMES, {}),
       prefGet(PREF_KEYS.COUNTRY),
+      prefGet(PREF_KEYS.PLAYER_UID),
     ]);
+
+    // B-023: load the permanent UID, or generate + persist one on first launch.
+    // Never regenerated once a value exists in Preferences.
+    let playerUid = storedUid ?? '';
+    if (!playerUid) {
+      playerUid = generatePlayerUid();
+      await prefSet(PREF_KEYS.PLAYER_UID, playerUid);
+    }
 
     set({
       languageSelected,
@@ -220,6 +243,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       bestTimes,
       // T-005: stored country, else a best-effort guess from the device timezone.
       country: country ?? detectCountry(),
+      playerUid, // B-023: permanent identity (loaded or freshly generated above)
       hydrated: true,
     });
 

@@ -36,10 +36,11 @@ export async function submitCampaignScore(params: {
   timeSecs: number;
   gridSize: number;
 }): Promise<void> {
-  const { alias, country, bestScores, setBestTime } = useSettingsStore.getState();
+  const { alias, country, playerUid, bestScores, setBestTime } = useSettingsStore.getState();
   const { levelId, score, timeSecs, gridSize } = params;
 
   const { error } = await supabase.from('campaign_scores').insert({
+    player_uid: playerUid, // B-023: permanent identity (alias is a display label only)
     level_id: levelId,
     alias: alias || 'Player',
     score: Math.max(0, score), // floor at 0

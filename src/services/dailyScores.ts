@@ -11,6 +11,7 @@ import { getTodayDateString } from '../game/DailyChallenge';
 import type { DailyChallengeIndex } from '../game/DailyChallenge';
 
 export interface DailyLeaderRow {
+  playerUid: string; // B-023: permanent identity (for the leaderboard UID column)
   alias: string;
   country: string;
   totalScore: number;
@@ -25,8 +26,9 @@ export async function submitDailyScore(params: {
   scoreC2: number;
   scoreC3: number;
 }): Promise<void> {
-  const { alias, country } = useSettingsStore.getState();
+  const { alias, country, playerUid } = useSettingsStore.getState();
   const { error } = await supabase.from('daily_scores').insert({
+    player_uid: playerUid, // B-023: permanent identity
     daily_date: params.dailyDate,
     alias: alias || 'Player',
     country: country || 'XX',
@@ -41,12 +43,13 @@ export async function submitDailyScore(params: {
 export async function fetchDailyLeaderboard(dailyDate: string, limit = 50): Promise<DailyLeaderRow[]> {
   const { data, error } = await supabase
     .from('daily_scores')
-    .select('alias, country, total_score, score_c1, score_c2, score_c3')
+    .select('player_uid, alias, country, total_score, score_c1, score_c2, score_c3')
     .eq('daily_date', dailyDate)
     .order('total_score', { ascending: false })
     .limit(limit);
   if (error || !data) return [];
   return data.map((r) => ({
+    playerUid: r.player_uid ?? '',
     alias: r.alias,
     country: r.country,
     totalScore: r.total_score,

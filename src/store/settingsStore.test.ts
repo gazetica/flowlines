@@ -23,7 +23,8 @@ vi.mock('@capacitor/preferences', () => {
   };
 });
 
-import { useSettingsStore, nextDailyStreak, DEFAULT_HINT_COUNT } from './settingsStore';
+import { useSettingsStore, nextDailyStreak, DEFAULT_HINT_COUNT, generatePlayerUid } from './settingsStore';
+import { PREF_KEYS, prefGet, prefSet } from '../services/preferences';
 
 // Helper: the date `days` days before `today` ('YYYY-MM-DD', UTC).
 function daysBefore(today: string, days: number): string {
@@ -118,6 +119,46 @@ describe('settingsStore — gem economy (F-005)', () => {
   it('6. addGems(20) credits the IAP Hint Pack amount', async () => {
     await useSettingsStore.getState().addGems(20);
     expect(useSettingsStore.getState().hintCount).toBe(20);
+  });
+});
+
+describe('settingsStore — player UID (B-023)', () => {
+  beforeEach(async () => {
+    // Clear any persisted UID so each test starts from a true fresh-install state.
+    await prefSet(PREF_KEYS.PLAYER_UID, '');
+    useSettingsStore.setState({ playerUid: '' });
+  });
+
+  it('1. generatePlayerUid() returns a string starting with "NT"', () => {
+    expect(generatePlayerUid().startsWith('NT')).toBe(true);
+  });
+
+  it('2. UID is exactly 8 characters (NT + 6)', () => {
+    expect(generatePlayerUid()).toHaveLength(8);
+  });
+
+  it('3. UID characters are all from the valid set (A-Z, 0-9)', () => {
+    // Run a handful — the 6 random chars must always match [A-Z0-9].
+    for (let i = 0; i < 50; i++) {
+      expect(generatePlayerUid()).toMatch(/^NT[A-Z0-9]{6}$/);
+    }
+  });
+
+  it('4. UID generated once on first hydrate and persisted to Preferences', async () => {
+    await prefSet(PREF_KEYS.PLAYER_UID, ''); // simulate fresh install (no UID yet)
+    await useSettingsStore.getState().loadFromPreferences();
+    const uid = useSettingsStore.getState().playerUid;
+    expect(uid).toMatch(/^NT[A-Z0-9]{6}$/);
+    // It must have been written through to Preferences.
+    expect(await prefGet(PREF_KEYS.PLAYER_UID)).toBe(uid);
+  });
+
+  it('5. UID is never regenerated when one already exists in Preferences', async () => {
+    await prefSet(PREF_KEYS.PLAYER_UID, 'NTABC123');
+    await useSettingsStore.getState().loadFromPreferences();
+    // Same value loaded — not replaced with a fresh random one.
+    expect(useSettingsStore.getState().playerUid).toBe('NTABC123');
+    expect(await prefGet(PREF_KEYS.PLAYER_UID)).toBe('NTABC123');
   });
 });
 
