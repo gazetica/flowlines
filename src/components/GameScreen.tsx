@@ -24,7 +24,7 @@ import { BuyHintModal } from './BuyHintModal';
 import { Capacitor } from '@capacitor/core';
 import { loadRewarded, showRewarded } from '../services/rewardedAdService';
 import { showClueAd, isClueEligible } from '../services/rescueAdService';
-import { showTimeExtensionAd, isTimeExtensionEligible } from '../services/timeExtensionAdService';
+import { showTimeExtensionAd, isTimeExtensionEligible, TIME_EXTENSION_SECONDS } from '../services/timeExtensionAdService';
 import { initAppLifecycle, removeAppLifecycle } from '../services/appLifecycle';
 import * as soundService from '../services/soundService';
 import * as musicService from '../services/musicService';
@@ -48,8 +48,8 @@ export function GameScreen() {
   const addGems = useSettingsStore((s) => s.addGems); // F-005 Part 5
 
   const [hintModalOpen, setHintModalOpen] = useState(false);
-  // F-009: cumulative bonus seconds fed to TimerComponent (LOW ON TIME +15s reward),
-  // and a transient flag that floats "+15s" over the HUD timer for ~1.5s.
+  // F-009: cumulative bonus seconds fed to TimerComponent (LOW ON TIME +30s reward),
+  // and a transient flag that floats "+30s" over the HUD timer for ~1.5s.
   const [timeBonus, setTimeBonus] = useState(0);
   const [timeFloat, setTimeFloat] = useState(false);
   // F-001c (corr.3): cyan hint overlay — stays on the target tile until the
@@ -439,15 +439,15 @@ export function GameScreen() {
     useGameStore.getState().startResumeCountdown();
   };
 
-  // LOW ON TIME: pause, show ad (+15s + marks timePillUsed on reward). On a rewarded
-  // watch, mirror the +15s onto the on-screen timer (bonus prop) and float "+15s" over
+  // LOW ON TIME: pause, show ad (+30s + marks timePillUsed on reward). On a rewarded
+  // watch, mirror the +30s onto the on-screen timer (bonus prop) and float "+30s" over
   // the HUD, then run the resume countdown.
   const handleTimeTap = async () => {
     if (!timeActive) return;
     useGameStore.getState().pauseTimer();
     const rewarded = await showTimeExtensionAd();
     if (rewarded) {
-      setTimeBonus((b) => b + 15); // extend the visible countdown by +15s
+      setTimeBonus((b) => b + TIME_EXTENSION_SECONDS); // VER-003: extend the visible countdown (+30s)
       setTimeFloat(true);
       setTimeout(() => setTimeFloat(false), 1500);
     }
@@ -582,7 +582,7 @@ export function GameScreen() {
 
         {/* Values row — baseline-aligned. TIMER & SCORE 22px white; NEXT 28px gold. */}
         <div className="hud-timer-value" style={{ position: 'relative', fontFamily: "'Space Mono',monospace", fontSize: '22px', lineHeight: 1, color: '#F0F4FF' }}>
-          {/* F-009: "+15s" float rises from the timer on a LOW ON TIME reward (1.5s). */}
+          {/* F-009: "+30s" float rises from the timer on a LOW ON TIME reward (1.5s). */}
           <style>{`@keyframes time-ext-float { 0% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -34px); } }`}</style>
           {timeFloat && (
             <span
@@ -601,7 +601,7 @@ export function GameScreen() {
             <TimerComponent
               key={runId}
               durationSeconds={resumeDuration}
-              bonusSeconds={timeBonus} // F-009: LOW ON TIME +15s extension
+              bonusSeconds={timeBonus} // F-009: LOW ON TIME +30s extension
               paused={isPaused || status !== 'playing'}
               // F-008 FIX 1: live, render-independent pause check. The `paused` prop
               // clears the interval, but that depends on a React commit that does NOT
@@ -691,7 +691,7 @@ export function GameScreen() {
         >
           {/* F-009 Part 2: two-pill rescue row — below the grid, above the hint cards.
               Left = GET A CLUE (cyan, 66.66% threshold, reveal N amber tiles); right =
-              LOW ON TIME (gold, 33.33% threshold, +15s). Each pill spans flex:1; the
+              LOW ON TIME (gold, 33.33% threshold, +30s). Each pill spans flex:1; the
               right pill is never rendered before its 33.33% threshold. A used pill stays
               visible but greyed (faded dashed border, "Already used", not tappable). */}
           {pillsRowVisible && (

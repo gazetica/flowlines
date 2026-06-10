@@ -34,8 +34,23 @@ describe('isClueEligible (F-009 GET A CLUE)', () => {
     expect(isClueEligible({ ...OK, gridSize: 3 })).toBe(false);
   });
 
-  it('NOT eligible when timeLimit <= 15s', () => {
-    expect(isClueEligible({ ...OK, timeLimit: 15, timeRemaining: 9 })).toBe(false);
+  // VER-003 boundary tests — grid ≥ 5 and timeLimit ≥ 45.
+  it('VER-003: NOT eligible on a 4×4 grid (was allowed before)', () => {
+    expect(isClueEligible({ ...OK, gridSize: 4 })).toBe(false);
+  });
+
+  it('VER-003: eligible on a 5×5 grid (minimum qualifying grid)', () => {
+    expect(isClueEligible({ ...OK, gridSize: 5 })).toBe(true);
+  });
+
+  it('VER-003: NOT eligible at timeLimit 44s (below the 45s floor)', () => {
+    // 44s level, in the final two-thirds (≤ floor(44*0.6667)=29s) — excluded by timeLimit.
+    expect(isClueEligible({ ...OK, timeLimit: 44, timeRemaining: 29 })).toBe(false);
+  });
+
+  it('VER-003: eligible at timeLimit 45s (minimum qualifying limit)', () => {
+    // 45s level, at the threshold (≤ floor(45*0.6667)=30s).
+    expect(isClueEligible({ ...OK, timeLimit: 45, timeRemaining: 30 })).toBe(true);
   });
 
   it('NOT eligible when fewer than 3 tiles remain', () => {

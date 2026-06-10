@@ -2,7 +2,7 @@
 // Numtap | Gazetica Studio | Sprint 5 | Task F-009 (LOW ON TIME pill)
 //
 // Loads and shows a rewarded ad for the LOW ON TIME mechanic. On a successful watch it
-// adds +15 seconds to the live countdown (via gameStore.setTimeRemaining) and marks the
+// adds TIME_EXTENSION_SECONDS (VER-003: +30) to the live countdown and marks the
 // time pill used for this attempt. COMPLETELY SEPARATE from rescueAdService.ts (GET A
 // CLUE / amber reveal) and rewardedAdService.ts (gem WATCH AD) — different reward, same
 // AdMob rewarded ad-unit constant only (AD_UNITS.REWARDED).
@@ -13,8 +13,8 @@ import { AD_UNITS } from './admob';
 import { useGameStore } from '../store/gameStore';
 import * as analytics from './analytics';
 
-// F-009: seconds granted by one LOW ON TIME watch.
-export const TIME_EXTENSION_SECONDS = 15;
+// F-009: seconds granted by one LOW ON TIME watch. VER-003: bumped 15 → 30.
+export const TIME_EXTENSION_SECONDS = 30;
 
 const TIME_OPTIONS: RewardAdOptions = {
   adId: AD_UNITS.REWARDED, // same live rewarded unit as the other rewarded flows
@@ -44,7 +44,7 @@ function awaitAdDismissed(): Promise<void> {
 /**
  * LOW ON TIME pill eligibility (F-009). ALL conditions must hold. Pure + side-effect-free
  * so GameScreen and the unit tests share one source of truth.
- *  1. grid larger than 3×3        2. level time limit > 15s
+ *  1. grid 5×5 or larger (VER-003)   2. level time limit ≥ 45s (VER-003)
  *  3. in the final third of the clock (timeRemaining ≤ floor(timeLimit * 0.3333))
  *  4. the time pill not already used this attempt
  *  5. timer is ON (not untimed Free Play)
@@ -61,17 +61,17 @@ export function isTimeExtensionEligible(p: {
   return (
     p.playing &&
     p.timed &&
-    p.gridSize > 3 &&
-    p.timeLimit > 15 &&
+    p.gridSize >= 5 &&
+    p.timeLimit >= 45 &&
     p.timeRemaining <= Math.floor(p.timeLimit * 0.3333) &&
     !p.used
   );
 }
 
 /**
- * Prepare + show a rewarded ad for the time extension. On 'rewarded' → add +15s to the
+ * Prepare + show a rewarded ad for the time extension. On 'rewarded' → add +30s to the
  * store's timeRemaining and mark the time pill used; returns true so the caller can
- * apply the matching +15s to the on-screen timer and show the float animation. On
+ * apply the matching +30s to the on-screen timer and show the float animation. On
  * dismiss / no-fill / error → returns false (pill stays usable). Native-only; no-ops on
  * web. Resolves only after the ad is DISMISSED (so the F-008 resume overlay shows after).
  */

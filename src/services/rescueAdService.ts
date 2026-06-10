@@ -41,7 +41,7 @@ function awaitAdDismissed(): Promise<void> {
 /**
  * GET A CLUE pill eligibility (F-009 — was isRescueEligible). ALL conditions must hold.
  * Pure + side-effect-free so GameScreen and the unit tests share one source of truth.
- *  1. grid larger than 3×3      2. level time limit > 15s
+ *  1. grid 5×5 or larger (VER-003)   2. level time limit ≥ 45s (VER-003)
  *  3. in the final TWO-THIRDS of the clock (timeRemaining ≤ floor(timeLimit * 0.6667))
  *  4. ≥ 3 tiles left            5. the clue pill not already used this attempt
  *  6. timer is ON (not untimed Free Play)
@@ -61,8 +61,8 @@ export function isClueEligible(p: {
   return (
     p.playing &&
     p.timed &&
-    p.gridSize > 3 &&
-    p.timeLimit > 15 &&
+    p.gridSize >= 5 &&
+    p.timeLimit >= 45 &&
     p.timeRemaining <= Math.floor(p.timeLimit * 0.6667) &&
     p.tilesRemaining >= 3 &&
     !p.used
