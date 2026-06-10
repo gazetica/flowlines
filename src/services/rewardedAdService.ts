@@ -67,10 +67,10 @@ export async function loadRewarded(): Promise<void> {
  */
 export async function showRewarded(): Promise<RewardedOutcome> {
   // F-008 FIX 1 Part A: freeze the live countdown before the ad takes over the screen
-  // so a short level cannot expire mid-watch. Idempotent (mirrors pauseGame). The
-  // RESUME is intentionally NOT done here — it is owned by the caller's 3-2-1
-  // countdown (GameScreen.startResumeCountdown → resumeTimer), so the overlay is
-  // never skipped and non-countdown callers can't be left frozen.
+  // so a short level cannot expire mid-watch. Idempotent (mirrors pauseGame). The RESUME
+  // is intentionally NOT done here — F-010: the caller flags adJustCompleted on close and
+  // the player resumes manually via the RESUME GAME overlay, so the round is never left
+  // frozen without a way back and never auto-resumes behind the ad.
   useGameStore.getState().pauseTimer();
   if (!prepared) {
     await loadRewarded();

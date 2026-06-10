@@ -21,7 +21,7 @@ const TIME_OPTIONS: RewardAdOptions = {
 };
 
 // Resolve once the ad is actually DISMISSED (mirrors rescueAdService) so the caller's
-// 3-2-1 resume overlay (F-008) runs after the ad is gone, not behind it. Listener
+// RESUME GAME overlay (F-010) shows after the ad is gone, not behind it. Listener
 // removed on fire; safety timeout prevents a permanent pause if the event is missed.
 function awaitAdDismissed(): Promise<void> {
   return new Promise<void>((resolve) => {
@@ -73,11 +73,11 @@ export function isTimeExtensionEligible(p: {
  * store's timeRemaining and mark the time pill used; returns true so the caller can
  * apply the matching +30s to the on-screen timer and show the float animation. On
  * dismiss / no-fill / error → returns false (pill stays usable). Native-only; no-ops on
- * web. Resolves only after the ad is DISMISSED (so the F-008 resume overlay shows after).
+ * web. Resolves only after the ad is DISMISSED (so the F-010 RESUME GAME overlay shows after).
  */
 export async function showTimeExtensionAd(): Promise<boolean> {
   // F-008 FIX 1 Part A: freeze the live countdown before the ad shows. Resume is owned
-  // by the caller's 3-2-1 countdown in GameScreen, so it is deliberately not called here.
+  // by the caller (F-010 manual RESUME GAME overlay), so it is deliberately not done here.
   useGameStore.getState().pauseTimer();
   const dismissed = awaitAdDismissed(); // register before showing
   let shown = false;

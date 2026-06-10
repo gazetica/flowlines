@@ -39,7 +39,7 @@ export function GameScreen() {
   const particleCanvasRef = useRef<HTMLCanvasElement>(null);
   const { status, currentLevel, mode, score, runId, startLevel, tickTimer, endGame, engine, timed,
     grid, timeRemaining, setTimeRemaining, rescueTileIds, cluePillUsed, timePillUsed, gemAdUsed,
-    resumeCountdown } =
+    adJustCompleted } =
     useGameStore();
 
   // T-006 Part 2.3: hint inventory + BuyHintModal (renamed T-008).
@@ -250,8 +250,9 @@ export function GameScreen() {
     }
     // 'dismissed' → no highlight, no penalty, no toast
 
-    // F-008 FIX 1 Part B: 3-2-1 overlay, then resumeTimer() (fires at count 0).
-    useGameStore.getState().startResumeCountdown();
+    // F-010: the round stays paused; show the manual RESUME GAME overlay (covers all
+    // outcomes incl. no-fill) so the player resumes when ready — no auto-countdown.
+    useGameStore.getState().setAdJustCompleted(true);
   };
 
   // T-007 Fix 4: left card → pause the timer, then go to the IAP screen. The
@@ -430,18 +431,18 @@ export function GameScreen() {
     tilesRemaining >= 5 ? t('game.clue_pill_sub_5') : tilesRemaining === 4 ? t('game.clue_pill_sub_4') : t('game.clue_pill_sub_3');
 
   // GET A CLUE: pause, show ad (reveals amber tiles + marks cluePillUsed on reward),
-  // then the F-008 3-2-1 resume overlay. Guarded so a used pill can't fire.
+  // then the F-010 manual RESUME GAME overlay. Guarded so a used pill can't fire.
   const handleClueTap = async () => {
     if (!clueActive) return;
     const reveal = Math.min(5, tilesRemaining);
     useGameStore.getState().pauseTimer();
     await showClueAd(reveal);
-    useGameStore.getState().startResumeCountdown();
+    useGameStore.getState().setAdJustCompleted(true);
   };
 
   // LOW ON TIME: pause, show ad (+30s + marks timePillUsed on reward). On a rewarded
   // watch, mirror the +30s onto the on-screen timer (bonus prop) and float "+30s" over
-  // the HUD, then run the resume countdown.
+  // the HUD, then show the F-010 manual RESUME GAME overlay.
   const handleTimeTap = async () => {
     if (!timeActive) return;
     useGameStore.getState().pauseTimer();
@@ -451,7 +452,7 @@ export function GameScreen() {
       setTimeFloat(true);
       setTimeout(() => setTimeFloat(false), 1500);
     }
-    useGameStore.getState().startResumeCountdown();
+    useGameStore.getState().setAdJustCompleted(true);
   };
 
   // On-screen rects for the amber rescue tiles (untapped only — they drop off as the
@@ -500,7 +501,7 @@ export function GameScreen() {
       {/* F-001b: tier-coloured play-area border (Pro purple / Expert cyan); none for C1. */}
       {/* F-008 FIX 1 Part B: tiles non-interactive during the resume countdown so a
           stray tap during 3-2-1 can't register on the grid. */}
-      <div id="phaser-container" style={{ position: 'absolute', inset: 0, zIndex: 1, border: tierColor ? `2px solid ${tierColor}` : 'none', boxShadow: tierColor ? `inset 0 0 24px ${tierColor}33` : 'none', pointerEvents: resumeCountdown !== null ? 'none' : 'auto' }} />
+      <div id="phaser-container" style={{ position: 'absolute', inset: 0, zIndex: 1, border: tierColor ? `2px solid ${tierColor}` : 'none', boxShadow: tierColor ? `inset 0 0 24px ${tierColor}33` : 'none', pointerEvents: adJustCompleted ? 'none' : 'auto' }} />
 
       {/* F-001c (corr.3): cyan hint highlight — stays on the target tile until the
           correct tap, then removed instantly (no fade). */}
@@ -852,29 +853,49 @@ export function GameScreen() {
         <PauseModal onResume={resumePause} onRestart={restartFromPause} onQuit={quitFromPause} />
       )}
 
-      {/* F-008 FIX 1 Part B: 3-2-1 resume countdown overlay shown after a rewarded ad
-          closes, before the timer resumes. Sits above ALL game UI; its full-screen
-          backdrop also intercepts taps so the grid stays non-interactive. */}
-      {resumeCountdown !== null && (
+      {/* F-010: manual RESUME GAME overlay shown after ANY rewarded ad closes (replaces
+          the F-008 3-2-1 auto-countdown). The round stays paused until the player taps
+          RESUME GAME — no time pressure from the app, and no resume while the player is
+          still on the ad / a browser redirect. Full-screen near-opaque backdrop; tapping
+          outside the button does nothing (only the button resumes — prevents accidental
+          resume). Highest z-index so it sits above all game UI. */}
+      {adJustCompleted && (
         <div
           style={{
             position: 'absolute',
             inset: 0,
-            zIndex: 9999,
-            background: 'rgba(7,17,31,0.92)',
+            zIndex: 10000,
+            background: 'rgba(7,17,31,0.97)',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: 12,
+            gap: 24,
           }}
         >
-          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 14, color: '#FFFFFF', letterSpacing: 1 }}>
-            {t('game.resuming_in')}
+          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 14, fontWeight: 400, color: '#FFFFFF', letterSpacing: 1, textAlign: 'center' }}>
+            {t('game.ad_completed_pause')}
           </span>
-          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 48, fontWeight: 700, color: '#FFD700', textShadow: '0 0 16px rgba(255,215,0,0.4)' }}>
-            {resumeCountdown}
-          </span>
+          <button
+            onClick={() => {
+              useGameStore.getState().setAdJustCompleted(false);
+              useGameStore.getState().resumeTimer();
+            }}
+            style={{
+              background: '#FFD700',
+              color: '#07111F',
+              fontFamily: "'Space Mono', monospace",
+              fontSize: 16,
+              fontWeight: 700,
+              border: 'none',
+              borderRadius: 8,
+              padding: '14px 32px',
+              cursor: 'pointer',
+              letterSpacing: 1,
+            }}
+          >
+            ▶ {t('game.resume_game')}
+          </button>
         </div>
       )}
 

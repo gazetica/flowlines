@@ -64,72 +64,58 @@ describe('gameStore — one-use ad flags (F-009)', () => {
   });
 });
 
-// F-008 FIX 1: pause/resume the live countdown around rewarded ads, with a 3-2-1
-// resume countdown. The round must stay 'paused' (TimerComponent frozen) for the
-// whole ad + countdown, then return to 'playing' exactly once when it hits 0.
-describe('gameStore — resume countdown (F-008 FIX 1)', () => {
+// F-010: manual resume after rewarded ads. The 3-2-1 auto-countdown is gone; instead the
+// round stays 'paused' and an adJustCompleted flag drives the RESUME GAME overlay. The
+// player taps it to resume — there is no time-based auto-resume.
+describe('gameStore — manual resume / adJustCompleted (F-010)', () => {
   beforeEach(() => {
-    vi.useFakeTimers();
     useGameStore.getState().startLevel(1, 'campaign'); // status → 'playing'
   });
   afterEach(() => {
-    useGameStore.getState().resetGame(); // clears any in-flight interval
-    vi.useRealTimers();
+    useGameStore.getState().resetGame();
   });
 
-  it('pauseTimer pauses (freezes timer); resumeTimer restores playing', () => {
+  it('1. adJustCompleted defaults to false on a fresh round', () => {
+    expect(useGameStore.getState().adJustCompleted).toBe(false);
+  });
+
+  it('2. setAdJustCompleted(true) sets the flag (round stays paused)', () => {
+    useGameStore.getState().pauseTimer();
+    useGameStore.getState().setAdJustCompleted(true);
+    expect(useGameStore.getState().adJustCompleted).toBe(true);
+    expect(useGameStore.getState().status).toBe('paused'); // NO auto-resume
+  });
+
+  it('3. adJustCompleted resets to false on startLevel (new attempt)', () => {
+    useGameStore.getState().setAdJustCompleted(true);
+    useGameStore.getState().startLevel(1, 'campaign');
+    expect(useGameStore.getState().adJustCompleted).toBe(false);
+  });
+
+  it('4. resumeTimer un-pauses and clears adJustCompleted (RESUME GAME tap)', () => {
+    useGameStore.getState().pauseTimer();
+    useGameStore.getState().setAdJustCompleted(true);
+    // Mirrors the overlay button: clear the flag + resume.
+    useGameStore.getState().setAdJustCompleted(false);
+    useGameStore.getState().resumeTimer();
+    expect(useGameStore.getState().status).toBe('playing');
+    expect(useGameStore.getState().adJustCompleted).toBe(false);
+  });
+
+  it('5. pauseTimer freezes; resumeTimer restores playing', () => {
     expect(useGameStore.getState().status).toBe('playing');
     useGameStore.getState().pauseTimer();
     expect(useGameStore.getState().status).toBe('paused');
     useGameStore.getState().resumeTimer();
     expect(useGameStore.getState().status).toBe('playing');
-    expect(useGameStore.getState().resumeCountdown).toBeNull();
+    expect(useGameStore.getState().adJustCompleted).toBe(false);
   });
 
-  it('startResumeCountdown begins at 3 and does NOT resume synchronously', () => {
+  it('6. no auto-resume — the flag persists until resumeTimer is called', () => {
     useGameStore.getState().pauseTimer();
-    useGameStore.getState().startResumeCountdown();
-    // The resume is deferred (FIX 2): immediately after the call the overlay shows 3
-    // and the round is still paused — no synchronous state flip back to playing.
-    expect(useGameStore.getState().resumeCountdown).toBe(3);
+    useGameStore.getState().setAdJustCompleted(true);
+    // No timers/intervals involved: the paused state and flag just stay put.
     expect(useGameStore.getState().status).toBe('paused');
-  });
-
-  it('counts 3 → 2 → 1 then resets to null and resumes playing', () => {
-    useGameStore.getState().pauseTimer();
-    useGameStore.getState().startResumeCountdown();
-    expect(useGameStore.getState().resumeCountdown).toBe(3);
-    vi.advanceTimersByTime(1000);
-    expect(useGameStore.getState().resumeCountdown).toBe(2);
-    vi.advanceTimersByTime(1000);
-    expect(useGameStore.getState().resumeCountdown).toBe(1);
-    vi.advanceTimersByTime(1000);
-    // After the final tick: overlay cleared (null) and the round is playing again.
-    expect(useGameStore.getState().resumeCountdown).toBeNull();
-    expect(useGameStore.getState().status).toBe('playing');
-  });
-
-  it('is idempotent — a second call does not restart or extend the countdown', () => {
-    useGameStore.getState().pauseTimer();
-    useGameStore.getState().startResumeCountdown();
-    vi.advanceTimersByTime(1000);
-    expect(useGameStore.getState().resumeCountdown).toBe(2);
-    useGameStore.getState().startResumeCountdown(); // ignored (already counting)
-    expect(useGameStore.getState().resumeCountdown).toBe(2); // not reset to 3
-    vi.advanceTimersByTime(2000);
-    expect(useGameStore.getState().resumeCountdown).toBeNull();
-    expect(useGameStore.getState().status).toBe('playing');
-  });
-
-  it('starting a new level mid-countdown clears the countdown', () => {
-    useGameStore.getState().pauseTimer();
-    useGameStore.getState().startResumeCountdown();
-    expect(useGameStore.getState().resumeCountdown).toBe(3);
-    useGameStore.getState().startLevel(1, 'campaign'); // fresh round
-    expect(useGameStore.getState().resumeCountdown).toBeNull();
-    expect(useGameStore.getState().status).toBe('playing');
-    // The stale interval must not resurrect the overlay on a later tick.
-    vi.advanceTimersByTime(3000);
-    expect(useGameStore.getState().resumeCountdown).toBeNull();
+    expect(useGameStore.getState().adJustCompleted).toBe(true);
   });
 });

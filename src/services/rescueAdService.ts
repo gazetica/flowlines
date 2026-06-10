@@ -18,7 +18,7 @@ const RESCUE_OPTIONS: RewardAdOptions = {
 };
 
 // F-008 FIX 1: resolve once the rescue ad is actually DISMISSED (see the matching note
-// in rewardedAdService) so the caller's 3-2-1 resume overlay runs after the ad is gone,
+// in rewardedAdService) so the caller's RESUME GAME overlay (F-010) shows after the ad is gone,
 // not behind it. Listener removed on fire; safety timeout prevents a permanent pause.
 function awaitAdDismissed(): Promise<void> {
   return new Promise<void>((resolve) => {
@@ -82,12 +82,12 @@ export function activateRescueFlash(tileCount: number): void {
  * F-009: prepare + show a rewarded ad for the GET A CLUE pill. On 'rewarded' → reveal
  * the amber tiles AND mark the clue pill used for this attempt (one use). On dismiss /
  * no-fill / error → nothing (pill stays available). Native-only; no-ops on web.
- * Resolves only after the ad is DISMISSED so the caller's 3-2-1 resume overlay (F-008)
+ * Resolves only after the ad is DISMISSED so the caller's RESUME GAME overlay (F-010)
  * runs after the ad leaves the screen.
  */
 export async function showClueAd(tileCount: number): Promise<void> {
   // F-008 FIX 1 Part A: freeze the live countdown before the ad shows. Resume is owned
-  // by the caller's 3-2-1 countdown in GameScreen, so it is deliberately not called here.
+  // by the caller (F-010 manual RESUME GAME overlay), so it is deliberately not done here.
   useGameStore.getState().pauseTimer();
   const dismissed = awaitAdDismissed(); // register before showing
   let shown = false;
