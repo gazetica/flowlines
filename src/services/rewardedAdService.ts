@@ -10,6 +10,7 @@ import { AdMob, RewardAdPluginEvents } from '@capacitor-community/admob';
 import type { RewardAdOptions } from '@capacitor-community/admob';
 import { AD_UNITS } from './admob';
 import { useGameStore } from '../store/gameStore';
+import { resetInterstitialCounter } from './interstitialAdService';
 import * as analytics from './analytics';
 
 export type RewardedOutcome = 'rewarded' | 'dismissed' | 'unavailable';
@@ -84,7 +85,10 @@ export async function showRewarded(): Promise<RewardedOutcome> {
     const result = await AdMob.showRewardVideoAd(); // resolves on REWARD, not dismiss
     shown = true;
     rewarded = !!result;
-    if (rewarded) analytics.adImpression('rewarded'); // T-020 (AC6)
+    if (rewarded) {
+      analytics.adImpression('rewarded'); // T-020 (AC6)
+      void resetInterstitialCounter(); // B-024: a watched rewarded ad defers the interstitial
+    }
   } catch (err) {
     console.warn('[rewardedAdService] show failed:', err);
   } finally {

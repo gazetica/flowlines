@@ -11,6 +11,7 @@ import { AdMob, RewardAdPluginEvents } from '@capacitor-community/admob';
 import type { RewardAdOptions } from '@capacitor-community/admob';
 import { AD_UNITS } from './admob';
 import { useGameStore } from '../store/gameStore';
+import { resetInterstitialCounter } from './interstitialAdService';
 import * as analytics from './analytics';
 
 const RESCUE_OPTIONS: RewardAdOptions = {
@@ -99,6 +100,7 @@ export async function showClueAd(tileCount: number): Promise<void> {
       analytics.adImpression('rewarded'); // it is a rewarded ad (clue flow)
       activateRescueFlash(tileCount);
       useGameStore.getState().markCluePillUsed(); // F-009: one use per attempt
+      void resetInterstitialCounter(); // B-024: defer the interstitial after a watched ad
     }
     // dismissed / no reward → nothing happens (pill remains usable)
   } catch (err) {

@@ -35,6 +35,24 @@ function parseCount(value: string | null): number {
   return Number.isNaN(n) ? 0 : n;
 }
 
+/**
+ * B-024: reset BOTH interstitial triggers — the completion count back to 0 and the
+ * "last shown" timestamp back to now (which restarts the 3-minute clock). Identical to
+ * the reset a successful interstitial show performs, so watching ANY rewarded ad
+ * (gem / clue / time) buys the player the same fresh window: no interstitial until 5
+ * more completions OR 3 more minutes. Fire-and-forget; silent on a Preferences error.
+ */
+export async function resetInterstitialCounter(): Promise<void> {
+  try {
+    await Promise.all([
+      Preferences.set({ key: CAP_KEY, value: String(Date.now()) }),
+      Preferences.set({ key: COUNT_KEY, value: '0' }),
+    ]);
+  } catch (err) {
+    console.warn('[interstitialAdService] resetInterstitialCounter failed:', err);
+  }
+}
+
 /** Preload an interstitial. Idempotent; no-op while one is already in hand. */
 export async function loadInterstitial(): Promise<void> {
   if (prepared) return;
@@ -78,9 +96,9 @@ export async function showInterstitial(): Promise<void> {
     }
     await AdMob.showInterstitial();
     analytics.adImpression('interstitial'); // T-020 (AC6)
-    // T-018b: reset both triggers together, only on a confirmed show.
-    await Preferences.set({ key: CAP_KEY, value: String(Date.now()) });
-    await Preferences.set({ key: COUNT_KEY, value: '0' });
+    // T-018b: reset both triggers together, only on a confirmed show (B-024: same reset
+    // a rewarded-ad watch performs).
+    await resetInterstitialCounter();
   } catch (err) {
     console.warn('[interstitialAdService] show failed:', err);
   } finally {

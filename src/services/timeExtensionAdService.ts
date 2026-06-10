@@ -11,6 +11,7 @@ import { AdMob, RewardAdPluginEvents } from '@capacitor-community/admob';
 import type { RewardAdOptions } from '@capacitor-community/admob';
 import { AD_UNITS } from './admob';
 import { useGameStore } from '../store/gameStore';
+import { resetInterstitialCounter } from './interstitialAdService';
 import * as analytics from './analytics';
 
 // F-009: seconds granted by one LOW ON TIME watch. VER-003: bumped 15 → 30.
@@ -92,6 +93,7 @@ export async function showTimeExtensionAd(): Promise<boolean> {
       const { timeRemaining, setTimeRemaining, markTimePillUsed } = useGameStore.getState();
       setTimeRemaining(timeRemaining + TIME_EXTENSION_SECONDS);
       markTimePillUsed(); // F-009: one use per attempt
+      void resetInterstitialCounter(); // B-024: defer the interstitial after a watched ad
     }
   } catch (err) {
     console.warn('[timeExtensionAdService] showTimeExtensionAd failed:', err);

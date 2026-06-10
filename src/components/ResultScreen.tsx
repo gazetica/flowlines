@@ -43,6 +43,12 @@ export function ResultScreen() {
     (async () => {
       await incrementLevelCount();   // T-018b: count this completion first
       await maybeShowInterstitial(); // decides on dual trigger + IAP guard
+      // B-024 FIX 2: after the interstitial is dismissed the WebView can leave the
+      // fixed bottom nav off-screen (viewport not recalculated). A synthetic resize a
+      // beat after dismissal forces the WebView to re-lay-out the fixed/absolute
+      // elements so BottomNav returns on screen — no second back-press needed. Harmless
+      // when no ad showed (maybeShowInterstitial no-op'd). BottomNav.tsx stays untouched.
+      setTimeout(() => window.dispatchEvent(new Event('resize')), 150);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
