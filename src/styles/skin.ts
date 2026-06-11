@@ -1,64 +1,100 @@
-// skin.ts
-// Numtap | Gazetica Studio | Sprint 4 (Pre) | Task T-003 | VDD v1.2
-//
-// Single source of truth for VDD v1.2 skin constants (React/DOM side).
-// New code should import from here rather than hardcoding hex values.
-//
-// NOTE: index.css :root already defines the canonical CSS custom properties
-// (--navy, --gold, --success, --muted, etc.) used by the existing screens since
-// T-008. SKIN mirrors those values for TypeScript consumers (ParticleCanvas,
-// inline-style props, new surfaces). Phaser tile rendering in GameScene.ts uses
-// numeric hex (0xRRGGBB) via fillGradientStyle — CSS gradient strings can't be
-// passed to Phaser — so the GameScene keeps its own matching numeric constants
-// (the colours are identical to those below). See docs/design-system.md.
+// src/styles/skin.ts
+// Flow Lines — complete design token system
+// LOCKED once created — unlock per brief only
 
-export const SKIN = {
-  // Backgrounds
-  pageBg: '#07111F',
-  dotPattern: 'radial-gradient(circle, rgba(30,139,195,0.12) 1px, transparent 1px)',
-  dotSize: '18px 18px',
-  ambientGlow:
-    'radial-gradient(ellipse, rgba(255,215,0,0.07) 0%, rgba(30,139,195,0.05) 40%, transparent 70%)',
+export const skin = {
 
-  // Tile states (CSS-side; Phaser mirrors these numerically in GameScene)
-  tileDefault: 'linear-gradient(145deg, #0F2A48 0%, #0A1E38 100%)',
-  tileBorderDefault: 'rgba(30,139,195,0.35)',
-  tileLastTapped: 'linear-gradient(145deg, #FFD700 0%, #C8A800 100%)',
-  tileBorderGold: '#FFD700',
-  tileGoldGlow:
-    '0 0 14px rgba(255,215,0,0.45), 0 0 28px rgba(255,215,0,0.2), inset 0 1px 0 rgba(255,255,255,0.3)',
-  tileTapped: 'linear-gradient(145deg, #0d2a1a 0%, #091f12 100%)',
-  tileBorderGreen: 'rgba(46,204,113,0.5)',
-  tileGreenGlow: '0 0 8px rgba(46,204,113,0.15)',
+  // ─── Background scale ───────────────────────────────────────────────
+  bgDeep:        '#0D0620',
+  bgMid:         '#130830',
+  bgCard:        '#1C0E42',
+  bgRaised:      '#24145A',
+  bgBorder:      '#2E1A70',
 
-  // Grid container
-  gridBg: 'rgba(10,26,46,0.4)',
-  gridBorder: 'rgba(30,139,195,0.25)',
-  gridShadow: '0 0 20px rgba(30,139,195,0.08), 0 4px 24px rgba(0,0,0,0.5)',
+  // ─── Brand accent ───────────────────────────────────────────────────
+  purple:        '#7F77DD',
+  purpleLight:   '#ADA7F0',
+  purpleDim:     '#4A4399',
+  gold:          '#FFD700',
+  goldDim:       '#C8A800',
+  white:         '#EDE8FF',
+  muted:         '#6B5C99',
+  muted2:        '#40306A',
+  danger:        '#E05050',
 
-  // HUD
-  hudBg: 'rgba(10,26,46,0.9)',
-  hudBorder: 'rgba(30,139,195,0.3)',
+  // ─── Game path colours — 8 total ────────────────────────────────────
+  // Pack 1: red / blue / green / yellow / purple  (5 colours)
+  // Pack 2: adds orange                           (6 colours)
+  // Pack 3: adds teal                             (7 colours)
+  // Pack 4: adds pink                             (8 colours)
+  pathColors: {
+    red:    '#E24B4A',
+    blue:   '#378ADD',
+    green:  '#639922',
+    yellow: '#EF9F27',
+    purple: '#7F77DD',
+    orange: '#D85A30',
+    teal:   '#1D9E75',
+    pink:   '#D4537E',
+  },
 
-  // Nav bar
-  navBg: 'rgba(8,18,32,0.95)',
-  navBorder: 'rgba(30,139,195,0.2)',
-  navActive: '#FFD700',
-  navInactive: '#5E7A9C',
+  // ─── Glow variants — path colour at 35% opacity ─────────────────────
+  // Used for dot endpoint outer glow rings
+  glowColors: {
+    red:    'rgba(226,75,74,0.35)',
+    blue:   'rgba(55,138,221,0.35)',
+    green:  'rgba(99,153,34,0.35)',
+    yellow: 'rgba(239,159,39,0.35)',
+    purple: 'rgba(127,119,221,0.35)',
+    orange: 'rgba(216,90,48,0.35)',
+    teal:   'rgba(29,158,117,0.35)',
+    pink:   'rgba(212,83,126,0.35)',
+  },
 
-  // Button
-  btnGold: 'linear-gradient(135deg, #FFD700 0%, #C8A800 50%, #FFD700 100%)',
-  btnGoldShadow:
-    '0 0 16px rgba(255,215,0,0.35), 0 4px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.25)',
+  // ─── Cell fill variants — path colour at 22% opacity ────────────────
+  // Used for occupied cell background fill
+  cellFillColors: {
+    red:    'rgba(226,75,74,0.22)',
+    blue:   'rgba(55,138,221,0.22)',
+    green:  'rgba(99,153,34,0.22)',
+    yellow: 'rgba(239,159,39,0.22)',
+    purple: 'rgba(127,119,221,0.22)',
+    orange: 'rgba(216,90,48,0.22)',
+    teal:   'rgba(29,158,117,0.22)',
+    pink:   'rgba(212,83,126,0.22)',
+  },
 
-  // Text
-  gold: '#FFD700',
-  goldGlow: '0 0 10px rgba(255,215,0,0.5)',
-  success: '#2ECC71',
-  muted: '#5E7A9C',
-  white: '#E8F0F8',
+  // ─── Grid rendering constants (VDD spec — do not change) ────────────
+  grid: {
+    padTotal:        16,    // total horizontal padding around grid (px)
+    gapSmall:         3,    // cell gap for 6×6 and 7×7 grids
+    gapLarge:         2,    // cell gap for 8×8 and 9×9 grids
+    cellMinSize:     28,    // minimum cell px for finger accuracy
+    pathStrokeRatio: 0.40,  // path stroke width = cellSize × 0.40
+    dotSizeRatio:    0.70,  // dot endpoint diameter = cellSize × 0.70
+    cellRadius:       3,    // border-radius on grid cells (px)
+  },
 
-  // Card surfaces
-  cardBg: 'rgba(15,32,64,0.8)',
-  cardBorder: 'rgba(26,53,88,0.8)',
+  // ─── Typography ─────────────────────────────────────────────────────
+  fontDisplay: "'Space Mono', monospace",
+  fontBody:    "'DM Sans', sans-serif",
+
+  // ─── Coverage bar gradient (purple → gold) ──────────────────────────
+  coverageGradient: 'linear-gradient(90deg, #7F77DD 0%, #FFD700 100%)',
+
+  // ─── Glassmorphism card tokens ──────────────────────────────────────
+  cardFill:   'rgba(255,255,255,0.05)',
+  cardBorder: 'rgba(127,119,221,0.25)',
+
+  // ─── Locked pack / level opacity ────────────────────────────────────
+  lockedAlpha: 0.42,
+
 } as const;
+
+// ─── Types ──────────────────────────────────────────────────────────────
+export type PathColour = keyof typeof skin.pathColors;
+
+// ─── Helpers ──────────────────────────────────────────────────────────────
+export const getPathColor     = (c: PathColour): string => skin.pathColors[c];
+export const getGlowColor     = (c: PathColour): string => skin.glowColors[c];
+export const getCellFillColor = (c: PathColour): string => skin.cellFillColors[c];

@@ -2,8 +2,8 @@ import { AdMob } from '@capacitor-community/admob';
 import type { AdOptions, RewardAdOptions } from '@capacitor-community/admob';
 
 export const AD_UNITS = {
-  REWARDED:     'ca-app-pub-7932168293321470/8916890465',
-  INTERSTITIAL: 'ca-app-pub-7932168293321470/5496520200',
+  REWARDED:     'ca-app-pub-3940256099942544/5224354917', // Google universal test ID — live IDs only at T-015
+  INTERSTITIAL: 'ca-app-pub-3940256099942544/1033173712', // Google universal test ID — live IDs only at T-015
 };
 
 export async function initAdmob() {

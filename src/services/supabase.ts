@@ -55,7 +55,7 @@ export async function submitScore(params: SubmitScoreParams): Promise<ScoreRow |
   const { playerUid } = useSettingsStore.getState();
 
   const { data, error } = await supabase
-    .from('scores')
+    .from('flowlines_scores')
     .insert({
       player_uid: playerUid,
       alias: alias || 'Player',
@@ -85,7 +85,7 @@ export async function submitScore(params: SubmitScoreParams): Promise<ScoreRow |
  */
 export async function fetchLeaderboard(tab: LeaderboardTab, limit = 50): Promise<ScoreRow[]> {
   let query = supabase
-    .from('scores')
+    .from('flowlines_scores')
     .select('*')
     .order('score', { ascending: false })
     .limit(limit);
@@ -113,7 +113,7 @@ export async function fetchLeaderboard(tab: LeaderboardTab, limit = 50): Promise
  */
 export async function fetchPlayerRank(tab: LeaderboardTab, playerScore: number): Promise<number | null> {
   let query = supabase
-    .from('scores')
+    .from('flowlines_scores')
     .select('score', { count: 'exact', head: true })
     .gt('score', playerScore);
 
