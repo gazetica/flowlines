@@ -446,8 +446,9 @@ export class GameScene extends Phaser.Scene {
   private checkWin(): void {
     if (isWinCondition(this.grid, this.levelConfig!.dots)) {
       useFlowGameStore.getState().setStatus('complete');
-      // Win animation + ResultScreen navigation wired in Day 6 / Sprint 3.
-      console.log('WIN DETECTED');
+      // Phaser has no React Router access — dispatch a DOM event that
+      // GameScreen.tsx listens for and turns into navigate('/win').
+      window.dispatchEvent(new CustomEvent('fl:win'));
     }
   }
 

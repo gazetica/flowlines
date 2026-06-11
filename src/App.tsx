@@ -27,6 +27,8 @@ import { CampaignScreen } from './components/CampaignScreen';
 import { DifficultyScreen } from './components/DifficultyScreen';
 import { FreePlayScreen } from './components/FreePlayScreen';
 import { DailyHubScreen } from './components/DailyHubScreen';
+import { WinScreen } from './components/WinScreen';
+import { useFlowSettingsStore } from './store/flowSettingsStore';
 
 /**
  * Decides the first screen to show based on onboarding flags.
@@ -63,6 +65,13 @@ export function App() {
     void initialiseBilling(); // T-019: connect the Play Billing client (native only)
   }, []);
 
+  // FL-S1-006: hydrate Flow Lines settings from Capacitor Preferences on mount,
+  // before any screen needs them. Web-safe (Preferences has a web shim).
+  const hydrateFlowSettings = useFlowSettingsStore((s) => s.hydrate);
+  useEffect(() => {
+    void hydrateFlowSettings();
+  }, [hydrateFlowSettings]);
+
   // B-002: background music. Settings are hydrated before App renders (main.tsx
   // awaits loadFromPreferences), so the saved toggle is reliable here. init()
   // wires the background/foreground listener; we only auto-play if music was left
@@ -81,6 +90,7 @@ export function App() {
         <Route path="/how-to-play" element={<HowToPlayScreen />} />
         <Route path="/home" element={<HomeScreen />} />
         <Route path="/game" element={<GameScreen />} />
+        <Route path="/win" element={<WinScreen />} />
         <Route path="/settings" element={<SettingsScreen />} />
         <Route path="/leaderboard" element={<LeaderboardScreen />} />
         <Route path="/about" element={<AboutScreen />} />

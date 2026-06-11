@@ -36,6 +36,7 @@ export interface FlowGameState {
   setScore: (n: number) => void;
   setPath: (colour: Colour, cells: Cell[]) => void;
   clearPath: (colour: Colour) => void;
+  useHint: () => void;
   resetGame: () => void;
 }
 
@@ -62,6 +63,7 @@ export const useFlowGameStore = create<FlowGameState>((set) => ({
       delete paths[colour];
       return { paths };
     }),
+  useHint: () => set((state) => ({ hintsUsed: Math.min(3, state.hintsUsed + 1) })),
   resetGame: () =>
     set({
       paths: {},

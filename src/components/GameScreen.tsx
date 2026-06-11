@@ -5,6 +5,7 @@
 // reads from the Flow Lines Zustand store. No SKIN import — uses lowercase `skin`.
 
 import { useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Phaser from 'phaser';
 import { GameScene, type LevelConfig } from '../game/scenes/GameScene';
 import { skin } from '../styles/skin';
@@ -26,6 +27,7 @@ export function GameScreen() {
   const phaserRef = useRef<HTMLDivElement>(null);
   const gameRef = useRef<Phaser.Game | null>(null);
 
+  const navigate = useNavigate();
   const coverage = useFlowGameStore((s) => s.coverage);
   const moveCount = useFlowGameStore((s) => s.moveCount);
 
@@ -49,10 +51,16 @@ export function GameScreen() {
       scene?.loadLevel(TEST_LEVEL);
     });
 
+    // GameScene dispatches 'fl:win' on win condition → navigate to the win screen.
+    const handleWin = () => navigate('/win');
+    window.addEventListener('fl:win', handleWin);
+
     return () => {
+      window.removeEventListener('fl:win', handleWin);
       gameRef.current?.destroy(true);
       gameRef.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
