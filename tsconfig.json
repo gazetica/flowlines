@@ -3,5 +3,15 @@
   "references": [
     { "path": "./tsconfig.app.json" },
     { "path": "./tsconfig.node.json" }
-  ]
+  ],
+  "ts-node": {
+    "esm": false,
+    "compilerOptions": {
+      "module": "commonjs",
+      "target": "es2020",
+      "lib": ["es2020"],
+      "types": ["node"],
+      "moduleResolution": "node"
+    }
+  }
 }
