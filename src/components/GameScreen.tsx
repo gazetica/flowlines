@@ -1,13 +1,14 @@
 // GameScreen.tsx
 // Flow Lines | Gazetica Studio | Sprint 1 Day 4 | Task FL-S1-004
 //
-// Minimal Day-4 shell: mounts the Phaser GameScene and shows a skeleton HUD.
-// Full HUD wiring comes in Days 5 and 6. No SKIN import — uses lowercase `skin`.
+// Mounts the Phaser GameScene and shows the HUD with a live coverage bar that
+// reads from the Flow Lines Zustand store. No SKIN import — uses lowercase `skin`.
 
 import { useEffect, useRef } from 'react';
 import Phaser from 'phaser';
 import { GameScene, type LevelConfig } from '../game/scenes/GameScene';
 import { skin } from '../styles/skin';
+import { useFlowGameStore } from '../store/flowGameStore';
 
 // Hardcoded test level for the Day 4 device check (5 dot pairs on a 6×6).
 const TEST_LEVEL: LevelConfig = {
@@ -24,6 +25,9 @@ const TEST_LEVEL: LevelConfig = {
 export function GameScreen() {
   const phaserRef = useRef<HTMLDivElement>(null);
   const gameRef = useRef<Phaser.Game | null>(null);
+
+  const coverage = useFlowGameStore((s) => s.coverage);
+  const moveCount = useFlowGameStore((s) => s.moveCount);
 
   useEffect(() => {
     if (!phaserRef.current || gameRef.current) return;
@@ -61,20 +65,40 @@ export function GameScreen() {
         flexDirection: 'column',
       }}
     >
-      {/* Skeleton HUD — replaced in Day 5/6 */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          padding: '8px 16px',
-          background: 'rgba(0,0,0,0.3)',
-          fontFamily: skin.fontDisplay,
-          color: skin.white,
-          fontSize: 12,
-        }}
-      >
-        <span>Moves: 0</span>
-        <span>Coverage: 0%</span>
+      {/* HUD — moves, coverage %, and live purple→gold coverage bar */}
+      <div style={{ display: 'flex', flexDirection: 'column', background: 'rgba(0,0,0,0.4)' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            padding: '8px 16px 4px',
+            fontFamily: skin.fontDisplay,
+            color: skin.white,
+            fontSize: 12,
+          }}
+        >
+          <span>Moves: {moveCount}</span>
+          <span>Coverage: {coverage}%</span>
+        </div>
+        <div
+          style={{
+            height: 4,
+            margin: '0 16px 6px',
+            background: skin.bgBorder,
+            borderRadius: 2,
+            overflow: 'hidden',
+          }}
+        >
+          <div
+            style={{
+              height: '100%',
+              width: `${coverage}%`,
+              background: skin.coverageGradient,
+              borderRadius: 2,
+              transition: 'width 0.1s ease-out',
+            }}
+          />
+        </div>
       </div>
 
       {/* Phaser mount point */}
