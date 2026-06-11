@@ -1,1 +1,2202 @@
-[]
+[
+  {
+    "id": "p1_001",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 4,
+        "c1": 1,
+        "r2": 3,
+        "c2": 3
+      },
+      {
+        "colour": "blue",
+        "r1": 0,
+        "c1": 5,
+        "r2": 2,
+        "c2": 5
+      },
+      {
+        "colour": "green",
+        "r1": 3,
+        "c1": 2,
+        "r2": 3,
+        "c2": 5
+      },
+      {
+        "colour": "yellow",
+        "r1": 0,
+        "c1": 3,
+        "r2": 5,
+        "c2": 1
+      },
+      {
+        "colour": "purple",
+        "r1": 2,
+        "c1": 0,
+        "r2": 0,
+        "c2": 0
+      }
+    ]
+  },
+  {
+    "id": "p1_002",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 0,
+        "c1": 0,
+        "r2": 1,
+        "c2": 2
+      },
+      {
+        "colour": "blue",
+        "r1": 3,
+        "c1": 1,
+        "r2": 1,
+        "c2": 0
+      },
+      {
+        "colour": "green",
+        "r1": 5,
+        "c1": 5,
+        "r2": 5,
+        "c2": 1
+      },
+      {
+        "colour": "yellow",
+        "r1": 2,
+        "c1": 5,
+        "r2": 3,
+        "c2": 4
+      },
+      {
+        "colour": "purple",
+        "r1": 5,
+        "c1": 0,
+        "r2": 0,
+        "c2": 4
+      }
+    ]
+  },
+  {
+    "id": "p1_003",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 5,
+        "c1": 5,
+        "r2": 2,
+        "c2": 1
+      },
+      {
+        "colour": "blue",
+        "r1": 3,
+        "c1": 2,
+        "r2": 2,
+        "c2": 5
+      },
+      {
+        "colour": "green",
+        "r1": 0,
+        "c1": 5,
+        "r2": 1,
+        "c2": 3
+      },
+      {
+        "colour": "yellow",
+        "r1": 0,
+        "c1": 4,
+        "r2": 1,
+        "c2": 2
+      },
+      {
+        "colour": "purple",
+        "r1": 4,
+        "c1": 2,
+        "r2": 3,
+        "c2": 5
+      }
+    ]
+  },
+  {
+    "id": "p1_004",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 4,
+        "c1": 2,
+        "r2": 4,
+        "c2": 4
+      },
+      {
+        "colour": "blue",
+        "r1": 0,
+        "c1": 0,
+        "r2": 3,
+        "c2": 1
+      },
+      {
+        "colour": "green",
+        "r1": 4,
+        "c1": 1,
+        "r2": 1,
+        "c2": 3
+      },
+      {
+        "colour": "yellow",
+        "r1": 3,
+        "c1": 4,
+        "r2": 3,
+        "c2": 2
+      },
+      {
+        "colour": "purple",
+        "r1": 1,
+        "c1": 4,
+        "r2": 2,
+        "c2": 1
+      }
+    ]
+  },
+  {
+    "id": "p1_005",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 4,
+        "c1": 4,
+        "r2": 3,
+        "c2": 2
+      },
+      {
+        "colour": "blue",
+        "r1": 2,
+        "c1": 5,
+        "r2": 1,
+        "c2": 4
+      },
+      {
+        "colour": "green",
+        "r1": 2,
+        "c1": 4,
+        "r2": 5,
+        "c2": 5
+      },
+      {
+        "colour": "yellow",
+        "r1": 4,
+        "c1": 3,
+        "r2": 0,
+        "c2": 0
+      },
+      {
+        "colour": "purple",
+        "r1": 3,
+        "c1": 0,
+        "r2": 2,
+        "c2": 2
+      }
+    ]
+  },
+  {
+    "id": "p1_006",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 3,
+        "c1": 5,
+        "r2": 3,
+        "c2": 3
+      },
+      {
+        "colour": "blue",
+        "r1": 5,
+        "c1": 3,
+        "r2": 1,
+        "c2": 5
+      },
+      {
+        "colour": "green",
+        "r1": 5,
+        "c1": 2,
+        "r2": 4,
+        "c2": 1
+      },
+      {
+        "colour": "yellow",
+        "r1": 2,
+        "c1": 0,
+        "r2": 0,
+        "c2": 5
+      },
+      {
+        "colour": "purple",
+        "r1": 1,
+        "c1": 2,
+        "r2": 2,
+        "c2": 1
+      }
+    ]
+  },
+  {
+    "id": "p1_007",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 2,
+        "c1": 1,
+        "r2": 5,
+        "c2": 5
+      },
+      {
+        "colour": "blue",
+        "r1": 1,
+        "c1": 4,
+        "r2": 3,
+        "c2": 4
+      },
+      {
+        "colour": "green",
+        "r1": 3,
+        "c1": 2,
+        "r2": 1,
+        "c2": 1
+      },
+      {
+        "colour": "yellow",
+        "r1": 1,
+        "c1": 3,
+        "r2": 1,
+        "c2": 5
+      },
+      {
+        "colour": "purple",
+        "r1": 4,
+        "c1": 2,
+        "r2": 2,
+        "c2": 3
+      }
+    ]
+  },
+  {
+    "id": "p1_008",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 1,
+        "c1": 1,
+        "r2": 3,
+        "c2": 1
+      },
+      {
+        "colour": "blue",
+        "r1": 4,
+        "c1": 4,
+        "r2": 5,
+        "c2": 3
+      },
+      {
+        "colour": "green",
+        "r1": 3,
+        "c1": 5,
+        "r2": 5,
+        "c2": 0
+      },
+      {
+        "colour": "yellow",
+        "r1": 3,
+        "c1": 2,
+        "r2": 1,
+        "c2": 2
+      },
+      {
+        "colour": "purple",
+        "r1": 4,
+        "c1": 1,
+        "r2": 0,
+        "c2": 5
+      }
+    ]
+  },
+  {
+    "id": "p1_009",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 2,
+        "c1": 5,
+        "r2": 3,
+        "c2": 2
+      },
+      {
+        "colour": "blue",
+        "r1": 3,
+        "c1": 0,
+        "r2": 0,
+        "c2": 0
+      },
+      {
+        "colour": "green",
+        "r1": 2,
+        "c1": 3,
+        "r2": 1,
+        "c2": 5
+      },
+      {
+        "colour": "yellow",
+        "r1": 1,
+        "c1": 1,
+        "r2": 0,
+        "c2": 3
+      },
+      {
+        "colour": "purple",
+        "r1": 2,
+        "c1": 2,
+        "r2": 5,
+        "c2": 1
+      }
+    ]
+  },
+  {
+    "id": "p1_010",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 1,
+        "c1": 2,
+        "r2": 0,
+        "c2": 1
+      },
+      {
+        "colour": "blue",
+        "r1": 5,
+        "c1": 2,
+        "r2": 0,
+        "c2": 4
+      },
+      {
+        "colour": "green",
+        "r1": 2,
+        "c1": 2,
+        "r2": 0,
+        "c2": 0
+      },
+      {
+        "colour": "yellow",
+        "r1": 5,
+        "c1": 0,
+        "r2": 2,
+        "c2": 0
+      },
+      {
+        "colour": "purple",
+        "r1": 0,
+        "c1": 5,
+        "r2": 3,
+        "c2": 5
+      }
+    ]
+  },
+  {
+    "id": "p1_011",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 3,
+        "c1": 3,
+        "r2": 2,
+        "c2": 4
+      },
+      {
+        "colour": "blue",
+        "r1": 1,
+        "c1": 4,
+        "r2": 5,
+        "c2": 1
+      },
+      {
+        "colour": "green",
+        "r1": 5,
+        "c1": 2,
+        "r2": 4,
+        "c2": 1
+      },
+      {
+        "colour": "yellow",
+        "r1": 1,
+        "c1": 2,
+        "r2": 2,
+        "c2": 1
+      },
+      {
+        "colour": "purple",
+        "r1": 0,
+        "c1": 0,
+        "r2": 2,
+        "c2": 0
+      }
+    ]
+  },
+  {
+    "id": "p1_012",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 2,
+        "c1": 4,
+        "r2": 4,
+        "c2": 3
+      },
+      {
+        "colour": "blue",
+        "r1": 1,
+        "c1": 1,
+        "r2": 5,
+        "c2": 2
+      },
+      {
+        "colour": "green",
+        "r1": 3,
+        "c1": 2,
+        "r2": 0,
+        "c2": 2
+      },
+      {
+        "colour": "yellow",
+        "r1": 0,
+        "c1": 3,
+        "r2": 3,
+        "c2": 5
+      },
+      {
+        "colour": "purple",
+        "r1": 1,
+        "c1": 4,
+        "r2": 3,
+        "c2": 3
+      }
+    ]
+  },
+  {
+    "id": "p1_013",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 3,
+        "c1": 4,
+        "r2": 2,
+        "c2": 5
+      },
+      {
+        "colour": "blue",
+        "r1": 2,
+        "c1": 2,
+        "r2": 1,
+        "c2": 1
+      },
+      {
+        "colour": "green",
+        "r1": 3,
+        "c1": 5,
+        "r2": 1,
+        "c2": 2
+      },
+      {
+        "colour": "yellow",
+        "r1": 4,
+        "c1": 4,
+        "r2": 3,
+        "c2": 3
+      },
+      {
+        "colour": "purple",
+        "r1": 2,
+        "c1": 3,
+        "r2": 0,
+        "c2": 5
+      }
+    ]
+  },
+  {
+    "id": "p1_014",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 3,
+        "c1": 3,
+        "r2": 4,
+        "c2": 0
+      },
+      {
+        "colour": "blue",
+        "r1": 4,
+        "c1": 1,
+        "r2": 5,
+        "c2": 0
+      },
+      {
+        "colour": "green",
+        "r1": 1,
+        "c1": 1,
+        "r2": 3,
+        "c2": 1
+      },
+      {
+        "colour": "yellow",
+        "r1": 4,
+        "c1": 5,
+        "r2": 1,
+        "c2": 3
+      },
+      {
+        "colour": "purple",
+        "r1": 3,
+        "c1": 4,
+        "r2": 0,
+        "c2": 5
+      }
+    ]
+  },
+  {
+    "id": "p1_015",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 3,
+        "c1": 2,
+        "r2": 3,
+        "c2": 0
+      },
+      {
+        "colour": "blue",
+        "r1": 4,
+        "c1": 0,
+        "r2": 5,
+        "c2": 3
+      },
+      {
+        "colour": "green",
+        "r1": 4,
+        "c1": 1,
+        "r2": 0,
+        "c2": 4
+      },
+      {
+        "colour": "yellow",
+        "r1": 1,
+        "c1": 4,
+        "r2": 3,
+        "c2": 4
+      },
+      {
+        "colour": "purple",
+        "r1": 1,
+        "c1": 3,
+        "r2": 3,
+        "c2": 3
+      }
+    ]
+  },
+  {
+    "id": "p1_016",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 3,
+        "c1": 4,
+        "r2": 0,
+        "c2": 0
+      },
+      {
+        "colour": "blue",
+        "r1": 4,
+        "c1": 2,
+        "r2": 1,
+        "c2": 1
+      },
+      {
+        "colour": "green",
+        "r1": 3,
+        "c1": 2,
+        "r2": 4,
+        "c2": 1
+      },
+      {
+        "colour": "yellow",
+        "r1": 5,
+        "c1": 1,
+        "r2": 5,
+        "c2": 3
+      },
+      {
+        "colour": "purple",
+        "r1": 5,
+        "c1": 0,
+        "r2": 3,
+        "c2": 0
+      }
+    ]
+  },
+  {
+    "id": "p1_017",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 4,
+        "c1": 1,
+        "r2": 4,
+        "c2": 3
+      },
+      {
+        "colour": "blue",
+        "r1": 4,
+        "c1": 0,
+        "r2": 3,
+        "c2": 5
+      },
+      {
+        "colour": "green",
+        "r1": 2,
+        "c1": 2,
+        "r2": 1,
+        "c2": 5
+      },
+      {
+        "colour": "yellow",
+        "r1": 0,
+        "c1": 3,
+        "r2": 1,
+        "c2": 0
+      },
+      {
+        "colour": "purple",
+        "r1": 0,
+        "c1": 5,
+        "r2": 1,
+        "c2": 1
+      }
+    ]
+  },
+  {
+    "id": "p1_018",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 4,
+        "c1": 1,
+        "r2": 3,
+        "c2": 2
+      },
+      {
+        "colour": "blue",
+        "r1": 2,
+        "c1": 0,
+        "r2": 0,
+        "c2": 3
+      },
+      {
+        "colour": "green",
+        "r1": 0,
+        "c1": 4,
+        "r2": 2,
+        "c2": 3
+      },
+      {
+        "colour": "yellow",
+        "r1": 4,
+        "c1": 0,
+        "r2": 2,
+        "c2": 2
+      },
+      {
+        "colour": "purple",
+        "r1": 5,
+        "c1": 5,
+        "r2": 5,
+        "c2": 0
+      }
+    ]
+  },
+  {
+    "id": "p1_019",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 1,
+        "c1": 2,
+        "r2": 1,
+        "c2": 4
+      },
+      {
+        "colour": "blue",
+        "r1": 1,
+        "c1": 5,
+        "r2": 0,
+        "c2": 4
+      },
+      {
+        "colour": "green",
+        "r1": 4,
+        "c1": 5,
+        "r2": 0,
+        "c2": 1
+      },
+      {
+        "colour": "yellow",
+        "r1": 3,
+        "c1": 5,
+        "r2": 2,
+        "c2": 2
+      },
+      {
+        "colour": "purple",
+        "r1": 5,
+        "c1": 2,
+        "r2": 5,
+        "c2": 5
+      }
+    ]
+  },
+  {
+    "id": "p1_020",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 0,
+        "c1": 0,
+        "r2": 2,
+        "c2": 1
+      },
+      {
+        "colour": "blue",
+        "r1": 3,
+        "c1": 3,
+        "r2": 4,
+        "c2": 5
+      },
+      {
+        "colour": "green",
+        "r1": 3,
+        "c1": 2,
+        "r2": 5,
+        "c2": 3
+      },
+      {
+        "colour": "yellow",
+        "r1": 4,
+        "c1": 0,
+        "r2": 3,
+        "c2": 1
+      },
+      {
+        "colour": "purple",
+        "r1": 1,
+        "c1": 4,
+        "r2": 3,
+        "c2": 0
+      }
+    ]
+  },
+  {
+    "id": "p1_021",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 0,
+        "c1": 3,
+        "r2": 2,
+        "c2": 5
+      },
+      {
+        "colour": "blue",
+        "r1": 3,
+        "c1": 1,
+        "r2": 4,
+        "c2": 5
+      },
+      {
+        "colour": "green",
+        "r1": 3,
+        "c1": 2,
+        "r2": 3,
+        "c2": 5
+      },
+      {
+        "colour": "yellow",
+        "r1": 2,
+        "c1": 2,
+        "r2": 2,
+        "c2": 4
+      },
+      {
+        "colour": "purple",
+        "r1": 5,
+        "c1": 1,
+        "r2": 3,
+        "c2": 0
+      }
+    ]
+  },
+  {
+    "id": "p1_022",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 0,
+        "c1": 3,
+        "r2": 1,
+        "c2": 4
+      },
+      {
+        "colour": "blue",
+        "r1": 3,
+        "c1": 1,
+        "r2": 3,
+        "c2": 3
+      },
+      {
+        "colour": "green",
+        "r1": 1,
+        "c1": 0,
+        "r2": 2,
+        "c2": 2
+      },
+      {
+        "colour": "yellow",
+        "r1": 0,
+        "c1": 0,
+        "r2": 5,
+        "c2": 2
+      },
+      {
+        "colour": "purple",
+        "r1": 2,
+        "c1": 0,
+        "r2": 5,
+        "c2": 0
+      }
+    ]
+  },
+  {
+    "id": "p1_023",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 2,
+        "c1": 2,
+        "r2": 0,
+        "c2": 2
+      },
+      {
+        "colour": "blue",
+        "r1": 0,
+        "c1": 1,
+        "r2": 5,
+        "c2": 3
+      },
+      {
+        "colour": "green",
+        "r1": 3,
+        "c1": 4,
+        "r2": 0,
+        "c2": 5
+      },
+      {
+        "colour": "yellow",
+        "r1": 0,
+        "c1": 4,
+        "r2": 1,
+        "c2": 3
+      },
+      {
+        "colour": "purple",
+        "r1": 4,
+        "c1": 5,
+        "r2": 4,
+        "c2": 1
+      }
+    ]
+  },
+  {
+    "id": "p1_024",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 2,
+        "c1": 4,
+        "r2": 4,
+        "c2": 4
+      },
+      {
+        "colour": "blue",
+        "r1": 5,
+        "c1": 2,
+        "r2": 3,
+        "c2": 2
+      },
+      {
+        "colour": "green",
+        "r1": 1,
+        "c1": 4,
+        "r2": 5,
+        "c2": 4
+      },
+      {
+        "colour": "yellow",
+        "r1": 0,
+        "c1": 2,
+        "r2": 5,
+        "c2": 0
+      },
+      {
+        "colour": "purple",
+        "r1": 5,
+        "c1": 3,
+        "r2": 1,
+        "c2": 1
+      }
+    ]
+  },
+  {
+    "id": "p1_025",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 4,
+        "c1": 0,
+        "r2": 0,
+        "c2": 1
+      },
+      {
+        "colour": "blue",
+        "r1": 0,
+        "c1": 4,
+        "r2": 5,
+        "c2": 5
+      },
+      {
+        "colour": "green",
+        "r1": 4,
+        "c1": 4,
+        "r2": 2,
+        "c2": 1
+      },
+      {
+        "colour": "yellow",
+        "r1": 5,
+        "c1": 2,
+        "r2": 5,
+        "c2": 4
+      },
+      {
+        "colour": "purple",
+        "r1": 1,
+        "c1": 4,
+        "r2": 3,
+        "c2": 3
+      }
+    ]
+  },
+  {
+    "id": "p1_026",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 4,
+        "c1": 1,
+        "r2": 0,
+        "c2": 0
+      },
+      {
+        "colour": "blue",
+        "r1": 0,
+        "c1": 2,
+        "r2": 5,
+        "c2": 3
+      },
+      {
+        "colour": "green",
+        "r1": 2,
+        "c1": 5,
+        "r2": 4,
+        "c2": 4
+      },
+      {
+        "colour": "yellow",
+        "r1": 5,
+        "c1": 2,
+        "r2": 0,
+        "c2": 1
+      },
+      {
+        "colour": "purple",
+        "r1": 1,
+        "c1": 3,
+        "r2": 0,
+        "c2": 5
+      }
+    ]
+  },
+  {
+    "id": "p1_027",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 1,
+        "c1": 3,
+        "r2": 2,
+        "c2": 5
+      },
+      {
+        "colour": "blue",
+        "r1": 0,
+        "c1": 1,
+        "r2": 4,
+        "c2": 2
+      },
+      {
+        "colour": "green",
+        "r1": 5,
+        "c1": 3,
+        "r2": 3,
+        "c2": 0
+      },
+      {
+        "colour": "yellow",
+        "r1": 0,
+        "c1": 2,
+        "r2": 1,
+        "c2": 5
+      },
+      {
+        "colour": "purple",
+        "r1": 5,
+        "c1": 4,
+        "r2": 4,
+        "c2": 5
+      }
+    ]
+  },
+  {
+    "id": "p1_028",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 2,
+        "c1": 1,
+        "r2": 1,
+        "c2": 2
+      },
+      {
+        "colour": "blue",
+        "r1": 5,
+        "c1": 1,
+        "r2": 4,
+        "c2": 2
+      },
+      {
+        "colour": "green",
+        "r1": 0,
+        "c1": 0,
+        "r2": 3,
+        "c2": 0
+      },
+      {
+        "colour": "yellow",
+        "r1": 2,
+        "c1": 4,
+        "r2": 3,
+        "c2": 3
+      },
+      {
+        "colour": "purple",
+        "r1": 5,
+        "c1": 0,
+        "r2": 1,
+        "c2": 4
+      }
+    ]
+  },
+  {
+    "id": "p1_029",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 0,
+        "c1": 5,
+        "r2": 1,
+        "c2": 0
+      },
+      {
+        "colour": "blue",
+        "r1": 3,
+        "c1": 1,
+        "r2": 2,
+        "c2": 0
+      },
+      {
+        "colour": "green",
+        "r1": 4,
+        "c1": 5,
+        "r2": 2,
+        "c2": 3
+      },
+      {
+        "colour": "yellow",
+        "r1": 1,
+        "c1": 4,
+        "r2": 3,
+        "c2": 5
+      },
+      {
+        "colour": "purple",
+        "r1": 4,
+        "c1": 0,
+        "r2": 5,
+        "c2": 3
+      }
+    ]
+  },
+  {
+    "id": "p1_030",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 0,
+        "c1": 5,
+        "r2": 3,
+        "c2": 5
+      },
+      {
+        "colour": "blue",
+        "r1": 5,
+        "c1": 2,
+        "r2": 0,
+        "c2": 3
+      },
+      {
+        "colour": "green",
+        "r1": 1,
+        "c1": 1,
+        "r2": 0,
+        "c2": 4
+      },
+      {
+        "colour": "yellow",
+        "r1": 2,
+        "c1": 3,
+        "r2": 5,
+        "c2": 5
+      },
+      {
+        "colour": "purple",
+        "r1": 2,
+        "c1": 4,
+        "r2": 4,
+        "c2": 5
+      }
+    ]
+  },
+  {
+    "id": "p1_031",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 2,
+        "c1": 3,
+        "r2": 3,
+        "c2": 4
+      },
+      {
+        "colour": "blue",
+        "r1": 4,
+        "c1": 0,
+        "r2": 0,
+        "c2": 0
+      },
+      {
+        "colour": "green",
+        "r1": 2,
+        "c1": 1,
+        "r2": 5,
+        "c2": 0
+      },
+      {
+        "colour": "yellow",
+        "r1": 4,
+        "c1": 2,
+        "r2": 3,
+        "c2": 5
+      },
+      {
+        "colour": "purple",
+        "r1": 0,
+        "c1": 3,
+        "r2": 2,
+        "c2": 4
+      }
+    ]
+  },
+  {
+    "id": "p1_032",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 5,
+        "c1": 3,
+        "r2": 4,
+        "c2": 4
+      },
+      {
+        "colour": "blue",
+        "r1": 0,
+        "c1": 2,
+        "r2": 3,
+        "c2": 1
+      },
+      {
+        "colour": "green",
+        "r1": 0,
+        "c1": 3,
+        "r2": 0,
+        "c2": 5
+      },
+      {
+        "colour": "yellow",
+        "r1": 2,
+        "c1": 5,
+        "r2": 2,
+        "c2": 1
+      },
+      {
+        "colour": "purple",
+        "r1": 2,
+        "c1": 2,
+        "r2": 5,
+        "c2": 4
+      }
+    ]
+  },
+  {
+    "id": "p1_033",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 4,
+        "c1": 3,
+        "r2": 2,
+        "c2": 4
+      },
+      {
+        "colour": "blue",
+        "r1": 3,
+        "c1": 1,
+        "r2": 3,
+        "c2": 3
+      },
+      {
+        "colour": "green",
+        "r1": 1,
+        "c1": 1,
+        "r2": 0,
+        "c2": 5
+      },
+      {
+        "colour": "yellow",
+        "r1": 5,
+        "c1": 0,
+        "r2": 0,
+        "c2": 1
+      },
+      {
+        "colour": "purple",
+        "r1": 5,
+        "c1": 1,
+        "r2": 2,
+        "c2": 1
+      }
+    ]
+  },
+  {
+    "id": "p1_034",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 0,
+        "c1": 3,
+        "r2": 1,
+        "c2": 5
+      },
+      {
+        "colour": "blue",
+        "r1": 2,
+        "c1": 0,
+        "r2": 0,
+        "c2": 2
+      },
+      {
+        "colour": "green",
+        "r1": 3,
+        "c1": 3,
+        "r2": 1,
+        "c2": 4
+      },
+      {
+        "colour": "yellow",
+        "r1": 1,
+        "c1": 3,
+        "r2": 3,
+        "c2": 2
+      },
+      {
+        "colour": "purple",
+        "r1": 2,
+        "c1": 1,
+        "r2": 4,
+        "c2": 1
+      }
+    ]
+  },
+  {
+    "id": "p1_035",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 1,
+        "c1": 2,
+        "r2": 3,
+        "c2": 1
+      },
+      {
+        "colour": "blue",
+        "r1": 1,
+        "c1": 0,
+        "r2": 0,
+        "c2": 1
+      },
+      {
+        "colour": "green",
+        "r1": 5,
+        "c1": 4,
+        "r2": 1,
+        "c2": 1
+      },
+      {
+        "colour": "yellow",
+        "r1": 3,
+        "c1": 3,
+        "r2": 0,
+        "c2": 2
+      },
+      {
+        "colour": "purple",
+        "r1": 2,
+        "c1": 4,
+        "r2": 0,
+        "c2": 5
+      }
+    ]
+  },
+  {
+    "id": "p1_036",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 0,
+        "c1": 3,
+        "r2": 4,
+        "c2": 2
+      },
+      {
+        "colour": "blue",
+        "r1": 2,
+        "c1": 3,
+        "r2": 5,
+        "c2": 0
+      },
+      {
+        "colour": "green",
+        "r1": 0,
+        "c1": 2,
+        "r2": 0,
+        "c2": 0
+      },
+      {
+        "colour": "yellow",
+        "r1": 0,
+        "c1": 4,
+        "r2": 3,
+        "c2": 5
+      },
+      {
+        "colour": "purple",
+        "r1": 4,
+        "c1": 1,
+        "r2": 5,
+        "c2": 4
+      }
+    ]
+  },
+  {
+    "id": "p1_037",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 1,
+        "c1": 1,
+        "r2": 5,
+        "c2": 4
+      },
+      {
+        "colour": "blue",
+        "r1": 0,
+        "c1": 3,
+        "r2": 0,
+        "c2": 0
+      },
+      {
+        "colour": "green",
+        "r1": 4,
+        "c1": 3,
+        "r2": 5,
+        "c2": 5
+      },
+      {
+        "colour": "yellow",
+        "r1": 2,
+        "c1": 2,
+        "r2": 4,
+        "c2": 1
+      },
+      {
+        "colour": "purple",
+        "r1": 4,
+        "c1": 2,
+        "r2": 3,
+        "c2": 4
+      }
+    ]
+  },
+  {
+    "id": "p1_038",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 0,
+        "c1": 4,
+        "r2": 5,
+        "c2": 5
+      },
+      {
+        "colour": "blue",
+        "r1": 3,
+        "c1": 1,
+        "r2": 2,
+        "c2": 2
+      },
+      {
+        "colour": "green",
+        "r1": 5,
+        "c1": 3,
+        "r2": 4,
+        "c2": 1
+      },
+      {
+        "colour": "yellow",
+        "r1": 1,
+        "c1": 2,
+        "r2": 2,
+        "c2": 3
+      },
+      {
+        "colour": "purple",
+        "r1": 1,
+        "c1": 4,
+        "r2": 5,
+        "c2": 4
+      }
+    ]
+  },
+  {
+    "id": "p1_039",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 3,
+        "c1": 5,
+        "r2": 2,
+        "c2": 3
+      },
+      {
+        "colour": "blue",
+        "r1": 5,
+        "c1": 5,
+        "r2": 5,
+        "c2": 2
+      },
+      {
+        "colour": "green",
+        "r1": 4,
+        "c1": 1,
+        "r2": 1,
+        "c2": 1
+      },
+      {
+        "colour": "yellow",
+        "r1": 2,
+        "c1": 4,
+        "r2": 0,
+        "c2": 5
+      },
+      {
+        "colour": "purple",
+        "r1": 4,
+        "c1": 5,
+        "r2": 2,
+        "c2": 2
+      }
+    ]
+  },
+  {
+    "id": "p1_040",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 3,
+        "c1": 3,
+        "r2": 0,
+        "c2": 1
+      },
+      {
+        "colour": "blue",
+        "r1": 1,
+        "c1": 3,
+        "r2": 0,
+        "c2": 5
+      },
+      {
+        "colour": "green",
+        "r1": 3,
+        "c1": 4,
+        "r2": 4,
+        "c2": 0
+      },
+      {
+        "colour": "yellow",
+        "r1": 5,
+        "c1": 4,
+        "r2": 1,
+        "c2": 5
+      },
+      {
+        "colour": "purple",
+        "r1": 0,
+        "c1": 3,
+        "r2": 1,
+        "c2": 1
+      }
+    ]
+  },
+  {
+    "id": "p1_041",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 1,
+        "c1": 2,
+        "r2": 0,
+        "c2": 1
+      },
+      {
+        "colour": "blue",
+        "r1": 0,
+        "c1": 2,
+        "r2": 1,
+        "c2": 5
+      },
+      {
+        "colour": "green",
+        "r1": 4,
+        "c1": 5,
+        "r2": 0,
+        "c2": 0
+      },
+      {
+        "colour": "yellow",
+        "r1": 4,
+        "c1": 0,
+        "r2": 3,
+        "c2": 4
+      },
+      {
+        "colour": "purple",
+        "r1": 5,
+        "c1": 2,
+        "r2": 5,
+        "c2": 5
+      }
+    ]
+  },
+  {
+    "id": "p1_042",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 1,
+        "c1": 2,
+        "r2": 2,
+        "c2": 4
+      },
+      {
+        "colour": "blue",
+        "r1": 5,
+        "c1": 5,
+        "r2": 0,
+        "c2": 0
+      },
+      {
+        "colour": "green",
+        "r1": 3,
+        "c1": 4,
+        "r2": 3,
+        "c2": 0
+      },
+      {
+        "colour": "yellow",
+        "r1": 4,
+        "c1": 3,
+        "r2": 2,
+        "c2": 3
+      },
+      {
+        "colour": "purple",
+        "r1": 3,
+        "c1": 1,
+        "r2": 2,
+        "c2": 2
+      }
+    ]
+  },
+  {
+    "id": "p1_043",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 2,
+        "c1": 0,
+        "r2": 5,
+        "c2": 0
+      },
+      {
+        "colour": "blue",
+        "r1": 0,
+        "c1": 5,
+        "r2": 4,
+        "c2": 3
+      },
+      {
+        "colour": "green",
+        "r1": 3,
+        "c1": 3,
+        "r2": 5,
+        "c2": 4
+      },
+      {
+        "colour": "yellow",
+        "r1": 5,
+        "c1": 5,
+        "r2": 2,
+        "c2": 4
+      },
+      {
+        "colour": "purple",
+        "r1": 4,
+        "c1": 2,
+        "r2": 2,
+        "c2": 3
+      }
+    ]
+  },
+  {
+    "id": "p1_044",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 4,
+        "c1": 3,
+        "r2": 0,
+        "c2": 0
+      },
+      {
+        "colour": "blue",
+        "r1": 5,
+        "c1": 0,
+        "r2": 5,
+        "c2": 3
+      },
+      {
+        "colour": "green",
+        "r1": 2,
+        "c1": 2,
+        "r2": 0,
+        "c2": 2
+      },
+      {
+        "colour": "yellow",
+        "r1": 2,
+        "c1": 5,
+        "r2": 2,
+        "c2": 3
+      },
+      {
+        "colour": "purple",
+        "r1": 1,
+        "c1": 2,
+        "r2": 2,
+        "c2": 4
+      }
+    ]
+  },
+  {
+    "id": "p1_045",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 4,
+        "c1": 4,
+        "r2": 2,
+        "c2": 4
+      },
+      {
+        "colour": "blue",
+        "r1": 5,
+        "c1": 3,
+        "r2": 2,
+        "c2": 0
+      },
+      {
+        "colour": "green",
+        "r1": 4,
+        "c1": 3,
+        "r2": 2,
+        "c2": 3
+      },
+      {
+        "colour": "yellow",
+        "r1": 1,
+        "c1": 2,
+        "r2": 5,
+        "c2": 4
+      },
+      {
+        "colour": "purple",
+        "r1": 0,
+        "c1": 0,
+        "r2": 0,
+        "c2": 3
+      }
+    ]
+  },
+  {
+    "id": "p1_046",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 5,
+        "c1": 3,
+        "r2": 5,
+        "c2": 1
+      },
+      {
+        "colour": "blue",
+        "r1": 1,
+        "c1": 3,
+        "r2": 3,
+        "c2": 5
+      },
+      {
+        "colour": "green",
+        "r1": 0,
+        "c1": 3,
+        "r2": 1,
+        "c2": 2
+      },
+      {
+        "colour": "yellow",
+        "r1": 5,
+        "c1": 4,
+        "r2": 4,
+        "c2": 1
+      },
+      {
+        "colour": "purple",
+        "r1": 5,
+        "c1": 0,
+        "r2": 2,
+        "c2": 2
+      }
+    ]
+  },
+  {
+    "id": "p1_047",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 3,
+        "c1": 2,
+        "r2": 3,
+        "c2": 0
+      },
+      {
+        "colour": "blue",
+        "r1": 5,
+        "c1": 1,
+        "r2": 5,
+        "c2": 3
+      },
+      {
+        "colour": "green",
+        "r1": 0,
+        "c1": 1,
+        "r2": 2,
+        "c2": 0
+      },
+      {
+        "colour": "yellow",
+        "r1": 0,
+        "c1": 4,
+        "r2": 4,
+        "c2": 5
+      },
+      {
+        "colour": "purple",
+        "r1": 1,
+        "c1": 2,
+        "r2": 0,
+        "c2": 0
+      }
+    ]
+  },
+  {
+    "id": "p1_048",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 1,
+        "c1": 1,
+        "r2": 2,
+        "c2": 3
+      },
+      {
+        "colour": "blue",
+        "r1": 0,
+        "c1": 1,
+        "r2": 4,
+        "c2": 2
+      },
+      {
+        "colour": "green",
+        "r1": 5,
+        "c1": 0,
+        "r2": 5,
+        "c2": 2
+      },
+      {
+        "colour": "yellow",
+        "r1": 1,
+        "c1": 4,
+        "r2": 3,
+        "c2": 3
+      },
+      {
+        "colour": "purple",
+        "r1": 1,
+        "c1": 5,
+        "r2": 0,
+        "c2": 2
+      }
+    ]
+  },
+  {
+    "id": "p1_049",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 1,
+        "c1": 4,
+        "r2": 2,
+        "c2": 5
+      },
+      {
+        "colour": "blue",
+        "r1": 0,
+        "c1": 5,
+        "r2": 0,
+        "c2": 2
+      },
+      {
+        "colour": "green",
+        "r1": 2,
+        "c1": 4,
+        "r2": 0,
+        "c2": 1
+      },
+      {
+        "colour": "yellow",
+        "r1": 3,
+        "c1": 5,
+        "r2": 3,
+        "c2": 0
+      },
+      {
+        "colour": "purple",
+        "r1": 3,
+        "c1": 1,
+        "r2": 4,
+        "c2": 2
+      }
+    ]
+  },
+  {
+    "id": "p1_050",
+    "pack": 1,
+    "grid": 6,
+    "colours": 5,
+    "optimalMoves": 36,
+    "dots": [
+      {
+        "colour": "red",
+        "r1": 3,
+        "c1": 0,
+        "r2": 0,
+        "c2": 2
+      },
+      {
+        "colour": "blue",
+        "r1": 2,
+        "c1": 3,
+        "r2": 5,
+        "c2": 4
+      },
+      {
+        "colour": "green",
+        "r1": 3,
+        "c1": 3,
+        "r2": 4,
+        "c2": 2
+      },
+      {
+        "colour": "yellow",
+        "r1": 5,
+        "c1": 3,
+        "r2": 4,
+        "c2": 1
+      },
+      {
+        "colour": "purple",
+        "r1": 1,
+        "c1": 4,
+        "r2": 3,
+        "c2": 1
+      }
+    ]
+  }
+]
