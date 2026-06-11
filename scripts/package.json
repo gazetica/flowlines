@@ -1,0 +1,4 @@
+{
+  "//": "Forces the build-time scripts/ folder to CommonJS so `npx ts-node` resolves extensionless relative imports (the repo root is type:module, which would otherwise put ts-node in ESM mode). Build-time only; not bundled into the app.",
+  "type": "commonjs"
+}
