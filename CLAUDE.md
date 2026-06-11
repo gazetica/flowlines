@@ -1,19 +1,27 @@
-# Numtap — Claude Code Project Brief
-**Gazetica Studio | Voraky Retail LLP | Game 1 of 5**
-**Bundle ID:** com.gazetica.numtap
-**Project path:** C:\Projects\Gazetica\numtap\
+# CLAUDE.md — Flow Lines Project Brief
+## Gazetica Studio | Voraky Retail LLP
+**Game:** Flow Lines (Game 2 of 5) | **Bundle ID:** `com.gazetica.flowlines`
+**Status:** Active Development | **Target Launch:** August 2026
+**Last updated:** 11 June 2026
 
 ---
 
-## 1. What This App Is
+## 1. What You Are Building
 
-Numtap is an Android casual puzzle game. A grid of shuffled numbers appears on screen. The player taps them in ascending order (1, 2, 3… N²) before the timer runs out. Grids range from 3×3 (9 tiles) to 7×7 (49 tiles). There are 5 modifiers that change how numbers behave: shuffle, fog, mirror, countdown, none.
+Flow Lines is a colour connection puzzle game for Android. Players drag to draw
+orthogonal paths between matching coloured dot pairs on an NxN grid.
 
-The game has 4 modes:
-- **Campaign** — 100 defined levels, linear progression, 3-star rating per level
-- **Daily Challenge** — 1 seeded 5×5 puzzle per day, global leaderboard
-- **Endless** — fixed 5×5, score = rounds completed in 3 minutes
-- **Speed** — fixed 4×4, timer halved, ×2 score multiplier
+**Win condition (dual — both required simultaneously):**
+- ALL dot pairs connected by paths
+- EVERY cell on the board occupied by a path (100% coverage)
+
+A player who connects all dots but leaves any empty cell has NOT won.
+
+**Core input rules:**
+- Drag starts only from a dot endpoint cell
+- Paths are orthogonal only — no diagonals
+- Drawing over a different colour's path breaks that path at the intersection
+- Drawing back over your own path retracts it to that point (undo-on-drag)
 
 ---
 
@@ -21,260 +29,325 @@ The game has 4 modes:
 
 | Layer | Technology |
 |---|---|
-| Game engine | Phaser.js (installed) |
-| App shell | React 18 + TypeScript + Vite |
-| Android wrapper | Capacitor 6 |
-| Styling | Tailwind CSS |
-| State management | Zustand |
-| Ads | @capacitor-community/admob |
-| Storage | @capacitor/preferences |
-| i18n | i18next + react-i18next (6 languages: EN, DE, FR, KO, PT-BR, ES) |
-| Analytics | Firebase |
-| Leaderboard | Supabase PostgreSQL |
-| CI/CD | GitHub Actions (AAB build on push to main) |
-
-**All packages already installed. Do not run npm install for these.**
+| Game engine | Phaser.js 4.x |
+| App shell | React 18 + Vite 5 |
+| Styling | Tailwind CSS 3 |
+| State | Zustand 4 |
+| Native bridge | Capacitor 6 |
+| Ads | @capacitor-community/admob 5 |
+| IAP | @capacitor/google-play |
+| Analytics | Firebase 10 |
+| Backend | Supabase (PostgreSQL) |
+| Local storage | @capacitor/preferences |
+| i18n | i18next 23 |
 
 ---
 
-## 3. Project Folder Structure
+## 3. Accounts & IDs
 
-```
-src/
-  game/              ← ALL game logic lives here (pure TypeScript, no Phaser dependency)
-    GridEngine.ts
-    ScoreEngine.ts
-    LevelManager.ts
-    levels.json
-    GridEngine.test.ts
-    ScoreEngine.test.ts
-  scenes/            ← Phaser scenes
-    SplashScene.ts
-    GameScene.ts
-    UIScene.ts
-  components/        ← React UI screens
-    HomeScreen.tsx
-    GameScreen.tsx
-    ResultScreen.tsx
-    LeaderboardScreen.tsx
-    SettingsScreen.tsx
-    LanguageScreen.tsx
-    HowToPlayScreen.tsx
-    AboutScreen.tsx
-    IAPScreen.tsx
-  store/             ← Zustand stores
-    gameStore.ts
-    settingsStore.ts
-  services/          ← External integrations
-    admob.ts         ← already exists, uses Google test IDs
-    firebase.ts
-    supabase.ts
-    preferences.ts
-  locales/           ← i18n JSON files
-    en.json
-    de.json
-    fr.json
-    ko.json
-    pt.json
-    es.json
-  App.tsx
-  main.tsx
-docs/                ← Reference documents (read before coding each sprint)
-  architecture.md
-  level-configs.md
-  design-system.md
-  api-contracts.md
-  sprint-log.md
-android/             ← Capacitor generated, do not manually edit
+### Google Accounts — NEVER MIX
+
+| Account | Role |
+|---|---|
+| `vorakyretail1@gmail.com` | Play Console, AdMob, Google Payments |
+| `gazetica99@gmail.com` | Firebase, GitHub, Supabase, Cloudflare |
+
+### Registered IDs
+
+| Service | ID |
+|---|---|
+| Bundle ID | `com.gazetica.flowlines` |
+| Play Console App ID | `4974770655912378248` |
+| AdMob App ID | `ca-app-pub-7932168293321470~6161449781` |
+| AdMob Rewarded unit | `ca-app-pub-7932168293321470/8878598689` |
+| AdMob Interstitial unit | `ca-app-pub-7932168293321470/1184455275` |
+| Firebase App ID | `1:399062316492:android:d780b5591f24f60c2b9969` |
+| Firebase Project ID | `gazetica` |
+| Supabase Project ID | `nkfbuzlxavqljkqyihyo` (Mumbai ap-south-1) |
+| AdMob Publisher ID | `pub-7932168293321470` |
+
+### Test Device
+
+| Field | Value |
+|---|---|
+| Device | Samsung SM-E146B |
+| Serial | `RZCW30XB11X` |
+| ADB path | `C:\Android\platform-tools\adb.exe` |
+
+---
+
+## 4. Project Paths
+
+| Item | Path |
+|---|---|
+| Project root | `C:\Projects\Gazetica\flowlines\` |
+| Build terminal | VS Code PowerShell |
+| Gradle command | `.\gradlew` (Windows — never `./gradlew`) |
+| Android dir | `C:\Projects\Gazetica\flowlines\android\` |
+
+---
+
+## 5. Design Tokens — src/skin.ts
+
+```typescript
+export const skin = {
+  bgDeep:        '#0D0620',
+  bgMid:         '#130830',
+  bgCard:        '#1C0E42',
+  bgRaised:      '#24145A',
+  bgBorder:      '#2E1A70',
+  purple:        '#7F77DD',
+  purpleLight:   '#ADA7F0',
+  purpleDim:     '#4A4399',
+  gold:          '#FFD700',
+  goldDim:       '#C8A800',
+  white:         '#EDE8FF',
+  muted:         '#6B5C99',
+  muted2:        '#40306A',
+  danger:        '#E05050',
+  pathColors: {
+    red:    '#E24B4A',
+    blue:   '#378ADD',
+    green:  '#639922',
+    yellow: '#EF9F27',
+    purple: '#7F77DD',
+    orange: '#D85A30',
+    teal:   '#1D9E75',
+    pink:   '#D4537E',
+  },
+  glowColors: {
+    red:    'rgba(226,75,74,0.35)',
+    blue:   'rgba(55,138,221,0.35)',
+    green:  'rgba(99,153,34,0.35)',
+    yellow: 'rgba(239,159,39,0.35)',
+    purple: 'rgba(127,119,221,0.35)',
+    orange: 'rgba(216,90,48,0.35)',
+    teal:   'rgba(29,158,117,0.35)',
+    pink:   'rgba(212,83,126,0.35)',
+  },
+  fontDisplay: "'Space Mono', monospace",
+  fontBody:    "'DM Sans', sans-serif",
+} as const;
 ```
 
 ---
 
-## 4. Critical Architecture Rules
-
-**READ BEFORE WRITING ANY CODE.**
-
-### 4.1 Game logic is pure TypeScript — no Phaser
-`src/game/` files must have zero Phaser imports. GridEngine, ScoreEngine, LevelManager are plain TypeScript classes. Phaser only lives in `src/scenes/`. This enables unit testing without a browser.
-
-### 4.2 Grid size is a property of a level config — never hardcoded
-```typescript
-// ✅ CORRECT
-const level = LevelManager.getLevel(47);
-const gridSize = level.grid; // could be 3, 4, 5, 6, or 7
-
-// ❌ WRONG — never do this
-if (levelId <= 25) { gridSize = 3; }
-if (levelId <= 60) { gridSize = 5; }
-```
-
-### 4.3 Level configs are data, not code
-All 100 levels live in `src/game/levels.json`. Adding levels 101–200 in future = adding JSON records only. Zero code changes.
-
-### 4.4 Modifier types
-```typescript
-export type Modifier = 'none' | 'shuffle' | 'fog' | 'mirror' | 'countdown';
-```
-- `none` — standard clean grid
-- `shuffle` — grid reshuffles every 8 seconds
-- `fog` — numbers hidden, reveal on hover within 1-cell radius
-- `mirror` — numbers displayed horizontally mirrored
-- `countdown` — each number disappears 3 seconds after first revealed
-
-### 4.5 Direction type (for Descending mode)
-```typescript
-export type Direction = 'ascending' | 'descending';
-// ascending = tap 1 → N² (default)
-// descending = tap N² → 1 (unlocks at Campaign level 75)
-```
-
-### 4.6 No authentication anywhere
-Zero auth in this app. No Google Sign-In. No email. No passwords. Leaderboard is anonymous. Alias set in Settings. Never add auth.
-
-### 4.7 IAP — 2 products maximum
-- `numtap_remove_ads` — non-consumable
-- `numtap_hint_pack` — consumable (5 hints)
-No subscriptions. No other products.
-
----
-
-## 5. Design System (apply to all UI)
-
-```
-Background:      #07111F  (Deep Navy)
-Surface/Card:    #0F2040
-Border:          #1A3558
-Gold (Primary):  #FFD700
-Blue (Secondary):#1E8BC3
-Text:            #EEF4FF
-Muted:           #5E7A9C
-Success:         #2ECC71
-Danger:          #E05050
-
-Display font:    Space Mono (monospace) — all numbers, headings, HUD values
-Body font:       DM Sans — descriptions, labels, settings text
-```
-
-**Skin rule:** All backgrounds use animated floating number particles (5–8% opacity, Space Mono, drifting upward). Radial gold/blue ambient glow behind play area. Tiles use gradient fills with inner glow — never flat solid fills.
-
----
-
-## 6. Level Config Schema
+## 6. Zustand State Shape
 
 ```typescript
-interface LevelConfig {
-  id: number;           // 1–100 (and beyond for future packs)
-  pack: 1 | 2 | 3;     // 1=Learn(1-25), 2=Rise(26-60), 3=Master(61-100)
-  grid: 3 | 4 | 5 | 6 | 7;  // NxN grid size
-  modifier: Modifier;
-  direction: Direction; // 'ascending' default; 'descending' from level 75
-  timeLimit: number;    // seconds
-  stars: [number, number, number]; // [3-star secs, 2-star secs, 1-star secs]
+// gameStore.ts
+interface GameState {
+  levelId: string;
+  grid: Cell[][];             // NxN — each cell: { colour | null, isEndpoint, isOccupied }
+  paths: Record<Colour, Cell[]>;
+  coverage: number;           // 0–100
+  moveCount: number;
+  hintsUsed: number;          // 0–3 per level
+  status: 'playing' | 'complete' | 'abandoned';
+  score: number;
+}
+
+// settingsStore.ts
+interface SettingsState {
+  alias: string;
+  country: string;
+  playerUid: string;          // NTxxxxxx format
+  gemBalance: number;
+  removeAdsPurchased: boolean;
+  soundEnabled: boolean;
+  musicEnabled: boolean;
+  hapticsEnabled: boolean;
+  language: string;
+  packProgress: Record<PackId, { solved: number; stars: Record<LevelId, 0|1|2|3> }>;
+  dailyStreakFL: number;
+  lastDailyDateFL: string;
 }
 ```
 
 ---
 
-## 7. Scoring Formulas
+## 7. Level JSON Schema
 
-```
-Base score:         each correct tap = 100 pts
-Time bonus:         remaining seconds × 20
-Speed bonus:        if avg tap interval < 2s → +200 pts
-Streak multiplier:  daily challenge streak N days → score × (1 + N × 0.05), max ×1.5
-Grid multiplier:    3×3=×1.0 | 4×4=×1.5 | 5×5=×2.0 | 6×6=×2.8 | 7×7=×3.5
-
-Final score = (baseScore + timeBonus + speedBonus) × streakMultiplier × gridMultiplier
+```json
+{
+  "id": "p1_001",
+  "pack": 1,
+  "grid": 6,
+  "colours": 5,
+  "optimalMoves": 28,
+  "dots": [
+    { "colour": "red",    "r1": 0, "c1": 0, "r2": 5, "c2": 3 },
+    { "colour": "blue",   "r1": 0, "c1": 5, "r2": 4, "c2": 1 },
+    { "colour": "green",  "r1": 2, "c1": 2, "r2": 3, "c2": 5 },
+    { "colour": "yellow", "r1": 1, "c1": 4, "r2": 5, "c2": 0 },
+    { "colour": "purple", "r1": 0, "c1": 2, "r2": 4, "c2": 4 }
+  ]
+}
 ```
 
 ---
 
-## 8. Star Rating Logic
+## 8. Pack Structure
 
-```
-3 stars: completed in ≤ stars[0] seconds
-2 stars: completed in ≤ stars[1] seconds
-1 star:  completed at all (even if slow)
-0 stars: time expired — no stars, level not passed
-```
-Stars are cosmetic only. 1 star always unlocks the next level. Never gate progression on 2 or 3 stars.
+| Pack | Grid | Colours | Levels | Unlock condition |
+|---|---|---|---|---|
+| Pack 1 | 6×6 | 5 | 50 | Default (free) |
+| Pack 2 | 7×7 | 6 | 50 | 25 Pack 1 levels solved |
+| Pack 3 | 8×8 | 7 | 50 | All 50 Pack 1 levels solved |
+| Pack 4 | 9×9 | 8 | 50 | All 50 Pack 2 levels solved |
 
 ---
 
-## 9. Ad Rules — Strict
+## 9. Monetisation Rules (All Locked — Never Change Without Explicit Instruction)
 
-| Trigger | Ad type |
+| Rule | Value |
 |---|---|
-| Result screen (level complete) | Interstitial — max 1 per 3 minutes |
-| Hint button tapped | Rewarded video — player initiated only |
-| Everywhere else | NO ADS |
-
-Never show ads on: home screen, active game, paused screen, leaderboard, settings, about.
+| Rewarded ad placement | Hint button ONLY |
+| Interstitial placement | ResultScreen ONLY — never during gameplay |
+| Interstitial trigger | 5 level completions OR 3 minutes since last show |
+| Max hints per level | 3 |
+| Hint penalty | −30 points per hint used |
+| `removeAdsPurchased` scope | Suppresses interstitials ONLY — rewarded hints always available |
+| Ads in Zen Mode | No interstitials — rewarded hints only |
+| Home / Game screen ads | None ever |
+| ResultScreen bottom slot | GazeticaPromoCard only — never third-party |
+| IAP Remove Ads | `flowlines_remove_ads` — non-consumable — $2.99 |
+| IAP Hint Pack | `flowlines_hint_pack` — consumable — $0.99 — +5 gems |
+| Gem economy | Uncapped — no ceiling |
 
 ---
 
-## 10. First-Launch Flow
+## 10. File Lock Rules
+
+### Locked After Sprint 2 Sign-Off (Never Unlock Without Explicit Scope)
+```
+src/scenes/GameScene.ts
+```
+
+### Locked Once Created (Unlock Per Brief Only)
+```
+src/game/GridEngine.ts
+src/game/PathValidator.ts
+src/game/CoverageCalc.ts
+src/game/ScoreEngine.ts
+src/game/DailyChallenge.ts
+src/game/LevelManager.ts
+src/styles/skin.ts
+src/services/admob.ts          — LOCKED until T-015
+src/services/billing.ts        — LOCKED after Sprint 4
+src/services/campaignScores.ts
+src/services/dailyScores.ts
+android/app/build.gradle       — versionCode only increments, never decreases
+.github/workflows/build.yml
+```
+
+### Never Commit (Ever)
+```
+.env
+keystore.properties
+gazetica-flowlines.jks
+android/app/google-services.json
+docs/HANDOVER.md
+```
+
+---
+
+## 11. Workflow Rules
+
+### Task brief → implement → report → validate → push
+
+1. Main Claude thread issues a task brief as a `.md` file
+2. Claude Code implements, runs tests, runs device check, generates Task Report
+3. Mahendra shares the Task Report back to main thread
+4. Main Claude thread validates: "Push approved" OR "Fix X before push"
+5. Mahendra confirms push hash
+6. Device verification on Samsung SM-E146B (`RZCW30XB11X`)
+
+**Never commit or push without explicit push approval from the main Claude thread.**
+
+### Commit Format
+```
+FL-TASK-ID: Short description (Sprint N)
+
+- what was added/changed
+- key behaviour
+- test count
+```
+
+### versionCode Rule
+Every Play Console upload (including failed ones) increments versionCode by 1.
+Flow Lines starts at versionCode 1.
+Always `.\gradlew clean` before `bundleRelease` when versionCode changes.
+
+### T-015 Rule
+`isTesting: true` must be explicitly removed from `admob.ts`, `rewardedAdService.ts`,
+and `interstitialAdService.ts` before any production build.
+Presence of live AdMob IDs alone is insufficient.
+Verify with:
+```powershell
+Select-String -Path "src\services\*" -Pattern "isTesting"
+# Must return zero results before production build
+```
+
+---
+
+## 12. Grid Rendering Constants
+
+| Constant | Value | Reason |
+|---|---|---|
+| Cell size formula | `(screenWidth - 16 - gap*(N-1)) / N` | Minimum 28px for finger accuracy |
+| Gap (6×6, 7×7) | 3px | Balance finger accuracy vs density |
+| Gap (8×8, 9×9) | 2px | Balance finger accuracy vs density |
+| Path stroke width | 40% of cellSize, lineCap round | VDD spec |
+| Dot endpoint size | 70% of cellSize | VDD spec |
+| Coverage bar gradient | Purple `#7F77DD` → Gold `#FFD700` | VDD Section 3 |
+
+---
+
+## 13. Scoring System
+
+| Component | Formula |
+|---|---|
+| Perfect Clear bonus | All dots connected + 100% coverage: +200 points |
+| Move efficiency | −5 points per move above optimalMoves |
+| Time bonus (Timed Mode only) | Remaining seconds × 15 points |
+| Hint penalty | −30 points per hint used |
+
+### Star Rating
+| Stars | Condition |
+|---|---|
+| 3 stars | Completed in optimalMoves or fewer |
+| 2 stars | Within 20% above optimalMoves |
+| 1 star | Completed but inefficient (>20% above optimal) |
+
+---
+
+## 14. Supabase Tables (Already Created)
 
 ```
-Splash → Language Selection → GDPR Consent (EU only) → How to Play → Home
+flowlines_scores        — campaign leaderboard scores
+flowlines_daily_scores  — daily challenge scores
+flowlines_pack_gate     — pack unlock thresholds (rows: 2→25, 3→50, 4→50)
 ```
-All flags stored in Capacitor Preferences. Returning users: Splash → Home directly.
+
+RLS enabled. Anon SELECT + INSERT granted explicitly (Numtap 401 lesson).
 
 ---
 
-## 11. Current Sprint Status
+## 15. Reference Documents
 
-| Sprint | Status |
+All four base documents are in the `docs/` folder:
+
+| File | Purpose |
 |---|---|
-| Sprint 1 — Scaffolding | ✅ COMPLETE |
-| Sprint 2 — Core game logic | 🔄 IN PROGRESS |
+| `docs/FlowLines_Project_Report.md` | Authoritative design, architecture, all specs |
+| `docs/FlowLines_VDD_v1_0.html` | All screen designs VD-01–VD-14, colours, animations |
+| `docs/FlowLines_Sprint_Plan.md` | Day-by-day task breakdown across 6 sprints |
+| `docs/Gazetica_Studio_Master_Document.docx` | Studio context, accounts, 5-game roadmap |
 
-**Sprint 2 tasks in order:**
-1. `src/game/GridEngine.ts` + unit tests
-2. `src/game/ScoreEngine.ts` + unit tests
-3. `src/game/LevelManager.ts` + `src/game/levels.json` (all 100 levels)
-4. `src/components/TimerComponent.tsx`
-5. Game loop wire-up in `src/scenes/GameScene.ts`
-6. Modifier implementations (shuffle, fog, mirror, countdown)
-
-**Current task: Step 1 — GridEngine.ts**
+Read the relevant document before implementing any screen or feature.
 
 ---
 
-## 12. Verified Device
-
-Samsung SM-E146B (serial: RZCW30XB11X) — USB debugging ON
-ADB path: C:\Android\platform-tools\adb.exe
-Android SDK: C:\Users\Mahendra\AppData\Local\Android\Sdk
-
----
-
-## 13. Key Accounts (for config reference only)
-
-| Service | Account |
-|---|---|
-| AdMob Publisher ID | pub-7932168293321470 |
-| Numtap App ID (TEST — use during dev) | ca-app-pub-3940256099942544~3347511713 |
-| Numtap App ID (LIVE — Sprint 4 only) | ca-app-pub-7932168293321470~5301760306 |
-| Firebase project | gazetica-numtap |
-| Supabase region | ap-south-1 (Mumbai) |
-| GitHub repo | github.com/gazetica/numtap |
-
-**CRITICAL: Never swap test AdMob IDs for live IDs until Sprint 4. Using live IDs during dev triggers invalid traffic detection.**
-
----
-
-## 14. Docs Folder — Always Consult Before Coding
-
-Before starting any task, read the relevant doc in `docs/`:
-
-| File | Read before... |
-|---|---|
-| `docs/architecture.md` | Any new file or structural decision |
-| `docs/level-configs.md` | Anything touching LevelManager or levels.json |
-| `docs/design-system.md` | Any UI component or screen |
-| `docs/api-contracts.md` | Any inter-module function call |
-| `docs/sprint-log.md` | Starting or finishing any task |
-
-**After completing each task, update `docs/sprint-log.md` with what was done, what was tested, and what is next.**
-
+*Gazetica Studio | Voraky Retail LLP | CLAUDE.md v1.0 | 11 June 2026*
+*Game 2 of 5 | com.gazetica.flowlines | Target launch August 2026*
