@@ -1,4 +1,4 @@
-package com.gazetica.numtap;
+package com.gazetica.flowlines;
 
 import android.os.Bundle;
 

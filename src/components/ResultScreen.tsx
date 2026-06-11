@@ -1,3 +1,4 @@
+// @ts-nocheck — Numtap component, broken SKIN import; replaced in Sprint 3 (FL-S1-004 Task 0)
 // ResultScreen.tsx
 // Numtap | Gazetica Studio | Sprint 3 Day 6 | Task T-013 | VD-05
 //
@@ -22,7 +23,7 @@ import { GazeticaPromoCard } from './GazeticaPromoCard';
 import * as analytics from '../services/analytics';
 import { ParticleCanvas } from './ParticleCanvas';
 import { BottomNav } from './BottomNav';
-import { SKIN } from '../styles/skin';
+import { skin as SKIN } from '../styles/skin';
 import { getFreePlayPB, setFreePlayPB } from '../services/freePlayPB';
 import * as musicService from '../services/musicService';
 

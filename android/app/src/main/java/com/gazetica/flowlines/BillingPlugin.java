@@ -1,4 +1,4 @@
-package com.gazetica.numtap;
+package com.gazetica.flowlines;
 
 // T-019: Real IAP via Google Play Billing Library 6.2.1, bridged to Capacitor.
 // All four products are ProductType.INAPP. Non-consumables (remove_ads,

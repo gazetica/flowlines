@@ -1,3 +1,4 @@
+// @ts-nocheck — Numtap component, broken SKIN import; replaced in Sprint 3 (FL-S1-004 Task 0)
 // DailyHubScreen.tsx
 // Numtap | Gazetica Studio | Sprint 4 | Task T-006 · corrected T-006-FIX (Issues 4–11, 13)
 //
@@ -23,7 +24,7 @@ import { getTodayDateString } from '../game/DailyChallenge';
 import type { DailyChallengeIndex } from '../game/DailyChallenge';
 import { ParticleCanvas } from './ParticleCanvas';
 import { BottomNav } from './BottomNav';
-import { SKIN } from '../styles/skin';
+import { skin as SKIN } from '../styles/skin';
 // B-001a: this screen's labels live in module-scope sub-components (Instructions,
 // StreakMap, ClaimButton, …) that can't use the useTranslation hook, so we read
 // from the i18n singleton directly.

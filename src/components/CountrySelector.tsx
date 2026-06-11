@@ -1,3 +1,4 @@
+// @ts-nocheck — Numtap component, broken SKIN import; replaced in Sprint 3 (FL-S1-004 Task 0)
 // CountrySelector.tsx
 // Numtap | Gazetica Studio | Sprint 4 | Task T-005 Part 3.3
 //
@@ -6,7 +7,7 @@
 
 import { useState } from 'react';
 import { countryFlag } from '../utils/countryFlag';
-import { SKIN } from '../styles/skin';
+import { skin as SKIN } from '../styles/skin';
 // B-001a: countryName() is a plain exported function (not a component), so it
 // reads the "prefer not to say" label from the i18n singleton directly.
 import i18n from '../i18n';

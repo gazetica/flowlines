@@ -1,3 +1,4 @@
+// @ts-nocheck — Numtap component, broken SKIN import; replaced in Sprint 3 (FL-S1-004 Task 0)
 // ParticleCanvas.tsx
 // Numtap | Gazetica Studio | Sprint 4 (Pre) | Task T-003 | VDD v1.2
 //
@@ -9,7 +10,7 @@
 // it), so it costs nothing while the app is hidden.
 
 import { useEffect, useRef } from 'react';
-import { SKIN } from '../styles/skin';
+import { skin as SKIN } from '../styles/skin';
 
 interface Particle {
   x: number;

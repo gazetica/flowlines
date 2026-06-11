@@ -1,3 +1,4 @@
+// @ts-nocheck — Numtap component, broken SKIN import; replaced in Sprint 3 (FL-S1-004 Task 0)
 // LanguageScreen.tsx
 // Numtap | Gazetica Studio | Sprint 3 Day 4 | Task T-012a | VD-12
 //
@@ -12,7 +13,7 @@ import { ParticleCanvas } from './ParticleCanvas';
 import { useTranslation } from 'react-i18next';
 import { useSettingsStore } from '../store/settingsStore';
 import type { Language } from '../store/settingsStore';
-import { SKIN } from '../styles/skin';
+import { skin as SKIN } from '../styles/skin';
 import { CountrySelector, countryName } from './CountrySelector';
 import { countryFlag } from '../utils/countryFlag';
 

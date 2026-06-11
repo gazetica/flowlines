@@ -33,18 +33,15 @@ import { DailyHubScreen } from './components/DailyHubScreen';
  * Runs once after settings are hydrated.
  */
 function RedirectHandler() {
-  const { hydrated, languageSelected, onboardingShown } = useSettingsStore();
+  const { hydrated } = useSettingsStore();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!hydrated) return;
-    if (!languageSelected) {
-      navigate('/language', { replace: true });
-    } else if (!onboardingShown) {
-      navigate('/how-to-play', { replace: true });
-    } else {
-      navigate('/home', { replace: true });
-    }
+    // FL-S1-004 device check: land directly on the Flow Lines grid. The Numtap
+    // onboarding flow (language → how-to-play → home) is bypassed until the Flow
+    // Lines onboarding screens are built in Sprint 3.
+    navigate('/game', { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrated]);
 

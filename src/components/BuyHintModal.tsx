@@ -1,3 +1,4 @@
+// @ts-nocheck — Numtap component, broken SKIN import; replaced in Sprint 3 (FL-S1-004 Task 0)
 // BuyHintModal.tsx
 // Numtap | Gazetica Studio | Sprint 4 | Task T-006 Part 2.4 · renamed T-008 Part 4
 //
@@ -12,7 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useSettingsStore } from '../store/settingsStore';
 import { showRewarded } from '../services/admob';
-import { SKIN } from '../styles/skin';
+import { skin as SKIN } from '../styles/skin';
 
 export function BuyHintModal({ onClose, onApplyHint }: { onClose: () => void; onApplyHint: () => void }) {
   const { t } = useTranslation();

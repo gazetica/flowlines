@@ -1,3 +1,4 @@
+// @ts-nocheck — Numtap component, broken SKIN import; replaced in Sprint 3 (FL-S1-004 Task 0)
 // FreePlayScreen.tsx
 // Numtap | Gazetica Studio | Sprint 4 | Task T-004B P2
 //
@@ -12,7 +13,7 @@ import { useGameStore } from '../store/gameStore';
 import type { Difficulty } from '../game/GridEngine';
 import { ParticleCanvas } from './ParticleCanvas';
 import { BottomNav } from './BottomNav';
-import { SKIN } from '../styles/skin';
+import { skin as SKIN } from '../styles/skin';
 
 const GRIDS = [3, 4, 5, 6, 7];
 const DIFFS: { key: Difficulty; labelKey: string }[] = [

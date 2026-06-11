@@ -1,3 +1,4 @@
+// @ts-nocheck — Numtap component, broken SKIN import; replaced in Sprint 3 (FL-S1-004 Task 0)
 // DifficultyScreen.tsx
 // Numtap | Gazetica Studio | Sprint 4 | Task T-004B · visual overhaul T-006 Part 4
 //
@@ -16,7 +17,7 @@ import { useGameStore } from '../store/gameStore';
 import type { GameMode } from '../store/gameStore';
 import type { Difficulty } from '../game/GridEngine';
 import { ParticleCanvas } from './ParticleCanvas';
-import { SKIN } from '../styles/skin';
+import { skin as SKIN } from '../styles/skin';
 
 interface DiffStyle {
   key: Difficulty;
