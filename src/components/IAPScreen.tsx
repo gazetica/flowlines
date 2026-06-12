@@ -1,249 +1,166 @@
 // IAPScreen.tsx
-// Numtap | Gazetica Studio | Sprint 3 Day 5 | Task T-012b | VD-08 (placeholder)
+// Flow Lines | Gazetica Studio | Sprint 4 Day 19 | Task FL-S4-019 (VD-10)
 //
-// IAP storefront UI. Real Google Play billing arrives in Sprint 4 — buttons
-// here are display-only with a "billing active in full release" note.
+// Store screen at /store. Two products: Remove Ads (non-consumable $2.99) and
+// Hint Pack (consumable $0.99, +5 gems). BUY is display-only for now — real
+// Google Play billing is wired in Day 21. Replaces the Numtap i18n/billing stub.
 
-import type React from 'react';
-import { useState, useEffect } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { useSettingsStore } from '../store/settingsStore';
-import { ParticleCanvas } from './ParticleCanvas';
-import { BottomNav } from './BottomNav';
-import {
-  PRODUCT_IDS,
-  queryProducts,
-  purchaseProduct,
-  restorePurchases,
-  consumePurchase,
-  type ProductDetail,
-} from '../services/billing';
-import { prefSetBool, PREF_KEYS } from '../services/preferences';
-import * as analytics from '../services/analytics';
+import { skin } from '../styles/skin';
+import { useFlowSettingsStore } from '../store/flowSettingsStore';
+
+const GOLD = '#FFD700';
 
 export function IAPScreen() {
-  const { t } = useTranslation();
-  const { removeAdsPurchased, setRemoveAds, addGems } = useSettingsStore();
+  const navigate = useNavigate();
+  const gemBalance = useFlowSettingsStore((s) => s.gemBalance);
+  const removeAdsPurchased = useFlowSettingsStore((s) => s.removeAdsPurchased);
 
   const [toast, setToast] = useState<string | null>(null);
-  const showToast = (msg: string) => {
+  const flashToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 1900);
   };
 
-  // T-019: real Play Billing. Fetch live product details on mount (price strings
-  // override the placeholders below); fall back to placeholders on web / no-fill.
-  const [details, setDetails] = useState<Record<string, ProductDetail>>({});
-  const [busy, setBusy] = useState(false);
-  useEffect(() => {
-    queryProducts().then((list) => {
-      const map: Record<string, ProductDetail> = {};
-      for (const p of list) map[p.productId] = p;
-      setDetails(map);
-    });
-  }, []);
+  // TODO Sprint 4 Day 21: wire billing.ts — purchaseProduct(sku) checkout flow.
+  const onBuy = () => flashToast('Billing coming in Day 21 — IAP not yet wired');
+  const onRestore = () => flashToast('Billing coming in Day 21 — IAP not yet wired');
 
-  const priceFor = (sku: string, fallback: string) => details[sku]?.price ?? fallback;
-  const valueFor = (sku: string, fallback: string) =>
-    details[sku] ? details[sku].priceAmountMicros / 1_000_000 : Number(fallback.replace(/[^0-9.]/g, '')) || 0;
-
-  // Generic purchase: launch the flow, run the success handler, fire analytics,
-  // toast. A user-cancelled flow is silent (no error toast).
-  const buy = async (sku: string, fallbackPrice: string, onSuccess: (token?: string) => Promise<void>) => {
-    if (busy || removeAdsPurchased && sku === PRODUCT_IDS.REMOVE_ADS) return;
-    setBusy(true);
-    const res = await purchaseProduct(sku);
-    setBusy(false);
-    if (res.success) {
-      await onSuccess(res.purchaseToken);
-      analytics.iapPurchase({ productId: sku, value: valueFor(sku, fallbackPrice) });
-      showToast(t('iap.toast_purchase_complete'));
-    } else if (res.error && res.error !== 'USER_CANCELED') {
-      showToast(t('iap.toast_purchase_failed'));
-    }
+  const card: CSSProperties = {
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(127,119,221,0.2)',
+    borderRadius: 16,
+    padding: 16,
+    width: '100%',
+    boxSizing: 'border-box',
   };
-
-  const buyRemoveAds = () => buy(PRODUCT_IDS.REMOVE_ADS, '$2.99', async () => { await setRemoveAds(); });
-  const buyHintPack = () => buy(PRODUCT_IDS.HINT_PACK, '$0.99', async (token) => {
-    await addGems(20); // F-005 Part 6: Hint Pack now grants 20 gems (was 5)
-    if (token) await consumePurchase(token); // consumable → consume so it can be re-bought
-  });
-  const buyCampaign2 = () => buy(PRODUCT_IDS.CAMPAIGN2, '$3.99', async () => { await prefSetBool(PREF_KEYS.CAMPAIGN2_PURCHASED, true); });
-  const buyCampaign3 = () => buy(PRODUCT_IDS.CAMPAIGN3, '$4.99', async () => { await prefSetBool(PREF_KEYS.CAMPAIGN3_PURCHASED, true); });
-
-  // Restore: re-apply entitlements for any owned non-consumables.
-  const handleRestore = async () => {
-    if (busy) return;
-    setBusy(true);
-    const restored = await restorePurchases();
-    setBusy(false);
-    for (const p of restored) {
-      if (p.productId === PRODUCT_IDS.REMOVE_ADS) await setRemoveAds();
-      else if (p.productId === PRODUCT_IDS.CAMPAIGN2) await prefSetBool(PREF_KEYS.CAMPAIGN2_PURCHASED, true);
-      else if (p.productId === PRODUCT_IDS.CAMPAIGN3) await prefSetBool(PREF_KEYS.CAMPAIGN3_PURCHASED, true);
-    }
-    showToast(restored.length ? t('iap.toast_restored') : t('iap.toast_no_restore'));
+  const buyBtn: CSSProperties = {
+    background: GOLD,
+    color: skin.bgDeep,
+    border: 'none',
+    borderRadius: 10,
+    padding: '10px 18px',
+    fontFamily: skin.fontDisplay,
+    fontSize: 13,
+    fontWeight: 700,
+    cursor: 'pointer',
   };
+  const bullet: CSSProperties = { fontSize: 12, color: skin.muted, lineHeight: 1.7 };
 
-  // F-001: Early-Access campaign placeholders (display-only until T-019).
-  const EARLY_ACCESS = [
-    { key: 'pro', sku: PRODUCT_IDS.CAMPAIGN2, onBuy: buyCampaign2, title: t('iap.pro_campaign_title'), desc: t('iap.pro_campaign_desc'), price: '$3.99', unlockKey: 'campaign.unlock_pro' },
-    { key: 'expert', sku: PRODUCT_IDS.CAMPAIGN3, onBuy: buyCampaign3, title: t('iap.expert_campaign_title'), desc: t('iap.expert_campaign_desc'), price: '$4.99', unlockKey: 'campaign.unlock_expert' },
-  ];
-
-  const PRODUCTS = [
-    {
-      key: 'remove_ads',
-      sku: PRODUCT_IDS.REMOVE_ADS,
-      onBuy: buyRemoveAds,
-      badge: t('iap.popular_badge'),
-      title: t('iap.remove_ads_title'),
-      desc: t('iap.remove_ads_desc'),
-      price: '$2.99', // placeholder — overridden by live Play Billing price
-      featured: true,
-    },
-    {
-      key: 'hint_pack',
-      sku: PRODUCT_IDS.HINT_PACK,
-      onBuy: buyHintPack,
-      badge: null,
-      title: t('iap.hint_pack_title'),
-      desc: t('iap.hint_pack_desc'),
-      price: '$0.99',
-      featured: false,
-    },
-  ];
+  function ProductCard({
+    icon,
+    title,
+    bullets,
+    price,
+    children,
+  }: {
+    icon: string;
+    title: string;
+    bullets: string[];
+    price: string;
+    children: ReactNode; // the BUY button / purchased badge
+  }) {
+    return (
+      <div style={card}>
+        <div style={{ fontFamily: skin.fontDisplay, fontSize: 14, color: skin.white, marginBottom: 8 }}>
+          {icon} {title}
+        </div>
+        {bullets.map((b) => (
+          <div key={b} style={bullet}>· {b}</div>
+        ))}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 14 }}>
+          <span style={{ fontFamily: skin.fontDisplay, fontSize: 18, color: GOLD }}>{price}</span>
+          {children}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <ScreenShell title={t('iap.title')}>
-      <div style={{ textAlign: 'center', padding: '20px 20px 12px' }}>
-        <p style={{ fontSize: 13, color: 'var(--muted)' }}>{t('iap.sub')}</p>
+    <div style={{ width: '100%', minHeight: '100vh', background: skin.bgDeep, display: 'flex', flexDirection: 'column', fontFamily: skin.fontBody }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px' }}>
+        <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', color: skin.white, fontSize: 18, cursor: 'pointer' }}>‹</button>
+        <span style={{ fontFamily: skin.fontDisplay, fontSize: 16, color: GOLD, letterSpacing: 2 }}>STORE</span>
       </div>
 
-      {PRODUCTS.map((product) => (
+      <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px 24px', maxWidth: 480, margin: '0 auto', width: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {/* Gem balance */}
         <div
-          key={product.key}
           style={{
-            margin: '0 16px 12px',
-            background: 'rgba(10,26,46,0.75)',
-            border: `1px solid ${product.featured ? 'var(--gold)' : 'rgba(30,139,195,0.2)'}`,
-            borderRadius: 10,
-            padding: '16px',
-            boxShadow: product.featured ? '0 0 16px rgba(255,215,0,0.1)' : 'none',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            background: 'rgba(255,215,0,0.1)',
+            border: '1px solid rgba(255,215,0,0.3)',
+            borderRadius: 12,
+            padding: '10px',
+            color: GOLD,
+            fontFamily: skin.fontDisplay,
+            fontSize: 14,
           }}
         >
-          {product.badge && (
-            <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 8, letterSpacing: 2, color: 'var(--gold)', marginBottom: 8 }}>★ {product.badge}</div>
+          💎 Your gems: {gemBalance}
+        </div>
+
+        {/* Remove Ads — non-consumable */}
+        <ProductCard
+          icon="🚫"
+          title="REMOVE ADS"
+          bullets={['No interstitials ever', 'One-time purchase', 'Hints always free']}
+          price="$2.99"
+        >
+          {removeAdsPurchased ? (
+            <span style={{ fontFamily: skin.fontDisplay, fontSize: 13, color: GOLD }}>✓ Purchased</span>
+          ) : (
+            <button onClick={onBuy} style={buyBtn}>BUY</button>
           )}
-          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 13, color: 'var(--white)', marginBottom: 4 }}>{product.title}</div>
-          <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 12 }}>{product.desc}</div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 18, color: 'var(--gold)' }}>
-              {product.key === 'remove_ads' && removeAdsPurchased ? t('settings.remove_ads_purchased') : priceFor(product.sku, product.price)}
-            </span>
-            {/* T-019: real Play Billing purchase. analytics.iapPurchase fires in
-                buy() on success (see handlers above). */}
-            <button
-              className="btn-gold"
-              onClick={product.onBuy}
-              disabled={busy || (product.key === 'remove_ads' && removeAdsPurchased)}
-              style={{ padding: '8px 16px', fontSize: 10, opacity: product.key === 'remove_ads' && removeAdsPurchased ? 0.5 : 1 }}
-            >
-              {product.key === 'remove_ads' && removeAdsPurchased ? '✓' : t('iap.btn_buy')}
-            </button>
-          </div>
-        </div>
-      ))}
+        </ProductCard>
 
-      {/* F-001: Early Access — Pro & Expert campaigns (placeholder) */}
-      {EARLY_ACCESS.map((ea) => (
-        <div
-          key={ea.key}
-          style={{
-            margin: '0 16px 12px',
-            background: 'rgba(10,26,46,0.75)',
-            border: '1px solid rgba(147,51,234,0.4)',
-            borderRadius: 10,
-            padding: '16px',
-            boxShadow: '0 0 16px rgba(147,51,234,0.08)',
-          }}
+        {/* Hint Pack — consumable, can buy multiple */}
+        <ProductCard
+          icon="💡"
+          title="HINT PACK"
+          bullets={['5 extra hints (+5 gems)', 'Reveal the next cell', 'Works on any level']}
+          price="$0.99"
         >
-          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 8, letterSpacing: 2, color: '#B36BFF', marginBottom: 8 }}>⚡ {t('campaign.early_access_badge')}</div>
-          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 13, color: 'var(--white)', marginBottom: 4 }}>{ea.title}</div>
-          <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 12 }}>{ea.desc}</div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 18, color: '#B36BFF' }}>{priceFor(ea.sku, ea.price)}</span>
-            <button
-              onClick={ea.onBuy}
-              disabled={busy}
-              style={{ padding: '8px 16px', fontSize: 10, fontFamily: "'Space Mono', monospace", letterSpacing: 1, borderRadius: 8, border: 'none', cursor: busy ? 'default' : 'pointer', fontWeight: 700, background: 'linear-gradient(135deg,#9333EA,#7C3AED)', color: '#fff', opacity: busy ? 0.6 : 1 }}
-            >
-              {t(ea.unlockKey)}
-            </button>
-          </div>
+          <button onClick={onBuy} style={buyBtn}>BUY</button>
+        </ProductCard>
+
+        {/* Footer note + restore */}
+        <div style={{ textAlign: 'center', fontSize: 11, color: skin.muted, lineHeight: 1.6, marginTop: 4 }}>
+          Purchases managed by Google Play. Tap BUY to start the checkout flow.
         </div>
-      ))}
-
-      {/* Sprint 4 note */}
-      <div style={{ margin: '0 16px 16px', padding: '12px', background: 'rgba(30,139,195,0.06)', border: '1px solid rgba(30,139,195,0.2)', borderRadius: 8, textAlign: 'center' }}>
-        <p style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: 'var(--blue-light)', letterSpacing: 1 }}>{t('iap.billing_notice')}</p>
+        <button
+          onClick={onRestore}
+          style={{ background: 'none', border: 'none', color: skin.purpleLight, fontSize: 13, cursor: 'pointer', padding: 8 }}
+        >
+          Restore Purchases
+        </button>
       </div>
-
-      <div style={{ textAlign: 'center', padding: '0 20px 8px' }}>
-        <p style={{ fontSize: 11, color: 'var(--muted)', lineHeight: 1.6 }}>
-          {t('iap.payment_note')}
-          <br />
-          {t('iap.terms_note')}
-        </p>
-      </div>
-
-      <button
-        onClick={handleRestore}
-        disabled={busy}
-        style={{
-          display: 'block',
-          width: '100%',
-          background: 'none',
-          border: 'none',
-          padding: '14px 20px',
-          cursor: busy ? 'default' : 'pointer',
-          fontFamily: "'Space Mono', monospace",
-          fontSize: 10,
-          color: 'var(--muted)',
-          letterSpacing: 1,
-        }}
-      >
-        {t('iap.restore')}
-      </button>
 
       {toast && (
-        <div style={{ position: 'fixed', bottom: '14%', left: 0, right: 0, textAlign: 'center', zIndex: 50, pointerEvents: 'none' }}>
-          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, color: 'var(--white)', background: 'rgba(8,18,32,0.92)', border: '1px solid rgba(147,51,234,0.4)', borderRadius: 8, padding: '8px 14px' }}>
+        <div style={{ position: 'fixed', bottom: '12%', left: 0, right: 0, textAlign: 'center', zIndex: 50, pointerEvents: 'none' }}>
+          <span
+            style={{
+              fontFamily: skin.fontBody,
+              fontSize: 13,
+              color: skin.white,
+              background: 'rgba(13,6,32,0.92)',
+              border: '1px solid rgba(127,119,221,0.4)',
+              borderRadius: 8,
+              padding: '8px 14px',
+            }}
+          >
             {toast}
           </span>
         </div>
       )}
-    </ScreenShell>
-  );
-}
-
-// —— Local shell ——————————————————————————————————————————————————
-
-function ScreenShell({ children, title }: { children: React.ReactNode; title: string }) {
-  const navigate = useNavigate();
-  return (
-    <div style={{ position: 'relative', width: '100vw', height: '100vh', background: 'var(--navy)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-      <div className="bg-dots" />
-      <ParticleCanvas />
-      <div className="glass" style={{ display: 'flex', alignItems: 'center', padding: '48px 20px 16px', gap: 16, zIndex: 10, borderBottom: '1px solid rgba(30,139,195,0.2)' }}>
-        <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Space Mono', monospace", fontSize: 20, color: 'var(--muted)', padding: 0 }}>
-          ←
-        </button>
-        <h1 style={{ fontFamily: "'Space Mono', monospace", fontSize: 16, color: 'var(--gold)', letterSpacing: 2, flex: 1 }}>{title}</h1>
-      </div>
-      <div style={{ flex: 1, overflowY: 'auto', position: 'relative', zIndex: 1 }}>{children}</div>
-      <BottomNav />
     </div>
   );
 }
+
+export default IAPScreen;

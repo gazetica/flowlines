@@ -140,3 +140,53 @@ export async function maybeShowInterstitial(): Promise<void> {
 
   await showInterstitial(); // shows once + resets both counters on success
 }
+
+// ─── FL-S4-019: Flow Lines result-screen interstitial (in-memory triggers) ───
+// Self-contained entry point called from ResultScreen.tsx on mount. Uses module-
+// level (not persisted) counters per the FL spec, distinct from the Numtap
+// persisted path above. Trigger: 5 completions OR 3 minutes since the last show,
+// AND not Remove-Ads, AND not Zen mode.
+
+// isTesting: true MUST be removed before production (T-015 Day 34 grep target).
+const isTesting = true;
+
+let levelCompletionCount = 0;
+let lastInterstitialTime = Date.now(); // start the 3-minute clock at app load
+
+const FL_OPTIONS: AdOptions = {
+  adId: AD_UNITS.INTERSTITIAL, // test interstitial unit from admob.ts (T-015)
+  isTesting,
+};
+
+/**
+ * Call on every level completion (ResultScreen mount). Increments the in-memory
+ * completion count, then shows an interstitial when permitted — 5 completions OR
+ * 3 minutes elapsed, never for Remove-Ads owners, never in Zen mode. Resets both
+ * counters only on a confirmed show. Fire-and-forget; silent on no-fill / error.
+ */
+export async function onLevelComplete(
+  isZenMode: boolean,
+  removeAdsPurchased: boolean,
+): Promise<void> {
+  levelCompletionCount += 1;
+
+  if (removeAdsPurchased) return; // IAP guard — suppresses interstitials only
+  if (isZenMode) return;          // no interstitials in Zen mode
+
+  const now = Date.now();
+  const shouldShow =
+    levelCompletionCount >= COMPLETION_CAP || now - lastInterstitialTime >= CAP_MS;
+  if (!shouldShow) return;
+
+  try {
+    await AdMob.prepareInterstitial(FL_OPTIONS);
+    await AdMob.showInterstitial();
+    analytics.adImpression('interstitial');
+  } catch (err) {
+    console.warn('[interstitialAdService] FL onLevelComplete failed:', err);
+    return; // no reset on failure — retry next completion while conditions hold
+  }
+
+  levelCompletionCount = 0;
+  lastInterstitialTime = now;
+}

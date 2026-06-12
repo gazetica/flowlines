@@ -6,11 +6,13 @@
 // from the store after triggerWin() has run. No @ts-nocheck, no Numtap alias.
 
 import type { CSSProperties } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { skin } from '../styles/skin';
 import { useFlowGameStore } from '../store/flowGameStore';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
 import { getNextLevel } from '../game/engine/LevelManager';
+import { onLevelComplete } from '../services/interstitialAdService';
 import { flagOf } from './CountrySelector';
 import { GazeticaPromoCard } from './GazeticaPromoCard';
 
@@ -39,6 +41,7 @@ const RESULT_KEYFRAMES = `
 
 export function ResultScreen() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const levelId = useFlowGameStore((s) => s.levelId);
   const stars = useFlowGameStore((s) => s.stars);
   const score = useFlowGameStore((s) => s.score);
@@ -55,6 +58,16 @@ export function ResultScreen() {
   const flag = country ? flagOf(country) : '🌐';
 
   const perfectClear = (breakdown?.perfectClearBonus ?? 0) > 0;
+
+  // Interstitial gate (CLAUDE.md §9: ResultScreen only). Fires once on mount —
+  // shows an ad on the 5-completions / 3-minute trigger, never for Remove-Ads
+  // owners, never in Zen mode. Self-gating inside the service.
+  useEffect(() => {
+    const isZen = searchParams.get('mode') === 'zen';
+    const removeAds = useFlowSettingsStore.getState().removeAdsPurchased ?? false;
+    void onLevelComplete(isZen, removeAds);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Parse "p1_001" → pack 1, level 001 (falls back gracefully for TEST_LEVEL).
   const match = /^p(\d+)_(\d+)/.exec(levelId);

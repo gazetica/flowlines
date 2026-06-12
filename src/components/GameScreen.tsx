@@ -10,8 +10,12 @@ import { App } from '@capacitor/app';
 import Phaser from 'phaser';
 import { GameScene, type LevelConfig } from '../game/scenes/GameScene';
 import { getLevel, type LevelData } from '../game/engine/LevelManager';
+import type { DotPair } from '../game/engine/GridEngine';
 import { skin } from '../styles/skin';
 import { useFlowGameStore } from '../store/flowGameStore';
+import { showHintAd, loadHintAd } from '../services/rewardedAdService';
+
+const MAX_HINTS = 3;
 
 // Dev-harness fallback level (used at /game with no params). Real levels come
 // from the URL (?pack=N&level=N) via LevelManager. optimalMoves = grid².
@@ -38,7 +42,18 @@ export function GameScreen() {
   const [searchParams] = useSearchParams();
   const coverage = useFlowGameStore((s) => s.coverage);
   const moveCount = useFlowGameStore((s) => s.moveCount);
+  const hintsUsed = useFlowGameStore((s) => s.hintsUsed);
   const [showAbandonDialog, setShowAbandonDialog] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const [hintBusy, setHintBusy] = useState(false);
+
+  const hintsRemaining = MAX_HINTS - hintsUsed;
+  const hintsExhausted = hintsRemaining <= 0;
+
+  const flashToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 1900);
+  };
 
   // Resolve the level from URL params; fall back to TEST_LEVEL when absent/invalid.
   const packId = parseInt(searchParams.get('pack') ?? '1', 10);
@@ -75,6 +90,7 @@ export function GameScreen() {
       store.setLevelId(levelData.id);
       scene?.loadLevel(config);
       store.setStatus('playing');
+      void loadHintAd(); // preload the hint rewarded ad so it's ready on tap
     });
 
     // Win → compute score/stars with the real optimalMoves. Daily mode returns
@@ -109,6 +125,32 @@ export function GameScreen() {
     navigate(-1);
   };
 
+  // HINT button → watch a rewarded ad, then GameScene pulses the optimal next
+  // cell. Max 3 hints/level; the store's hintsUsed feeds ScoreEngine's penalty
+  // via triggerWin (no signature change needed — it reads state.hintsUsed).
+  const onHint = async () => {
+    if (hintsExhausted) {
+      flashToast('No more hints this level');
+      return;
+    }
+    if (hintBusy) return;
+    const scene = gameRef.current?.scene.getScene('GameScene') as GameScene | undefined;
+    if (!scene) return;
+    setHintBusy(true);
+    try {
+      const outcome = await showHintAd(
+        { grid: levelData.grid, dots: levelData.dots as DotPair[] },
+        (row, col) => {
+          scene.showHint(row, col);
+          useFlowGameStore.getState().useHint(); // 0 gems awarded (FL rule)
+        },
+      );
+      if (outcome === 'unavailable') flashToast('Hint ad unavailable — try again');
+    } finally {
+      setHintBusy(false);
+    }
+  };
+
   return (
     <div style={{ width: '100%', height: '100dvh', overflow: 'hidden', background: skin.bgDeep, display: 'flex', flexDirection: 'column' }}>
       {/* HUD — moves, coverage %, and live purple→gold coverage bar */}
@@ -125,6 +167,27 @@ export function GameScreen() {
         >
           <span>Moves: {moveCount}</span>
           <span>Coverage: {coverage}%</span>
+          {/* HINT — remaining count (not used). Gold/active until exhausted. */}
+          <button
+            onClick={() => void onHint()}
+            disabled={hintBusy}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+              padding: '2px 10px',
+              borderRadius: 12,
+              fontFamily: skin.fontDisplay,
+              fontSize: 12,
+              cursor: hintBusy ? 'default' : 'pointer',
+              background: 'none',
+              color: hintsExhausted ? skin.muted : skin.gold,
+              border: hintsExhausted ? '1px solid transparent' : `1px solid ${skin.gold}`,
+              opacity: hintsExhausted ? 0.5 : 1,
+            }}
+          >
+            💡 {hintsRemaining}
+          </button>
         </div>
         <div style={{ height: 4, margin: '0 16px 6px', background: skin.bgBorder, borderRadius: 2, overflow: 'hidden' }}>
           <div
@@ -142,6 +205,25 @@ export function GameScreen() {
       {/* Phaser mount point — fills the space below the HUD. minHeight:0 lets the
           flex child shrink instead of overflowing; position:relative anchors the canvas. */}
       <div ref={phaserRef} style={{ flex: 1, minHeight: 0, position: 'relative' }} />
+
+      {/* Hint toast (hint exhausted / ad unavailable) */}
+      {toast && (
+        <div style={{ position: 'fixed', bottom: '12%', left: 0, right: 0, textAlign: 'center', zIndex: 1100, pointerEvents: 'none' }}>
+          <span
+            style={{
+              fontFamily: skin.fontBody,
+              fontSize: 13,
+              color: skin.white,
+              background: 'rgba(13,6,32,0.92)',
+              border: '1px solid rgba(127,119,221,0.4)',
+              borderRadius: 8,
+              padding: '8px 14px',
+            }}
+          >
+            {toast}
+          </span>
+        </div>
+      )}
 
       {/* Abandon confirmation dialog (Sprint 3 restyles all modals) */}
       {showAbandonDialog && (
