@@ -59,6 +59,11 @@ export class GameScene extends Phaser.Scene {
   private readonly allPaths: Map<Colour, Cell[]> = new Map();
   private isDrawing = false;
 
+  // Hint pulse state (FL-S3-013 Task 13.3).
+  private hintGraphics?: Phaser.GameObjects.Graphics;
+  private hintTweens: Phaser.Tweens.Tween[] = [];
+  private hintCell: { row: number; col: number } | null = null;
+
   constructor() {
     super({ key: 'GameScene' });
   }
@@ -340,10 +345,13 @@ export class GameScene extends Phaser.Scene {
       for (const c of cellsToRemove) {
         if (!c.isEndpoint) {
           this.grid = this.clearCellOccupancy(this.grid, c.row, c.col);
+          this.playRetractFade(c, this.activeColour); // Task 13.4 — visual only
         }
       }
       this.renderPath(this.activeColour, this.activePath);
       this.dispatchCoverage();
+      // Task 13.4 — let the React HUD flash the move counter.
+      window.dispatchEvent(new CustomEvent('fl:undo'));
       return;
     }
 
@@ -364,6 +372,11 @@ export class GameScene extends Phaser.Scene {
 
     this.renderPath(this.activeColour, this.activePath);
     this.dispatchCoverage();
+
+    // Task 13.3 — stop the hint pulse once the player reaches the hinted cell.
+    if (this.hintCell && this.hintCell.row === cell.row && this.hintCell.col === cell.col) {
+      this.hideHint();
+    }
 
     // ── COMPLETION: reached the matching dot ────────────────────────────────
     if (isPathComplete(this.activePath, this.levelConfig!.dots, this.activeColour)) {
@@ -440,19 +453,225 @@ export class GameScene extends Phaser.Scene {
     useFlowGameStore.getState().setPath(colour, path);
     this.renderPath(colour, path);
     this.dispatchCoverage();
+    this.playLockInAnimation(colour); // Task 13.1 — visual only
     this.checkWin();
   }
 
   private checkWin(): void {
     if (isWinCondition(this.grid, this.levelConfig!.dots)) {
       useFlowGameStore.getState().setStatus('complete');
-      // Phaser has no React Router access — dispatch a DOM event that
-      // GameScreen.tsx listens for and turns into navigate('/win').
-      window.dispatchEvent(new CustomEvent('fl:win'));
+      // Task 13.2 — play the cascade, then dispatch fl:win after 650ms so the
+      // animation is visible before React navigates to /result. (Win detection
+      // logic is unchanged; only the emit timing is delayed.)
+      this.playWinCascade();
+      this.time.delayedCall(650, () => {
+        window.dispatchEvent(new CustomEvent('fl:win'));
+      });
     }
   }
 
   private dispatchCoverage(): void {
     useFlowGameStore.getState().setCoverage(calculateCoverage(this.grid));
+  }
+
+  // ─── Animations (FL-S3-013 — visual only, no game-logic changes) ─────────────
+
+  /**
+   * Task 13.1 — Path lock-in shimmer (≤200ms): a bright glow sweeps along the
+   * path source→target, and each endpoint's ring pulses radius 0→12→6.
+   * Runs independently per call (multiple colours can lock in at once).
+   */
+  private playLockInAnimation(colour: Colour): void {
+    const cells = this.allPaths.get(colour) ?? [];
+    if (cells.length === 0) return;
+    const hex = toHex(skin.pathColors[colour]);
+
+    // Shimmer: a white additive glow travelling along the path cells.
+    if (cells.length >= 2) {
+      const shimmer = this.add.circle(
+        this.cellCentreX(cells[0].col),
+        this.cellCentreY(cells[0].row),
+        Math.max(4, this.cellSize * 0.3),
+        0xffffff,
+        0.85,
+      );
+      shimmer.setBlendMode(Phaser.BlendModes.ADD);
+      this.tweens.addCounter({
+        from: 0,
+        to: cells.length - 1,
+        duration: 180,
+        ease: 'Power2.easeOut',
+        onUpdate: (tw) => {
+          const v = tw.getValue() ?? 0;
+          const i = Math.min(Math.floor(v), cells.length - 2);
+          const f = v - i;
+          const a = cells[i];
+          const b = cells[i + 1];
+          shimmer.x = Phaser.Math.Linear(this.cellCentreX(a.col), this.cellCentreX(b.col), f);
+          shimmer.y = Phaser.Math.Linear(this.cellCentreY(a.row), this.cellCentreY(b.row), f);
+        },
+        onComplete: () => shimmer.destroy(),
+      });
+    }
+
+    // Dot ring pulse: radius 0 → 12 → 6 over ~200ms ease-out, both endpoints.
+    for (const cell of cells) {
+      if (!cell.isEndpoint) continue;
+      const ring = this.add.circle(this.cellCentreX(cell.col), this.cellCentreY(cell.row), 1, 0xffffff, 0);
+      ring.setStrokeStyle(2, hex, 1);
+      this.tweens.addCounter({
+        from: 0,
+        to: 12,
+        duration: 100,
+        ease: 'Power2.easeOut',
+        onUpdate: (tw) => ring.setRadius(tw.getValue() ?? 0),
+        onComplete: () => {
+          this.tweens.addCounter({
+            from: 12,
+            to: 6,
+            duration: 100,
+            ease: 'Power2.easeOut',
+            onUpdate: (tw) => ring.setRadius(tw.getValue() ?? 0),
+            onComplete: () => ring.destroy(),
+          });
+        },
+      });
+    }
+  }
+
+  /**
+   * Task 13.2 — Win cascade (600ms): all cells flash white (0–100ms), then each
+   * cell's colour brightens 22%→85% in a radial cascade outward from centre
+   * (100–600ms). Overlays are torn down with the scene/game on navigation.
+   */
+  private playWinCascade(): void {
+    const N = this.N;
+    const radius = skin.grid.cellRadius;
+    const centre = (N - 1) / 2;
+
+    // Phase 1 — simultaneous white flash over the whole board.
+    const flash = this.add.graphics();
+    flash.fillStyle(0xffffff, 1);
+    for (let r = 0; r < N; r++) {
+      for (let c = 0; c < N; c++) {
+        flash.fillRoundedRect(this.cellX(c), this.cellY(r), this.cellSize, this.cellSize, radius);
+      }
+    }
+    flash.setAlpha(0);
+    this.tweens.add({
+      targets: flash,
+      alpha: 0.6,
+      duration: 100,
+      yoyo: true,
+      ease: 'Sine.easeOut',
+      onComplete: () => flash.destroy(),
+    });
+
+    // Phase 2 — radial colour brighten, staggered by distance band from centre.
+    let maxBand = 1;
+    for (let r = 0; r < N; r++) {
+      for (let c = 0; c < N; c++) {
+        maxBand = Math.max(maxBand, Math.round(Math.abs(r - centre) + Math.abs(c - centre)));
+      }
+    }
+    for (let r = 0; r < N; r++) {
+      for (let c = 0; c < N; c++) {
+        const colour = this.grid[r][c].colour;
+        if (!colour) continue;
+        const band = Math.round(Math.abs(r - centre) + Math.abs(c - centre));
+        const overlay = this.add.graphics();
+        overlay.fillStyle(toHex(skin.pathColors[colour]), 1);
+        overlay.fillRoundedRect(this.cellX(c), this.cellY(r), this.cellSize, this.cellSize, radius);
+        overlay.setAlpha(0);
+        this.tweens.add({
+          targets: overlay,
+          alpha: 0.63, // stacks over the existing 22% fill → ~85%
+          duration: 150,
+          delay: 100 + (band / maxBand) * 350,
+          ease: 'Power2.easeOut',
+        });
+      }
+    }
+  }
+
+  /**
+   * Task 13.4 — Undo retraction fade (150ms ease-in). The path data is already
+   * updated (frame-accurate); this overlays the removed cell's colour and fades
+   * it to empty for a smooth retract.
+   */
+  private playRetractFade(cell: Cell, colour: Colour): void {
+    const overlay = this.add.graphics();
+    overlay.fillStyle(toHex(skin.pathColors[colour]), 0.22);
+    overlay.fillRoundedRect(
+      this.cellX(cell.col),
+      this.cellY(cell.row),
+      this.cellSize,
+      this.cellSize,
+      skin.grid.cellRadius,
+    );
+    this.tweens.add({
+      targets: overlay,
+      alpha: 0,
+      duration: 150,
+      ease: 'Power2.easeIn',
+      onComplete: () => overlay.destroy(),
+    });
+  }
+
+  /**
+   * Task 13.3 — Start the hint pulse on (row, col): white border 1→3px and a
+   * white background flash 0→30%→0, both repeating every 800ms. Colour-agnostic.
+   * React calls this on the GameScene instance when a hint is activated.
+   */
+  showHint(row: number, col: number): void {
+    this.hideHint();
+    this.hintCell = { row, col };
+
+    const x = this.cellX(col);
+    const y = this.cellY(row);
+    const s = this.cellSize;
+    const radius = skin.grid.cellRadius;
+    const g = this.add.graphics();
+    this.hintGraphics = g;
+
+    const state = { border: 1, flash: 0 };
+    const redraw = () => {
+      g.clear();
+      g.fillStyle(0xffffff, state.flash);
+      g.fillRoundedRect(x, y, s, s, radius);
+      g.lineStyle(state.border, 0xffffff, 1);
+      g.strokeRoundedRect(x, y, s, s, radius);
+    };
+    redraw();
+
+    this.hintTweens = [
+      this.tweens.add({
+        targets: state,
+        border: 3,
+        duration: 400,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+        onUpdate: redraw,
+      }),
+      this.tweens.add({
+        targets: state,
+        flash: 0.3,
+        duration: 400,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+        onUpdate: redraw,
+      }),
+    ];
+  }
+
+  /** Task 13.3 — Stop the hint pulse and remove its overlay. */
+  hideHint(): void {
+    for (const t of this.hintTweens) t.remove();
+    this.hintTweens = [];
+    this.hintGraphics?.destroy();
+    this.hintGraphics = undefined;
+    this.hintCell = null;
   }
 }

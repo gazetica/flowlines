@@ -4,6 +4,11 @@
    Fonts degrade gracefully to monospace/sans-serif if the device is offline. */
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;600&display=swap');
 
+/* —— Tailwind (FL-S3-013) — @import must precede these per CSS spec —— */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* —— Reset —— */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
