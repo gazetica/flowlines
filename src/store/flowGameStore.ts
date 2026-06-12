@@ -41,6 +41,7 @@ export interface FlowGameState {
   scoreBreakdown: ScoreBreakdown | null;
 
   // Actions
+  setLevelId: (id: string) => void;
   setCoverage: (pct: number) => void;
   setMoveCount: (n: number) => void;
   setStatus: (s: FlowGameState['status']) => void;
@@ -67,6 +68,7 @@ export const useFlowGameStore = create<FlowGameState>((set) => ({
   stars: 0,
   scoreBreakdown: null,
 
+  setLevelId: (id) => set({ levelId: id }),
   setCoverage: (pct) => set({ coverage: pct }),
   setMoveCount: (n) => set({ moveCount: n }),
   setStatus: (s) => set({ status: s }),

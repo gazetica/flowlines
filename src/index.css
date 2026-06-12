@@ -9,6 +9,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/* —— Shake (FL-S3-015) — locked pack tap + newly-unlocked feedback —— */
+@keyframes fl-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+.fl-shake { animation: fl-shake 0.3s ease; }
+
 /* —— Reset —— */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 

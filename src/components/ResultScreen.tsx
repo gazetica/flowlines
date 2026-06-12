@@ -9,6 +9,12 @@ import type { CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { skin } from '../styles/skin';
 import { useFlowGameStore } from '../store/flowGameStore';
+import { getNextLevel } from '../game/engine/LevelManager';
+
+/** 1-based level index from a level id, e.g. "p1_005" → 5. */
+function levelIndexFromId(id: string): number {
+  return parseInt(id.split('_')[1] ?? '1', 10);
+}
 
 const GOLD = '#EF9F27';
 const MUTED = '#6b6898';
@@ -30,18 +36,26 @@ export function ResultScreen() {
   const packNo = match ? match[1] : '–';
   const levelNo = match ? match[2] : '—';
 
+  const currentPack = match ? Number(match[1]) : 1;
+  const currentIndex = match ? Number(match[2]) : 1;
+
   const goPackSelect = () => {
     resetGame();
-    navigate('/');
+    navigate('/packs');
   };
   const replay = () => {
     resetGame();
-    navigate('/game');
+    if (match) navigate(`/game?pack=${currentPack}&level=${currentIndex}`);
+    else navigate('/game');
   };
   const nextLevel = () => {
-    // Real per-level loading lands in Sprint 3; for now reload the game screen.
     resetGame();
-    navigate('/game');
+    const next = match ? getNextLevel(levelId) : null;
+    if (next) {
+      navigate(`/game?pack=${next.pack}&level=${levelIndexFromId(next.id)}`);
+    } else {
+      navigate('/packs'); // last level in pack (or no real level loaded)
+    }
   };
 
   const card: CSSProperties = {

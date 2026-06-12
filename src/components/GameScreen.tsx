@@ -5,17 +5,22 @@
 // navigate to /result. Android back mid-game → abandon confirmation dialog.
 
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { App } from '@capacitor/app';
 import Phaser from 'phaser';
 import { GameScene, type LevelConfig } from '../game/scenes/GameScene';
+import { getLevel, type LevelData } from '../game/engine/LevelManager';
 import { skin } from '../styles/skin';
 import { useFlowGameStore } from '../store/flowGameStore';
 
-// Hardcoded test level for the device check (5 dot pairs on a 6×6). Real
-// per-level loading lands in Sprint 3. optimalMoves = grid² (100% coverage).
-const TEST_LEVEL: LevelConfig = {
+// Dev-harness fallback level (used at /game with no params). Real levels come
+// from the URL (?pack=N&level=N) via LevelManager. optimalMoves = grid².
+const TEST_LEVEL: LevelData = {
+  id: '',
+  pack: 0,
   grid: 6,
+  colours: 5,
+  optimalMoves: 36,
   dots: [
     { colour: 'red',    r1: 0, c1: 0, r2: 5, c2: 3 },
     { colour: 'blue',   r1: 0, c1: 5, r2: 4, c2: 1 },
@@ -24,16 +29,21 @@ const TEST_LEVEL: LevelConfig = {
     { colour: 'purple', r1: 0, c1: 2, r2: 4, c2: 4 },
   ],
 };
-const OPTIMAL_MOVES = TEST_LEVEL.grid * TEST_LEVEL.grid;
 
 export function GameScreen() {
   const phaserRef = useRef<HTMLDivElement>(null);
   const gameRef = useRef<Phaser.Game | null>(null);
 
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const coverage = useFlowGameStore((s) => s.coverage);
   const moveCount = useFlowGameStore((s) => s.moveCount);
   const [showAbandonDialog, setShowAbandonDialog] = useState(false);
+
+  // Resolve the level from URL params; fall back to TEST_LEVEL when absent/invalid.
+  const packId = parseInt(searchParams.get('pack') ?? '1', 10);
+  const levelIndex = parseInt(searchParams.get('level') ?? '1', 10);
+  const levelData: LevelData = getLevel(packId, levelIndex) ?? TEST_LEVEL;
 
   useEffect(() => {
     if (!phaserRef.current || gameRef.current) return;
@@ -49,16 +59,20 @@ export function GameScreen() {
     });
     gameRef.current = game;
 
+    const config: LevelConfig = { grid: levelData.grid, dots: levelData.dots as LevelConfig['dots'] };
+
     game.events.once('ready', () => {
       const scene = game.scene.getScene('GameScene') as GameScene | null;
-      useFlowGameStore.getState().resetGame();
-      scene?.loadLevel(TEST_LEVEL);
-      useFlowGameStore.getState().setStatus('playing');
+      const store = useFlowGameStore.getState();
+      store.resetGame();
+      store.setLevelId(levelData.id);
+      scene?.loadLevel(config);
+      store.setStatus('playing');
     });
 
-    // Win → compute score/stars, then go to the result screen.
+    // Win → compute score/stars with the real optimalMoves, then go to /result.
     const handleWin = () => {
-      useFlowGameStore.getState().triggerWin(OPTIMAL_MOVES);
+      useFlowGameStore.getState().triggerWin(levelData.optimalMoves);
       navigate('/result');
     };
     window.addEventListener('fl:win', handleWin);
