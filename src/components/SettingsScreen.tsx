@@ -169,8 +169,11 @@ export default function SettingsScreen() {
           <button onClick={() => openUrl('https://gazetica.com/privacy')} style={{ ...rowStyle, width: '100%', background: 'none', border: 'none', borderBottom: '1px solid rgba(127,119,221,0.1)', cursor: 'pointer' }}>
             <span>Privacy Policy</span><span style={{ color: skin.muted }}>›</span>
           </button>
-          <button onClick={() => openUrl('https://gazetica.com/terms')} style={{ ...rowStyle, width: '100%', background: 'none', border: 'none', borderBottom: 'none', cursor: 'pointer' }}>
+          <button onClick={() => openUrl('https://gazetica.com/terms')} style={{ ...rowStyle, width: '100%', background: 'none', border: 'none', borderBottom: '1px solid rgba(127,119,221,0.1)', cursor: 'pointer' }}>
             <span>Terms of Service</span><span style={{ color: skin.muted }}>›</span>
+          </button>
+          <button onClick={() => navigate('/about')} style={{ ...rowStyle, width: '100%', background: 'none', border: 'none', borderBottom: 'none', cursor: 'pointer' }}>
+            <span>About Flow Lines</span><span style={{ color: skin.muted }}>›</span>
           </button>
         </Section>
       </div>

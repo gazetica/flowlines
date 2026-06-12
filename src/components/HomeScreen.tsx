@@ -34,11 +34,11 @@ function GemBadge({ balance }: { balance: number }) {
   );
 }
 
-const MODES: Array<{ title: string; icon: string; subtitle: string; route: string; gold?: boolean }> = [
-  { title: 'CLASSIC', icon: '🎁', subtitle: 'Packs 1–4', route: '/packs' },
-  { title: 'TIMED', icon: '⏱', subtitle: '3 min rush', route: '/packs' },
-  { title: 'DAILY', icon: '📅', subtitle: "Today's puzzle", route: '/daily', gold: true },
-  { title: 'ZEN', icon: '🧘', subtitle: 'No timer', route: '/packs' },
+const MODES: Array<{ title: string; icon: string; subtitle: string; route: string; accent: string; tint: string; circle: string }> = [
+  { title: 'CLASSIC', icon: '🎁', subtitle: 'Packs 1–4',      route: '/packs', accent: '#7F77DD', tint: 'rgba(127,119,221,0.06)', circle: 'rgba(127,119,221,0.15)' },
+  { title: 'TIMED',   icon: '⏱', subtitle: '3 min rush',      route: '/packs', accent: '#E24B4A', tint: 'rgba(226,75,74,0.06)',  circle: 'rgba(226,75,74,0.15)' },
+  { title: 'DAILY',   icon: '📅', subtitle: "Today's puzzle",  route: '/daily', accent: '#EF9F27', tint: 'rgba(239,159,39,0.08)', circle: 'rgba(239,159,39,0.15)' },
+  { title: 'ZEN',     icon: '🧘', subtitle: 'No timer',        route: '/packs', accent: '#639922', tint: 'rgba(99,153,34,0.06)',  circle: 'rgba(99,153,34,0.15)' },
 ];
 
 export function HomeScreen() {
@@ -99,7 +99,7 @@ export function HomeScreen() {
             ▶ {continueMode ? 'CONTINUE' : 'START PLAYING'}
           </div>
           {continueMode && (
-            <div style={{ fontSize: 12, marginTop: 4, opacity: 0.8 }}>
+            <div style={{ fontSize: 11, marginTop: 4, opacity: 0.7 }}>
               Classic · Pack {currentPack} · Level {nextLevel}
             </div>
           )}
@@ -113,7 +113,8 @@ export function HomeScreen() {
               onClick={() => navigate(m.route)}
               style={{
                 ...card,
-                border: m.gold ? '1px solid rgba(255,215,0,0.3)' : (card.border as string),
+                background: m.tint,
+                borderLeft: `3px solid ${m.accent}`,
                 padding: 14,
                 cursor: 'pointer',
                 textAlign: 'left',
@@ -122,7 +123,21 @@ export function HomeScreen() {
                 gap: 4,
               }}
             >
-              <span style={{ fontSize: 20 }}>{m.icon}</span>
+              <div
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: '50%',
+                  background: m.circle,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 22,
+                  marginBottom: 6,
+                }}
+              >
+                {m.icon}
+              </div>
               <span style={{ fontFamily: skin.fontDisplay, fontSize: 11, color: skin.purpleLight, letterSpacing: 1 }}>{m.title}</span>
               <span style={{ fontSize: 9, color: skin.muted }}>{m.subtitle}</span>
             </button>
@@ -140,18 +155,18 @@ export function HomeScreen() {
                 <div
                   key={i}
                   style={{
-                    flex: 1,
-                    aspectRatio: '1',
-                    borderRadius: 6,
+                    width: 28,
+                    height: 28,
+                    borderRadius: '50%',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: 12,
-                    background: filled ? 'rgba(255,215,0,0.25)' : 'rgba(127,119,221,0.1)',
+                    fontSize: 13,
+                    background: filled ? 'rgba(255,215,0,0.3)' : 'rgba(127,119,221,0.12)',
                     color: filled ? GOLD : skin.muted,
                   }}
                 >
-                  {filled ? '★' : '☆'}
+                  {filled ? '✓' : '·'}
                 </div>
               );
             })}

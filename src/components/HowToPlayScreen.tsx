@@ -103,6 +103,17 @@ export function HowToPlayScreen() {
     }
   };
 
+  // Skip: on first launch, complete onboarding then go Home; for a returning
+  // user (opened from Settings) just go back.
+  const handleSkip = () => {
+    if (!firstLaunchComplete) {
+      completeFirstLaunch();
+      navigate('/home');
+    } else {
+      navigate(-1);
+    }
+  };
+
   const card: CSSProperties = {
     background: 'rgba(255,255,255,0.04)',
     border: '1px solid rgba(127,119,221,0.2)',
@@ -116,9 +127,14 @@ export function HowToPlayScreen() {
   return (
     <div style={{ width: '100%', minHeight: '100vh', background: skin.bgDeep, display: 'flex', flexDirection: 'column', fontFamily: skin.fontBody }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px' }}>
-        <button onClick={onBack} style={{ background: 'none', border: 'none', color: skin.white, fontSize: 18, cursor: 'pointer' }}>‹</button>
-        <span style={{ fontFamily: skin.fontDisplay, fontSize: 16, color: GOLD, letterSpacing: 2 }}>HOW TO PLAY</span>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button onClick={onBack} style={{ background: 'none', border: 'none', color: skin.white, fontSize: 18, cursor: 'pointer' }}>‹</button>
+          <span style={{ fontFamily: skin.fontDisplay, fontSize: 16, color: GOLD, letterSpacing: 2 }}>HOW TO PLAY</span>
+        </div>
+        <button onClick={handleSkip} style={{ background: 'none', border: 'none', color: skin.muted, fontSize: 13, cursor: 'pointer' }}>
+          Skip ›
+        </button>
       </div>
 
       {/* Steps */}

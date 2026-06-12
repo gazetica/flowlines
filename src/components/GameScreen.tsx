@@ -51,11 +51,17 @@ export function GameScreen() {
 
     const game = new Phaser.Game({
       type: Phaser.AUTO,
-      parent: phaserRef.current,
-      width: window.innerWidth,
-      height: window.innerHeight,
       backgroundColor: skin.bgDeep,
       transparent: false,
+      // RESIZE mode sizes the canvas (and camera) to the parent container, so
+      // GameScene's layout reads the real available height below the HUD rather
+      // than the full viewport. Fixes the oversized ambient-glow / pushed grid.
+      scale: {
+        mode: Phaser.Scale.RESIZE,
+        parent: phaserRef.current,
+        width: '100%',
+        height: '100%',
+      },
       scene: [GameScene],
     });
     gameRef.current = game;
@@ -104,9 +110,9 @@ export function GameScreen() {
   };
 
   return (
-    <div style={{ width: '100%', height: '100vh', background: skin.bgDeep, display: 'flex', flexDirection: 'column' }}>
+    <div style={{ width: '100%', height: '100dvh', overflow: 'hidden', background: skin.bgDeep, display: 'flex', flexDirection: 'column' }}>
       {/* HUD — moves, coverage %, and live purple→gold coverage bar */}
-      <div style={{ display: 'flex', flexDirection: 'column', background: 'rgba(0,0,0,0.4)' }}>
+      <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', background: 'rgba(0,0,0,0.4)' }}>
         <div
           style={{
             display: 'flex',
@@ -133,8 +139,9 @@ export function GameScreen() {
         </div>
       </div>
 
-      {/* Phaser mount point */}
-      <div ref={phaserRef} style={{ flex: 1 }} />
+      {/* Phaser mount point — fills the space below the HUD. minHeight:0 lets the
+          flex child shrink instead of overflowing; position:relative anchors the canvas. */}
+      <div ref={phaserRef} style={{ flex: 1, minHeight: 0, position: 'relative' }} />
 
       {/* Abandon confirmation dialog (Sprint 3 restyles all modals) */}
       {showAbandonDialog && (
