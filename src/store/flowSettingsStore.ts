@@ -24,6 +24,7 @@ const KEYS = {
   PACK_PROGRESS:   'FL_PACK_PROGRESS',
   DAILY_STREAK:    'FL_DAILY_STREAK',
   LAST_DAILY:      'FL_LAST_DAILY_DATE',
+  FIRST_LAUNCH:    'FL_FIRST_LAUNCH',
 } as const;
 
 interface PackLevelProgress {
@@ -52,6 +53,9 @@ interface FlowSettingsState {
   dailyStreakFL: number;
   lastDailyDateFL: string;
 
+  // Onboarding
+  firstLaunchComplete: boolean;
+
   // Hydration flag
   hydrated: boolean;
 
@@ -68,6 +72,7 @@ interface FlowSettingsState {
   saveStars: (levelId: string, packId: number, stars: 0 | 1 | 2 | 3) => void;
   incrementDailyStreak: () => Promise<void>;
   resetDailyStreak: () => Promise<void>;
+  completeFirstLaunch: () => void;
   hydrate: () => Promise<void>;
 }
 
@@ -84,6 +89,7 @@ export const useFlowSettingsStore = create<FlowSettingsState>((set, get) => ({
   packProgress: {},
   dailyStreakFL: 0,
   lastDailyDateFL: '',
+  firstLaunchComplete: false,
   hydrated: false,
 
   setAlias: async (v) => {
@@ -173,6 +179,14 @@ export const useFlowSettingsStore = create<FlowSettingsState>((set, get) => ({
     set({ dailyStreakFL: 0 });
   },
 
+  // completeFirstLaunch — called at the end of the onboarding flow (after the
+  // tutorial's START PLAYING). Marks onboarding done so Splash routes straight
+  // to /home on subsequent launches. Fire-and-forget Preferences write.
+  completeFirstLaunch: () => {
+    set({ firstLaunchComplete: true });
+    void Preferences.set({ key: KEYS.FIRST_LAUNCH, value: 'true' });
+  },
+
   // Hydrate — called once on app startup to load persisted state.
   hydrate: async () => {
     const read = async (key: string) =>
@@ -188,6 +202,7 @@ export const useFlowSettingsStore = create<FlowSettingsState>((set, get) => ({
     const removeAds = (await read(KEYS.REMOVE_ADS)) === 'true';
     const streak = parseInt((await read(KEYS.DAILY_STREAK)) || '0', 10);
     const lastDaily = (await read(KEYS.LAST_DAILY)) || '';
+    const firstLaunchComplete = (await read(KEYS.FIRST_LAUNCH)) === 'true';
 
     let packProgress: Record<number, PackLevelProgress> = {};
     try {
@@ -216,6 +231,7 @@ export const useFlowSettingsStore = create<FlowSettingsState>((set, get) => ({
       removeAdsPurchased: removeAds,
       dailyStreakFL: streak,
       lastDailyDateFL: lastDaily,
+      firstLaunchComplete,
       packProgress,
       hydrated: true,
     });

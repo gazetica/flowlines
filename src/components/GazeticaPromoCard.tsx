@@ -1,157 +1,99 @@
 // GazeticaPromoCard.tsx
-// Numtap | Gazetica Studio | Sprint 5 | Task B-012
+// Flow Lines | Gazetica Studio | Sprint 3 Day 17 | Task FL-S3-017
 //
-// Internal house-ad slot on ResultScreen: rotating cross-promotion of upcoming
-// Gazetica games. Entirely static — no network, no SDK, no AdMob. Three height
-// variants by result state (compact / medium / full). Taps open the games page
-// in the in-app Capacitor Browser (same pattern as AboutScreen).
+// Numtap cross-promo card. Rendered ONLY at the bottom of ResultScreen and
+// inside AboutScreen — never mid-game, never blocking play (CLAUDE.md §9:
+// ResultScreen bottom slot is GazeticaPromoCard only). Tapping opens the Numtap
+// Play Store listing via the in-app Capacitor Browser.
+//
+// Replaces the Numtap B-012 rotating-roadmap component (unimported remnant);
+// its obsolete test (GazeticaPromoCard.test.tsx) was removed with it.
 
-import { useState } from 'react';
-import { Capacitor } from '@capacitor/core';
+import type { CSSProperties } from 'react';
 import { Browser } from '@capacitor/browser';
+import { skin } from '../styles/skin';
 
-export type PromoVariant = 'compact' | 'medium' | 'full';
+const GOLD = '#FFD700';
+const NUMTAP_URL = 'https://play.google.com/store/apps/details?id=com.gazetica.numtap';
 
-export interface PromoGame {
-  name: string;
-  tagline: string;
-  description: string;
-  color: string; // per-game accent
-}
+export function GazeticaPromoCard() {
+  const openListing = () => {
+    void Browser.open({ url: NUMTAP_URL });
+  };
 
-export const GAMES: PromoGame[] = [
-  {
-    name: 'Flow Lines',
-    tagline: 'Connect the dots. Fill the grid.',
-    description: 'Draw paths to connect matching colours and fill every cell. 500+ hand-crafted levels.',
-    color: '#1D9E75', // teal
-  },
-  {
-    name: 'Word Drop',
-    tagline: 'Words fall. You catch them.',
-    description: 'Form words from falling letter tiles before the grid fills up. Fast and addictive.',
-    color: '#7F77DD', // purple
-  },
-  {
-    name: 'Pulse Grid',
-    tagline: 'Tap to the beat.',
-    description: 'Hit grid targets in rhythm with the pulse. Every miss breaks your streak.',
-    color: '#D85A30', // coral
-  },
-  {
-    name: 'Echo Trail',
-    tagline: 'Follow the path. Trust your memory.',
-    description: 'Memorise a growing path across the grid and retrace it perfectly.',
-    color: '#378ADD', // blue
-  },
-];
+  const glass: CSSProperties = {
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(127,119,221,0.2)',
+    borderRadius: 16,
+    padding: 16,
+    width: '100%',
+    boxSizing: 'border-box',
+  };
 
-const GAMES_URL = 'https://gazetica.com/games.html';
-
-// Module-level rotation counter — survives across mounts so each new ResultScreen
-// shows the next game in sequence (Flow Lines → Word Drop → Pulse Grid → Echo
-// Trail → …). Not React state, so it never triggers a re-render.
-let promoIndex = 0;
-
-// B-012 NOTE: the brief's pseudocode increments promoIndex in the render body.
-// ResultScreen re-renders several times per visit (stars/breakdown/gate effects),
-// which would advance the counter multiple times per result. We instead pick the
-// game once per MOUNT via a useState initializer (read-only state — never set, so
-// no extra re-renders), which both honours "next game each mount" and avoids the
-// over-increment bug.
-
-// Open the Gazetica games page in the in-app browser (native only; web no-op).
-async function openGames(): Promise<void> {
-  if (!Capacitor.isNativePlatform()) {
-    console.log('[GazeticaPromoCard] open (web no-op):', GAMES_URL);
-    return;
-  }
-  await Browser.open({ url: GAMES_URL });
-}
-
-const NAVY_CARD = 'rgba(10,26,46,0.75)';
-const FONT = "'Space Mono', monospace";
-
-function ComingSoon() {
   return (
-    <span style={{ position: 'absolute', top: 6, right: 10, fontFamily: FONT, fontSize: 8, color: 'var(--muted)', letterSpacing: 0.5 }}>
-      Coming Soon
-    </span>
+    <div style={glass}>
+      <div style={{ fontSize: 11, color: skin.muted, letterSpacing: 1, marginBottom: 10 }}>
+        🎮 Also by Gazetica
+      </div>
+
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          background: skin.bgDeep,
+          border: '1px solid rgba(127,119,221,0.18)',
+          borderRadius: 12,
+          padding: 12,
+        }}
+      >
+        {/* CSS-only Numtap icon — no image asset needed */}
+        <div
+          style={{
+            width: 44,
+            height: 44,
+            flexShrink: 0,
+            borderRadius: 10,
+            background: 'linear-gradient(135deg, #EF9F27, #D85A30)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontFamily: skin.fontDisplay,
+            fontSize: 22,
+            fontWeight: 700,
+            color: '#1A0E08',
+          }}
+        >
+          N
+        </div>
+
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontFamily: skin.fontDisplay, fontSize: 14, color: GOLD, letterSpacing: 1 }}>
+            NUMTAP
+          </div>
+          <div style={{ fontSize: 11, color: skin.muted }}>Speed Number Puzzles</div>
+        </div>
+
+        <button
+          onClick={openListing}
+          style={{
+            flexShrink: 0,
+            background: GOLD,
+            color: skin.bgDeep,
+            border: 'none',
+            borderRadius: 8,
+            padding: '8px 12px',
+            fontFamily: skin.fontDisplay,
+            fontSize: 11,
+            fontWeight: 700,
+            cursor: 'pointer',
+          }}
+        >
+          ▶ TRY FREE
+        </button>
+      </div>
+    </div>
   );
 }
 
-function GameIcon({ color, size = 26 }: { color: string; size?: number }) {
-  return <span style={{ width: size, height: size, borderRadius: '50%', background: color, flexShrink: 0, boxShadow: `0 0 8px ${color}66` }} />;
-}
-
-export function GazeticaPromoCard({ variant }: { variant: PromoVariant }) {
-  // Pick the game once per mount; advance the shared rotation counter.
-  const [game] = useState<PromoGame>(() => {
-    const g = GAMES[promoIndex % GAMES.length];
-    promoIndex += 1;
-    return g;
-  });
-
-  const onTap = () => { void openGames(); };
-
-  // —— Compact (44px): campaign win — single line, no card, just text + arrow ——
-  if (variant === 'compact') {
-    return (
-      <button
-        onClick={onTap}
-        style={{
-          width: '100%', height: 44, background: 'none', border: 'none', cursor: 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: 0,
-          fontFamily: FONT, fontSize: 10, letterSpacing: 0.5, color: 'var(--muted)',
-        }}
-      >
-        <span>ALSO BY GAZETICA: <span style={{ color: game.color }}>{game.name}</span></span>
-        <span aria-hidden>→</span>
-      </button>
-    );
-  }
-
-  // —— Medium (80px): non-campaign win — icon + name + tagline + Coming Soon ——
-  if (variant === 'medium') {
-    return (
-      <button
-        onClick={onTap}
-        style={{
-          position: 'relative', width: '100%', height: 80, cursor: 'pointer', textAlign: 'left',
-          background: NAVY_CARD, border: `1px solid ${game.color}4D`, borderRadius: 10,
-          display: 'flex', alignItems: 'center', gap: 12, padding: '0 14px',
-        }}
-      >
-        <ComingSoon />
-        <GameIcon color={game.color} />
-        <span style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
-          <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: 700, color: 'var(--white)' }}>{game.name}</span>
-          <span style={{ fontSize: 11, color: 'var(--muted)' }}>{game.tagline}</span>
-        </span>
-      </button>
-    );
-  }
-
-  // —— Full (120px): fail / timeout — header + name + description + DISCOVER ——
-  return (
-    <button
-      onClick={onTap}
-      style={{
-        position: 'relative', width: '100%', height: 120, cursor: 'pointer', textAlign: 'left',
-        background: NAVY_CARD, border: `1px solid ${game.color}4D`, borderRadius: 10,
-        display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 6, padding: '12px 14px',
-      }}
-    >
-      <ComingSoon />
-      <span style={{ fontFamily: FONT, fontSize: 9, color: 'var(--gold)', letterSpacing: 1.5 }}>MORE FROM GAZETICA</span>
-      <span style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-        <GameIcon color={game.color} size={24} />
-        <span style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-          <span style={{ fontFamily: FONT, fontSize: 12, fontWeight: 700, color: 'var(--white)' }}>{game.name}</span>
-          <span style={{ fontSize: 10, color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{game.description}</span>
-        </span>
-      </span>
-      <span style={{ alignSelf: 'flex-end', fontFamily: FONT, fontSize: 10, color: 'var(--gold)', letterSpacing: 1 }}>DISCOVER →</span>
-    </button>
-  );
-}
+export default GazeticaPromoCard;

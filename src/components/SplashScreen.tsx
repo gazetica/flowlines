@@ -17,10 +17,12 @@ export function SplashScreen() {
     // Animate the loading bar to 100% over 1800ms.
     const t = setTimeout(() => setBarWidth(100), 50);
 
-    // After ~2s, route by first-launch state (language unset → onboarding).
+    // After ~2s, route by first-launch state. A dedicated firstLaunchComplete
+    // flag drives onboarding (language defaults to 'en', so it can't be the
+    // signal — see CF-005). First run → /language onboarding; returning → /home.
     const nav = setTimeout(() => {
-      const lang = useFlowSettingsStore.getState().language;
-      navigate(lang ? '/home' : '/language', { replace: true });
+      const done = useFlowSettingsStore.getState().firstLaunchComplete;
+      navigate(done ? '/home' : '/language', { replace: true });
     }, 2000);
 
     return () => {

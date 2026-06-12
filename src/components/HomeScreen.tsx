@@ -57,7 +57,8 @@ export function HomeScreen() {
   const currentPack = inProgressPack ?? 1;
   const nextLevel = (packProgress[currentPack]?.solved ?? 0) + 1;
 
-  const onContinue = () => navigate(continueMode ? '/game' : '/packs');
+  const onContinue = () =>
+    navigate(continueMode ? `/game?pack=${currentPack}&level=${nextLevel}` : '/packs');
 
   const card: CSSProperties = {
     background: 'rgba(255,255,255,0.04)',

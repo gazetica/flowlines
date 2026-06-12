@@ -9,7 +9,10 @@ import type { CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { skin } from '../styles/skin';
 import { useFlowGameStore } from '../store/flowGameStore';
+import { useFlowSettingsStore } from '../store/flowSettingsStore';
 import { getNextLevel } from '../game/engine/LevelManager';
+import { flagOf } from './CountrySelector';
+import { GazeticaPromoCard } from './GazeticaPromoCard';
 
 /** 1-based level index from a level id, e.g. "p1_005" → 5. */
 function levelIndexFromId(id: string): number {
@@ -19,6 +22,20 @@ function levelIndexFromId(id: string): number {
 const GOLD = '#EF9F27';
 const MUTED = '#6b6898';
 const STAR_EMPTY = '#4a4a6a';
+
+// Stars bounce in (VDD: 120ms each, ease-out, 130ms stagger). 3-star earns a
+// gold glow pulse on the container 380ms after mount (last star lands at 260+120).
+const RESULT_KEYFRAMES = `
+@keyframes flStarBounce {
+  0%   { transform: scale(0); opacity: 0; }
+  60%  { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(1.0); opacity: 1; }
+}
+@keyframes flStarGlow {
+  0%   { box-shadow: 0 0 20px rgba(255,215,0,0.6); }
+  100% { box-shadow: 0 0 0 rgba(255,215,0,0); }
+}
+`;
 
 export function ResultScreen() {
   const navigate = useNavigate();
@@ -30,6 +47,14 @@ export function ResultScreen() {
   const optimalMoves = useFlowGameStore((s) => s.optimalMoves);
   const breakdown = useFlowGameStore((s) => s.scoreBreakdown);
   const resetGame = useFlowGameStore((s) => s.resetGame);
+
+  // Player identity for the leaderboard rank snippet.
+  const playerUid = useFlowSettingsStore((s) => s.playerUid);
+  const alias = useFlowSettingsStore((s) => s.alias);
+  const country = useFlowSettingsStore((s) => s.country);
+  const flag = country ? flagOf(country) : '🌐';
+
+  const perfectClear = (breakdown?.perfectClearBonus ?? 0) > 0;
 
   // Parse "p1_001" → pack 1, level 001 (falls back gracefully for TEST_LEVEL).
   const match = /^p(\d+)_(\d+)/.exec(levelId);
@@ -119,14 +144,55 @@ export function ResultScreen() {
           Pack {packNo} · Level {levelNo}
         </div>
 
-        {/* Stars */}
-        <div style={{ display: 'flex', gap: 12, fontSize: 40, lineHeight: 1 }}>
-          {[1, 2, 3].map((n) => (
-            <span key={n} style={{ color: n <= stars ? GOLD : STAR_EMPTY }}>
-              {n <= stars ? '★' : '☆'}
-            </span>
-          ))}
+        {/* Stars — earned stars bounce in with a 130ms stagger; 3-star glow pulse */}
+        <style>{RESULT_KEYFRAMES}</style>
+        <div
+          style={{
+            display: 'flex',
+            gap: 12,
+            fontSize: 40,
+            lineHeight: 1,
+            borderRadius: 16,
+            padding: '2px 8px',
+            animation: stars >= 3 ? 'flStarGlow 600ms ease-out 380ms forwards' : undefined,
+          }}
+        >
+          {[1, 2, 3].map((n) => {
+            const earned = n <= stars;
+            return (
+              <span
+                key={n}
+                style={{
+                  display: 'inline-block',
+                  color: earned ? GOLD : STAR_EMPTY,
+                  ...(earned
+                    ? {
+                        opacity: 0,
+                        animation: `flStarBounce 120ms ease-out ${(n - 1) * 130}ms forwards`,
+                      }
+                    : {}),
+                }}
+              >
+                {earned ? '★' : '☆'}
+              </span>
+            );
+          })}
         </div>
+
+        {/* ✨ PERFECT CLEAR badge */}
+        {perfectClear && (
+          <div
+            style={{
+              fontFamily: skin.fontDisplay,
+              fontSize: 13,
+              color: skin.gold,
+              textAlign: 'center',
+              marginTop: -4,
+            }}
+          >
+            ✨ PERFECT CLEAR!
+          </div>
+        )}
 
         {/* Score breakdown card */}
         <div style={card}>
@@ -153,6 +219,29 @@ export function ResultScreen() {
               <span style={{ color: GOLD }}>{score}</span>
             </div>
           )}
+        </div>
+
+        {/* YOUR RANK snippet — own-row highlight style from VD-08 */}
+        <div
+          style={{
+            ...card,
+            background: 'rgba(255,215,0,0.08)',
+            border: '1px solid rgba(255,215,0,0.25)',
+          }}
+        >
+          <div style={{ fontFamily: skin.fontDisplay, fontSize: 13, color: skin.purpleLight, marginBottom: 8, letterSpacing: 1 }}>
+            YOUR RANK
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: skin.white }}>
+            {/* TODO Sprint 4: real rank from Supabase */}
+            <span style={{ fontFamily: skin.fontDisplay, color: GOLD, minWidth: 34 }}>#--</span>
+            <span style={{ fontSize: 11, color: MUTED }}>{playerUid || '—'}</span>
+            <span style={{ fontSize: 16 }}>{flag}</span>
+            <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {alias || 'You'}
+            </span>
+            <span style={{ fontFamily: skin.fontDisplay, color: GOLD }}>{score}</span>
+          </div>
         </div>
 
         {/* Stat row */}
@@ -192,6 +281,10 @@ export function ResultScreen() {
             Pack Select
           </button>
         </div>
+
+        {/* Cross-promo (CLAUDE.md §9: ResultScreen bottom slot = GazeticaPromoCard only) */}
+        <div style={{ width: '100%', height: 1, background: 'rgba(127,119,221,0.2)', marginTop: 4 }} />
+        <GazeticaPromoCard />
       </div>
     </div>
   );
