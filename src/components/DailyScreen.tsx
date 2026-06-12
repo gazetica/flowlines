@@ -1,10 +1,129 @@
-// DailyScreen.tsx — FL stub (FL-S3-014), replaces Numtap DailyHubScreen. Built in Day 16.
+// DailyScreen.tsx
+// Flow Lines | Gazetica Studio | Sprint 3 Day 16 | Task FL-S3-016 (VD-07)
+//
+// Daily challenge: deterministic UTC-seeded pack-2 level, one-attempt gate,
+// streak + gem reward on completion. UI shell — Supabase submission is Sprint 4.
+
+import { useEffect } from 'react';
+import type { CSSProperties } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { skin } from '../styles/skin';
+import { useFlowSettingsStore } from '../store/flowSettingsStore';
+import { BottomNav } from './BottomNav';
+
+const GOLD = '#FFD700';
+
+/** UTC YYYY-MM-DD for a given date (defaults to now). */
+function utcDateStr(d = new Date()): string {
+  return d.toISOString().split('T')[0];
+}
+
+/** Deterministic pack-2 level index (1–50) for today's UTC date — same for all
+ *  players worldwide. mulberry32 seeded with YYYYMMDD. */
+function getDailyLevelIndex(): number {
+  const now = new Date();
+  const seed = now.getUTCFullYear() * 10000 + (now.getUTCMonth() + 1) * 100 + now.getUTCDate();
+  let s = seed;
+  const rand = () => {
+    s |= 0;
+    s = (s + 0x6d2b79f5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  return Math.floor(rand() * 50) + 1;
+}
 
 export default function DailyScreen() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const streak = useFlowSettingsStore((s) => s.dailyStreakFL);
+  const lastDaily = useFlowSettingsStore((s) => s.lastDailyDateFL);
+
+  const today = utcDateStr();
+  const levelIndex = getDailyLevelIndex();
+  const gateClosed = lastDaily === today;
+
+  // Record completion when returning from a daily win (?completed=true).
+  useEffect(() => {
+    if (searchParams.get('completed') !== 'true') return;
+    const store = useFlowSettingsStore.getState();
+    if (store.lastDailyDateFL === today) return; // already recorded
+
+    const yesterday = utcDateStr(new Date(Date.now() - 86400000));
+    (async () => {
+      if (store.lastDailyDateFL === yesterday) {
+        await store.incrementDailyStreak(); // continue streak
+      } else {
+        await store.resetDailyStreak();
+        await store.incrementDailyStreak(); // start fresh streak at 1
+      }
+      await store.addGems(3); // daily reward
+      // TODO Sprint 4: submit score to flowlines_daily_scores Supabase table
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const dateLabel = new Date().toLocaleDateString('en-GB', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+
+  const card: CSSProperties = {
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(127,119,221,0.2)',
+    borderRadius: 12,
+    padding: 20,
+    textAlign: 'center',
+  };
+
   return (
-    <div style={{ width: '100%', height: '100vh', background: skin.bgDeep, color: skin.white, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: skin.fontBody }}>
-      Daily Challenge — Coming Soon
+    <div style={{ width: '100%', height: '100vh', background: skin.bgDeep, display: 'flex', flexDirection: 'column', fontFamily: skin.fontBody }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px' }}>
+        <button onClick={() => navigate('/home')} style={{ background: 'none', border: 'none', color: skin.white, fontSize: 18, cursor: 'pointer' }}>‹</button>
+        <span style={{ fontFamily: skin.fontDisplay, fontSize: 16, color: GOLD, letterSpacing: 2 }}>DAILY CHALLENGE</span>
+      </div>
+
+      <div style={{ flex: 1, overflowY: 'auto', padding: '8px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ textAlign: 'center', color: skin.white, fontSize: 14 }}>{dateLabel}</div>
+        <div style={{ textAlign: 'center', color: skin.muted, fontSize: 13 }}>🔥 {streak} day{streak === 1 ? '' : 's'}</div>
+
+        {gateClosed ? (
+          <div style={{ ...card, borderColor: 'rgba(127,119,221,0.2)' }}>
+            <div style={{ fontFamily: skin.fontDisplay, fontSize: 18, color: skin.purpleLight }}>✓ COMPLETED</div>
+            <div style={{ fontSize: 13, color: skin.muted, marginTop: 10 }}>Come back tomorrow for a new puzzle</div>
+            <div style={{ fontSize: 12, color: GOLD, marginTop: 12 }}>Current streak: {streak} day{streak === 1 ? '' : 's'} 🔥</div>
+            {/* TODO Sprint 4: leaderboard slide-in after completion */}
+          </div>
+        ) : (
+          <div style={{ ...card, border: '1px solid rgba(255,215,0,0.4)', background: 'rgba(255,215,0,0.06)' }}>
+            <div style={{ fontFamily: skin.fontDisplay, fontSize: 16, color: GOLD }}>TODAY'S PUZZLE</div>
+            <div style={{ fontSize: 13, color: skin.white, marginTop: 8 }}>Pack 2 · Level {levelIndex}</div>
+            <button
+              onClick={() => navigate(`/game?pack=2&level=${levelIndex}&mode=daily`)}
+              style={{
+                marginTop: 16,
+                width: '100%',
+                padding: 14,
+                background: GOLD,
+                color: skin.bgDeep,
+                border: 'none',
+                borderRadius: 12,
+                fontFamily: skin.fontDisplay,
+                fontSize: 15,
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              ▶ PLAY NOW
+            </button>
+          </div>
+        )}
+      </div>
+
+      <BottomNav />
     </div>
   );
 }

@@ -28,6 +28,7 @@ import SettingsScreen from './components/SettingsScreen';
 import HowToPlayScreen from './components/HowToPlayScreen';
 import AboutScreen from './components/AboutScreen';
 import LanguageScreen from './components/LanguageScreen';
+import CountrySelector from './components/CountrySelector';
 
 export function App() {
   // T-016: GDPR/UMP consent must resolve BEFORE AdMob initialises. Native-only.
@@ -68,6 +69,7 @@ export function App() {
         <Route path="/tutorial" element={<HowToPlayScreen />} />
         <Route path="/about" element={<AboutScreen />} />
         <Route path="/language" element={<LanguageScreen />} />
+        <Route path="/country" element={<CountrySelector />} />
         {/* Unknown routes return to splash, which re-routes appropriately. */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

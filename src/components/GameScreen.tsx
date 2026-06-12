@@ -43,6 +43,7 @@ export function GameScreen() {
   // Resolve the level from URL params; fall back to TEST_LEVEL when absent/invalid.
   const packId = parseInt(searchParams.get('pack') ?? '1', 10);
   const levelIndex = parseInt(searchParams.get('level') ?? '1', 10);
+  const isDaily = searchParams.get('mode') === 'daily';
   const levelData: LevelData = getLevel(packId, levelIndex) ?? TEST_LEVEL;
 
   useEffect(() => {
@@ -70,10 +71,11 @@ export function GameScreen() {
       store.setStatus('playing');
     });
 
-    // Win → compute score/stars with the real optimalMoves, then go to /result.
+    // Win → compute score/stars with the real optimalMoves. Daily mode returns
+    // to /daily (records streak + reward); otherwise go to the result screen.
     const handleWin = () => {
       useFlowGameStore.getState().triggerWin(levelData.optimalMoves);
-      navigate('/result');
+      navigate(isDaily ? '/daily?completed=true' : '/result');
     };
     window.addEventListener('fl:win', handleWin);
 
