@@ -1,3 +1,8 @@
+// ============================================================
+// GameScene.ts — LOCKED after FL-S3-013 (Sprint 3 Day 13)
+// NO CHANGES to this file without explicit unlock scope approval
+// from the main project thread.
+// ============================================================
 // GameScene.ts
 // Flow Lines | Gazetica Studio | Sprint 1 Day 5 | Task FL-S1-005
 //
