@@ -65,6 +65,7 @@ interface FlowSettingsState {
   addGems: (n: number) => Promise<void>;
   setRemoveAds: (v: boolean) => Promise<void>;
   markLevelSolved: (packId: number, levelId: string, stars: 1 | 2 | 3) => Promise<void>;
+  saveStars: (levelId: string, packId: number, stars: 0 | 1 | 2 | 3) => void;
   incrementDailyStreak: () => Promise<void>;
   resetDailyStreak: () => Promise<void>;
   hydrate: () => Promise<void>;
@@ -139,6 +140,24 @@ export const useFlowSettingsStore = create<FlowSettingsState>((set, get) => ({
     progress[packId] = pack;
     await Preferences.set({ key: KEYS.PACK_PROGRESS, value: JSON.stringify(progress) });
     set({ packProgress: progress });
+  },
+
+  // saveStars — called from flowGameStore.triggerWin. Never downgrades stars;
+  // increments `solved` on first completion of a level. Persists synchronously
+  // to state and fire-and-forgets the Preferences write. NOTE: uses the same
+  // KEYS.PACK_PROGRESS ('FL_PACK_PROGRESS') key that hydrate() reads, so stars
+  // round-trip on restart (the brief's literal 'packProgress' key would not).
+  saveStars: (levelId, packId, stars) => {
+    const progress = { ...get().packProgress };
+    const existingPack = progress[packId] ?? { solved: 0, stars: {} };
+    const pack = { ...existingPack, stars: { ...existingPack.stars } };
+    const isFirstCompletion = !(levelId in pack.stars);
+    const previous = pack.stars[levelId] ?? 0;
+    if (stars >= previous) pack.stars[levelId] = stars;
+    if (isFirstCompletion) pack.solved = pack.solved + 1;
+    progress[packId] = pack;
+    set({ packProgress: progress });
+    void Preferences.set({ key: KEYS.PACK_PROGRESS, value: JSON.stringify(progress) });
   },
 
   incrementDailyStreak: async () => {
