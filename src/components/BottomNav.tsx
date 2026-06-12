@@ -1,62 +1,59 @@
 // BottomNav.tsx
-// Numtap | Gazetica Studio | Sprint 4 | Task T-004A | Fix 6
+// Flow Lines | Gazetica Studio | Sprint 3 Day 14 | Task FL-S3-014
 //
-// Standard 4-icon footer (Home / Board / Settings / About), extracted from the
-// HomeScreen inline nav so every non-onboarding/non-game screen shares one bar.
-// `active` highlights the current destination in gold; pass nothing on screens
-// that aren't a nav destination (Campaign, IAP, Result).
+// Shared bottom navigation. Active tab derived from the current route. Takes no
+// required props (legacy Numtap callers use <BottomNav />).
 
-import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { skin } from '../styles/skin';
 
-export type NavKey = 'home' | 'leaderboard' | 'settings' | 'about';
-
-const ITEMS: { key: NavKey; icon: string; route: string }[] = [
-  { key: 'home', icon: '🏠', route: '/home' },
-  { key: 'leaderboard', icon: '🏆', route: '/leaderboard' },
-  { key: 'settings', icon: '⚙️', route: '/settings' },
-  { key: 'about', icon: 'ℹ️', route: '/about' },
+const TABS: Array<{ key: string; icon: string; label: string; route: string }> = [
+  { key: 'home', icon: '🏠', label: 'Home', route: '/home' },
+  { key: 'packs', icon: '🎁', label: 'Packs', route: '/packs' },
+  { key: 'leaderboard', icon: '🏆', label: 'Leaderboard', route: '/leaderboard' },
+  { key: 'settings', icon: '⚙️', label: 'Settings', route: '/settings' },
 ];
 
-export function BottomNav({ active }: { active?: NavKey }) {
+export function BottomNav() {
+  const location = useLocation();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+
   return (
     <div
-      className="glass"
       style={{
         display: 'flex',
-        justifyContent: 'space-around',
-        padding: '10px 8px 24px',
-        borderTop: '1px solid rgba(30,139,195,0.15)',
-        position: 'relative',
-        zIndex: 10,
+        height: 56,
+        background: 'rgba(13,6,32,0.95)',
+        borderTop: '1px solid rgba(46,26,112,1)',
       }}
     >
-      {ITEMS.map((item) => {
-        const isActive = item.key === active;
+      {TABS.map((tab) => {
+        const active = location.pathname === tab.route;
+        const colour = active ? skin.gold : skin.muted;
         return (
           <button
-            key={item.key}
-            onClick={() => navigate(item.route)}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'center', padding: '4px 8px' }}
+            key={tab.key}
+            onClick={() => navigate(tab.route)}
+            style={{
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 3,
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: colour,
+            }}
           >
-            <div style={{ fontSize: 18, marginBottom: 2, filter: isActive ? 'drop-shadow(0 0 4px rgba(255,215,0,0.6))' : 'none' }}>
-              {item.icon}
-            </div>
-            <div
-              style={{
-                fontFamily: "'Space Mono', monospace",
-                fontSize: 9,
-                color: isActive ? 'var(--gold)' : 'var(--muted)',
-                letterSpacing: 0.5,
-              }}
-            >
-              {t(`nav.${item.key}`)}
-            </div>
+            <span style={{ fontSize: 18, opacity: active ? 1 : 0.7 }}>{tab.icon}</span>
+            <span style={{ fontSize: 9, fontFamily: skin.fontBody, color: colour }}>{tab.label}</span>
           </button>
         );
       })}
     </div>
   );
 }
+
+export default BottomNav;
