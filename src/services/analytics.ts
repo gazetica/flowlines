@@ -67,3 +67,57 @@ export function adImpression(adType: 'rewarded' | 'interstitial'): void {
 export function iapPurchase(p: { productId: string; value: number }): void {
   log('iap_purchase', { product_id: p.productId, value: p.value });
 }
+
+// ─── FL-S4-021: Flow Lines analytics events ──────────────────────────────────
+// Distinct, fl_-prefixed names so they never collide with Numtap events above or
+// Firebase reserved names (level_start/level_up etc.). Same fire-and-forget log().
+
+export function trackLevelStart(p: {
+  level_id: string;
+  pack_id: number;
+  grid_size: number;
+  colour_count: number;
+}): void {
+  log('fl_level_start', {
+    level_id: p.level_id,
+    pack_id: p.pack_id,
+    grid_size: p.grid_size,
+    colour_count: p.colour_count,
+  });
+}
+
+export function trackLevelComplete(p: {
+  level_id: string;
+  pack_id: number;
+  moves: number;
+  stars: number;
+  score: number;
+}): void {
+  log('fl_level_complete', {
+    level_id: p.level_id,
+    pack_id: p.pack_id,
+    moves: p.moves,
+    stars: p.stars,
+    score: p.score,
+  });
+}
+
+export function trackLevelAbandon(p: { level_id: string; coverage_pct: number }): void {
+  log('fl_level_abandon', { level_id: p.level_id, coverage_pct: p.coverage_pct });
+}
+
+export function trackHintRequested(p: { level_id: string; hints_used_this_level: number }): void {
+  log('fl_hint_requested', { level_id: p.level_id, hints_used_this_level: p.hints_used_this_level });
+}
+
+export function trackAdImpression(p: { ad_type: 'rewarded' | 'interstitial' }): void {
+  log('fl_ad_impression', { ad_type: p.ad_type });
+}
+
+export function trackIapPurchase(p: { product_id: string; value: number }): void {
+  log('fl_iap_purchase', { product_id: p.product_id, value: p.value });
+}
+
+export function trackPackUnlocked(p: { pack_id: number }): void {
+  log('fl_pack_unlocked', { pack_id: p.pack_id });
+}

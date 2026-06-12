@@ -4,12 +4,15 @@
 // Daily challenge: deterministic UTC-seeded pack-2 level, one-attempt gate,
 // streak + gem reward on completion. UI shell — Supabase submission is Sprint 4.
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { skin } from '../styles/skin';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
+import { useFlowGameStore } from '../store/flowGameStore';
+import { submitDailyScore, getDailyLeaderboard, type DailyScoreRow } from '../services/flDailyScores';
 import { BottomNav } from './BottomNav';
+import { flagOf } from './CountrySelector';
 
 const GOLD = '#FFD700';
 
@@ -44,23 +47,34 @@ export default function DailyScreen() {
   const levelIndex = getDailyLevelIndex();
   const gateClosed = lastDaily === today;
 
-  // Record completion when returning from a daily win (?completed=true).
-  useEffect(() => {
-    if (searchParams.get('completed') !== 'true') return;
-    const store = useFlowSettingsStore.getState();
-    if (store.lastDailyDateFL === today) return; // already recorded
+  const [dailyRows, setDailyRows] = useState<DailyScoreRow[]>([]);
 
-    const yesterday = utcDateStr(new Date(Date.now() - 86400000));
+  // On mount: record a fresh completion (streak + gems + Supabase score), then
+  // always refresh today's daily leaderboard so the completed card can show it.
+  useEffect(() => {
+    const justCompleted = searchParams.get('completed') === 'true';
+    const store = useFlowSettingsStore.getState();
+    const alreadyRecorded = store.lastDailyDateFL === today;
+    let cancelled = false;
+
     (async () => {
-      if (store.lastDailyDateFL === yesterday) {
-        await store.incrementDailyStreak(); // continue streak
-      } else {
-        await store.resetDailyStreak();
-        await store.incrementDailyStreak(); // start fresh streak at 1
+      if (justCompleted && !alreadyRecorded) {
+        const yesterday = utcDateStr(new Date(Date.now() - 86400000));
+        if (store.lastDailyDateFL === yesterday) {
+          await store.incrementDailyStreak(); // continue streak
+        } else {
+          await store.resetDailyStreak();
+          await store.incrementDailyStreak(); // start fresh streak at 1
+        }
+        await store.addGems(3); // daily reward
+        const g = useFlowGameStore.getState();
+        await submitDailyScore(g.score, g.moveCount); // flowlines_daily_scores
       }
-      await store.addGems(3); // daily reward
-      // TODO Sprint 4: submit score to flowlines_daily_scores Supabase table
+      const rows = await getDailyLeaderboard(today, 10);
+      if (!cancelled) setDailyRows(rows);
     })();
+
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -95,7 +109,20 @@ export default function DailyScreen() {
             <div style={{ fontFamily: skin.fontDisplay, fontSize: 18, color: skin.purpleLight }}>✓ COMPLETED</div>
             <div style={{ fontSize: 13, color: skin.muted, marginTop: 10 }}>Come back tomorrow for a new puzzle</div>
             <div style={{ fontSize: 12, color: GOLD, marginTop: 12 }}>Current streak: {streak} day{streak === 1 ? '' : 's'} 🔥</div>
-            {/* TODO Sprint 4: leaderboard slide-in after completion */}
+
+            {dailyRows.length > 0 && (
+              <div style={{ marginTop: 16, textAlign: 'left' }}>
+                <div style={{ fontFamily: skin.fontDisplay, fontSize: 11, color: skin.muted, letterSpacing: 1, marginBottom: 8 }}>TODAY'S TOP</div>
+                {dailyRows.slice(0, 5).map((r, i) => (
+                  <div key={`${r.player_uid}-${i}`} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: skin.white, padding: '4px 0', borderBottom: '1px solid rgba(127,119,221,0.1)' }}>
+                    <span style={{ fontFamily: skin.fontDisplay, color: skin.muted, minWidth: 22 }}>#{i + 1}</span>
+                    <span style={{ fontSize: 14 }}>{flagOf(r.country || 'XX')}</span>
+                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.alias || 'Player'}</span>
+                    <span style={{ fontFamily: skin.fontDisplay, color: GOLD }}>{r.score}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         ) : (
           <div style={{ ...card, border: '1px solid rgba(255,215,0,0.4)', background: 'rgba(255,215,0,0.06)' }}>

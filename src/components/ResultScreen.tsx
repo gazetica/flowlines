@@ -13,6 +13,8 @@ import { useFlowGameStore } from '../store/flowGameStore';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
 import { getNextLevel } from '../game/engine/LevelManager';
 import { onLevelComplete } from '../services/interstitialAdService';
+import { submitCampaignScore } from '../services/flCampaignScores';
+import { trackLevelComplete } from '../services/analytics';
 import { flagOf } from './CountrySelector';
 import { GazeticaPromoCard } from './GazeticaPromoCard';
 
@@ -66,6 +68,15 @@ export function ResultScreen() {
     const isZen = searchParams.get('mode') === 'zen';
     const removeAds = useFlowSettingsStore.getState().removeAdsPurchased ?? false;
     void onLevelComplete(isZen, removeAds);
+
+    // Submit the campaign score + log completion for real pack levels only
+    // (TEST_LEVEL has an empty levelId). Daily wins route to /daily, not here.
+    const m = /^p(\d+)_(\d+)/.exec(levelId);
+    if (m) {
+      const pack = Number(m[1]);
+      void submitCampaignScore(levelId, pack, score, moveCount);
+      trackLevelComplete({ level_id: levelId, pack_id: pack, moves: moveCount, stars, score });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

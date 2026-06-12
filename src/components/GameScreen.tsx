@@ -15,6 +15,7 @@ import { skin } from '../styles/skin';
 import { useFlowGameStore } from '../store/flowGameStore';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
 import { showHintAd, loadHintAd } from '../services/rewardedAdService';
+import { trackLevelStart, trackLevelAbandon, trackHintRequested, trackAdImpression } from '../services/analytics';
 import BuyHintModal from './BuyHintModal';
 
 const MAX_HINTS = 3;
@@ -95,6 +96,12 @@ export function GameScreen() {
       scene?.loadLevel(config);
       store.setStatus('playing');
       void loadHintAd(); // preload the hint rewarded ad so it's ready on tap
+      trackLevelStart({
+        level_id: levelData.id,
+        pack_id: levelData.pack,
+        grid_size: levelData.grid,
+        colour_count: levelData.colours,
+      });
     });
 
     // Win → compute score/stars with the real optimalMoves. Daily mode returns
@@ -125,6 +132,7 @@ export function GameScreen() {
 
   const confirmAbandon = () => {
     setShowAbandonDialog(false);
+    trackLevelAbandon({ level_id: levelData.id, coverage_pct: useFlowGameStore.getState().coverage });
     useFlowGameStore.getState().triggerAbandon();
     navigate(-1);
   };
@@ -141,6 +149,7 @@ export function GameScreen() {
     const scene = gameRef.current?.scene.getScene('GameScene') as GameScene | undefined;
     if (!scene) return;
     setHintBusy(true);
+    trackHintRequested({ level_id: levelData.id, hints_used_this_level: hintsUsed });
     try {
       const outcome = await showHintAd(
         { grid: levelData.grid, dots: levelData.dots as DotPair[] },
@@ -149,6 +158,7 @@ export function GameScreen() {
           useFlowGameStore.getState().useHint(); // 0 gems awarded (FL rule)
         },
       );
+      if (outcome === 'rewarded') trackAdImpression({ ad_type: 'rewarded' });
       if (outcome === 'unavailable') {
         // No ad fill. If the player also has 0 gems, offer the IAP/retry sheet;
         // otherwise a simple toast (they can try again shortly).

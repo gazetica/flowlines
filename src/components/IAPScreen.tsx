@@ -16,6 +16,7 @@ import {
   consumePurchase,
   FL_PRODUCTS,
 } from '../services/billing';
+import { trackIapPurchase } from '../services/analytics';
 
 const GOLD = '#FFD700';
 
@@ -41,6 +42,7 @@ export function IAPScreen() {
     const result = await purchaseProduct(FL_PRODUCTS.REMOVE_ADS);
     if (result.success) {
       await setRemoveAds(true);
+      trackIapPurchase({ product_id: FL_PRODUCTS.REMOVE_ADS, value: 2.99 });
       flashToast('Ads removed — thank you!');
     } else if (result.error !== 'USER_CANCELED') {
       flashToast(result.error ?? 'Purchase failed');
@@ -57,6 +59,7 @@ export function IAPScreen() {
     if (result.success) {
       await addGems(5);
       if (result.purchaseToken) await consumePurchase(result.purchaseToken);
+      trackIapPurchase({ product_id: FL_PRODUCTS.HINT_PACK, value: 0.99 });
       flashToast('+5 gems added!');
     } else if (result.error !== 'USER_CANCELED') {
       flashToast(result.error ?? 'Purchase failed');

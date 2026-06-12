@@ -3,9 +3,11 @@
 //
 // UI shell with 3 tabs and mock rows. Real Supabase queries are Sprint 4.
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { skin } from '../styles/skin';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
+import { getDailyLeaderboard } from '../services/flDailyScores';
+import { getCampaignLeaderboard } from '../services/flCampaignScores';
 import { BottomNav } from './BottomNav';
 import { flagOf } from './CountrySelector';
 
@@ -14,14 +16,10 @@ const PURPLE_LIGHT = '#ADA7F0';
 
 type Row = { rank: number; uid: string; code: string; alias: string; score: number; moves: number };
 
-// TODO Sprint 4: replace MOCK_ROWS with Supabase query results.
-const MOCK_ROWS: Row[] = [
-  { rank: 1, uid: 'NT8K2M', code: 'KR', alias: 'Jisu', score: 920, moves: 38 },
-  { rank: 2, uid: 'NTA3X9', code: 'DE', alias: 'Klaus', score: 890, moves: 41 },
-  { rank: 3, uid: 'NT7B4Q', code: 'GB', alias: 'Emma', score: 870, moves: 43 },
-  { rank: 4, uid: 'NT2C8V', code: 'FR', alias: 'Laurent', score: 845, moves: 45 },
-  { rank: 5, uid: 'NT9R1P', code: 'BR', alias: 'Ana', score: 830, moves: 47 },
-];
+/** Today's UTC date 'YYYY-MM-DD' (matches the daily-scores `date` column). */
+function todayUtc(): string {
+  return new Date().toISOString().slice(0, 10);
+}
 
 type Tab = 'daily' | 'timed' | 'alltime';
 const TABS: Array<{ key: Tab; label: string }> = [
@@ -56,15 +54,45 @@ function LeaderRow({ row, isPlayer }: { row: Row; isPlayer?: boolean }) {
 
 export default function LeaderboardScreen() {
   const [tab, setTab] = useState<Tab>('daily');
+  const [rows, setRows] = useState<Row[]>([]);
+  const [loading, setLoading] = useState(true);
   const playerUid = useFlowSettingsStore((s) => s.playerUid);
   const alias = useFlowSettingsStore((s) => s.alias);
   const country = useFlowSettingsStore((s) => s.country);
 
   const dateLabel = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 
-  // TODO Sprint 4: fetch daily / timed / all-time data from Supabase.
-  const rows = MOCK_ROWS;
-  const playerRow: Row = { rank: -1, uid: playerUid || 'NT------', code: country || 'IN', alias, score: 0, moves: 0 };
+  // Fetch real scores from Supabase per active tab. DAILY → today's daily board;
+  // ALL-TIME → campaign board; TIMED → campaign board for now (TODO Sprint 5:
+  // dedicated timed leaderboard). Fails silently to an empty list.
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    (async () => {
+      const data =
+        tab === 'daily'
+          ? await getDailyLeaderboard(todayUtc(), 20)
+          : await getCampaignLeaderboard(20);
+      if (cancelled) return;
+      const mapped: Row[] = data.map((r, i) => ({
+        rank: i + 1,
+        uid: r.player_uid || 'NT------',
+        code: r.country || 'XX',
+        alias: r.alias,
+        score: r.score,
+        moves: r.moves,
+      }));
+      setRows(mapped);
+      setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [tab]);
+
+  // Player's own row: real rank if they appear in the results, else '#--'.
+  const playerInList = rows.find((r) => r.uid === playerUid);
+  const playerRow: Row = playerInList
+    ? { ...playerInList }
+    : { rank: -1, uid: playerUid || 'NT------', code: country || 'IN', alias, score: 0, moves: 0 };
 
   return (
     <div style={{ width: '100%', height: '100vh', background: skin.bgDeep, display: 'flex', flexDirection: 'column', fontFamily: skin.fontBody }}>
@@ -100,9 +128,13 @@ export default function LeaderboardScreen() {
       )}
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px' }}>
-        {rows.map((r) => (
-          <LeaderRow key={r.uid} row={r} />
-        ))}
+        {loading ? (
+          <div style={{ textAlign: 'center', color: skin.muted, fontSize: 13, padding: '32px 0' }}>Loading…</div>
+        ) : rows.length === 0 ? (
+          <div style={{ textAlign: 'center', color: skin.muted, fontSize: 13, padding: '32px 0' }}>No scores yet — be the first!</div>
+        ) : (
+          rows.map((r) => <LeaderRow key={`${r.uid}-${r.rank}`} row={r} />)
+        )}
       </div>
 
       {/* Player's own row pinned at the bottom */}

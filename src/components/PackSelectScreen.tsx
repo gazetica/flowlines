@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { skin } from '../styles/skin';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
 import { getPackSize } from '../game/engine/LevelManager';
+import { trackPackUnlocked } from '../services/analytics';
 import { BottomNav } from './BottomNav';
 
 const GOLD = '#FFD700';
@@ -51,6 +52,7 @@ export default function PackSelectScreen() {
       const justUnlocked = PACKS.find((p) => current[p.id] && !prevUnlocked.current![p.id]);
       if (justUnlocked) {
         setNewlyUnlocked(justUnlocked.id);
+        trackPackUnlocked({ pack_id: justUnlocked.id });
         const t = setTimeout(() => setNewlyUnlocked(null), 800);
         prevUnlocked.current = current;
         return () => clearTimeout(t);
