@@ -36,9 +36,10 @@ import java.util.Map;
 @CapacitorPlugin(name = "Billing")
 public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
 
-    private static final String HINT_PACK = "numtap_hint_pack_5"; // the only consumable
+    // FL-S4-020: Flow Lines SKUs (must match Play Console + billing.ts FL_PRODUCTS).
+    private static final String HINT_PACK = "flowlines_hint_pack"; // the only consumable
     private static final List<String> PRODUCT_IDS = Arrays.asList(
-        "numtap_remove_ads", HINT_PACK, "numtap_campaign2", "numtap_campaign3"
+        "flowlines_remove_ads", HINT_PACK
     );
 
     private BillingClient billingClient;

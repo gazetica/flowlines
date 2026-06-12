@@ -10,6 +10,12 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { skin } from '../styles/skin';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
+import {
+  purchaseProduct,
+  restorePurchases,
+  consumePurchase,
+  FL_PRODUCTS,
+} from '../services/billing';
 
 const GOLD = '#FFD700';
 
@@ -17,16 +23,57 @@ export function IAPScreen() {
   const navigate = useNavigate();
   const gemBalance = useFlowSettingsStore((s) => s.gemBalance);
   const removeAdsPurchased = useFlowSettingsStore((s) => s.removeAdsPurchased);
+  const setRemoveAds = useFlowSettingsStore((s) => s.setRemoveAds);
+  const addGems = useFlowSettingsStore((s) => s.addGems);
 
   const [toast, setToast] = useState<string | null>(null);
+  const [purchasing, setPurchasing] = useState(false);
   const flashToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 1900);
   };
 
-  // TODO Sprint 4 Day 21: wire billing.ts — purchaseProduct(sku) checkout flow.
-  const onBuy = () => flashToast('Billing coming in Day 21 — IAP not yet wired');
-  const onRestore = () => flashToast('Billing coming in Day 21 — IAP not yet wired');
+  // Remove Ads — non-consumable. On success the billing entitlement is applied
+  // to flowSettingsStore (suppresses interstitials only — hints stay ad-free).
+  const handleRemoveAdsBuy = async () => {
+    if (purchasing) return;
+    setPurchasing(true);
+    const result = await purchaseProduct(FL_PRODUCTS.REMOVE_ADS);
+    if (result.success) {
+      await setRemoveAds(true);
+      flashToast('Ads removed — thank you!');
+    } else if (result.error !== 'USER_CANCELED') {
+      flashToast(result.error ?? 'Purchase failed');
+    }
+    setPurchasing(false);
+  };
+
+  // Hint Pack — consumable. +5 gems (FL: not Numtap's +20), then consume the
+  // token so it can be bought again.
+  const handleHintPackBuy = async () => {
+    if (purchasing) return;
+    setPurchasing(true);
+    const result = await purchaseProduct(FL_PRODUCTS.HINT_PACK);
+    if (result.success) {
+      await addGems(5);
+      if (result.purchaseToken) await consumePurchase(result.purchaseToken);
+      flashToast('+5 gems added!');
+    } else if (result.error !== 'USER_CANCELED') {
+      flashToast(result.error ?? 'Purchase failed');
+    }
+    setPurchasing(false);
+  };
+
+  const handleRestore = async () => {
+    if (purchasing) return;
+    setPurchasing(true);
+    const restored = await restorePurchases();
+    if (restored.some((p) => p.productId === FL_PRODUCTS.REMOVE_ADS)) {
+      await setRemoveAds(true);
+    }
+    flashToast(restored.length ? 'Purchases restored' : 'No purchases to restore');
+    setPurchasing(false);
+  };
 
   const card: CSSProperties = {
     background: 'rgba(255,255,255,0.04)',
@@ -116,7 +163,7 @@ export function IAPScreen() {
           {removeAdsPurchased ? (
             <span style={{ fontFamily: skin.fontDisplay, fontSize: 13, color: GOLD }}>✓ Purchased</span>
           ) : (
-            <button onClick={onBuy} style={buyBtn}>BUY</button>
+            <button onClick={() => void handleRemoveAdsBuy()} disabled={purchasing} style={{ ...buyBtn, opacity: purchasing ? 0.5 : 1 }}>BUY</button>
           )}
         </ProductCard>
 
@@ -127,7 +174,7 @@ export function IAPScreen() {
           bullets={['5 extra hints (+5 gems)', 'Reveal the next cell', 'Works on any level']}
           price="$0.99"
         >
-          <button onClick={onBuy} style={buyBtn}>BUY</button>
+          <button onClick={() => void handleHintPackBuy()} disabled={purchasing} style={{ ...buyBtn, opacity: purchasing ? 0.5 : 1 }}>BUY</button>
         </ProductCard>
 
         {/* Footer note + restore */}
@@ -135,8 +182,9 @@ export function IAPScreen() {
           Purchases managed by Google Play. Tap BUY to start the checkout flow.
         </div>
         <button
-          onClick={onRestore}
-          style={{ background: 'none', border: 'none', color: skin.purpleLight, fontSize: 13, cursor: 'pointer', padding: 8 }}
+          onClick={() => void handleRestore()}
+          disabled={purchasing}
+          style={{ background: 'none', border: 'none', color: skin.purpleLight, fontSize: 13, cursor: purchasing ? 'default' : 'pointer', padding: 8, opacity: purchasing ? 0.5 : 1 }}
         >
           Restore Purchases
         </button>

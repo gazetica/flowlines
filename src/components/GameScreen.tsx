@@ -13,7 +13,9 @@ import { getLevel, type LevelData } from '../game/engine/LevelManager';
 import type { DotPair } from '../game/engine/GridEngine';
 import { skin } from '../styles/skin';
 import { useFlowGameStore } from '../store/flowGameStore';
+import { useFlowSettingsStore } from '../store/flowSettingsStore';
 import { showHintAd, loadHintAd } from '../services/rewardedAdService';
+import BuyHintModal from './BuyHintModal';
 
 const MAX_HINTS = 3;
 
@@ -43,7 +45,9 @@ export function GameScreen() {
   const coverage = useFlowGameStore((s) => s.coverage);
   const moveCount = useFlowGameStore((s) => s.moveCount);
   const hintsUsed = useFlowGameStore((s) => s.hintsUsed);
+  const gemBalance = useFlowSettingsStore((s) => s.gemBalance);
   const [showAbandonDialog, setShowAbandonDialog] = useState(false);
+  const [showBuyHintModal, setShowBuyHintModal] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [hintBusy, setHintBusy] = useState(false);
 
@@ -145,7 +149,12 @@ export function GameScreen() {
           useFlowGameStore.getState().useHint(); // 0 gems awarded (FL rule)
         },
       );
-      if (outcome === 'unavailable') flashToast('Hint ad unavailable — try again');
+      if (outcome === 'unavailable') {
+        // No ad fill. If the player also has 0 gems, offer the IAP/retry sheet;
+        // otherwise a simple toast (they can try again shortly).
+        if (gemBalance === 0) setShowBuyHintModal(true);
+        else flashToast('Hint ad unavailable — try again');
+      }
     } finally {
       setHintBusy(false);
     }
@@ -205,6 +214,14 @@ export function GameScreen() {
       {/* Phaser mount point — fills the space below the HUD. minHeight:0 lets the
           flex child shrink instead of overflowing; position:relative anchors the canvas. */}
       <div ref={phaserRef} style={{ flex: 1, minHeight: 0, position: 'relative' }} />
+
+      {/* Buy-hint sheet — shown when a hint ad has no fill and gems are 0 */}
+      {showBuyHintModal && (
+        <BuyHintModal
+          onClose={() => setShowBuyHintModal(false)}
+          onWatchAd={() => void onHint()}
+        />
+      )}
 
       {/* Hint toast (hint exhausted / ad unavailable) */}
       {toast && (

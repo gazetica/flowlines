@@ -36,6 +36,16 @@ export const PRODUCT_IDS = {
   CAMPAIGN3: 'numtap_campaign3',
 } as const;
 
+// FL-S4-020: Flow Lines storefront SKUs. Must match Play Console (Task 20.7) +
+// BillingPlugin.java's PRODUCT_IDS list. FL: +5 gems per Hint Pack (not Numtap's
+// +20). Entitlements are applied by the caller (IAPScreen / BuyHintModal) on a
+// successful purchaseProduct() — REMOVE_ADS → setRemoveAds(true); HINT_PACK →
+// addGems(5) + consumePurchase(token).
+export const FL_PRODUCTS = {
+  REMOVE_ADS: 'flowlines_remove_ads', // non-consumable, $2.99
+  HINT_PACK: 'flowlines_hint_pack',   // consumable, $0.99 → +5 gems
+} as const;
+
 // Native plugin surface (implemented by BillingPlugin.java).
 interface BillingNativePlugin {
   initialise(): Promise<void>;
@@ -101,4 +111,14 @@ export async function consumePurchase(purchaseToken: string): Promise<void> {
   } catch (err) {
     console.warn('[billing] consume failed:', err);
   }
+}
+
+/**
+ * FL-S4-020: whether a non-consumable (e.g. Remove Ads) is already owned. Backed
+ * by restorePurchases(), so it reflects Play's current entitlements. False on web
+ * or any error.
+ */
+export async function isOwned(productId: string): Promise<boolean> {
+  const owned = await restorePurchases();
+  return owned.some((p) => p.productId === productId);
 }
