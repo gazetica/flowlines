@@ -16,8 +16,11 @@ import {
   getScoreBreakdown,
   type ScoreBreakdown,
   type ScoreParams,
+  type GameMode,
 } from '../game/engine/ScoreEngine';
 import { useFlowSettingsStore } from './flowSettingsStore';
+
+export type GameStatus = 'idle' | 'playing' | 'complete' | 'failed' | 'abandoned';
 
 export interface FlowGameState {
   // Grid state
@@ -30,12 +33,21 @@ export interface FlowGameState {
 
   // Progress
   coverage: number;   // 0–100
-  moveCount: number;
+  moveCount: number;  // cell-step counter (used by GameScene) — unchanged
   hintsUsed: number;  // 0–3 per level
   optimalMoves: number;
 
+  // FL-UX-D-004 mode layer
+  gameMode: GameMode;
+  timeElapsed: number;          // seconds since level start (counts up)
+  timeLimitSeconds: number;     // level JSON timeLimit (0 = no ceiling)
+  classicMoveLimitTotal: number; // level JSON classicMoveLimit (0 = no limit)
+  movesRemaining: number;        // classicMoveLimitTotal - gestureCount
+  gestureCount: number;          // one complete colour path per drag gesture
+  retryCount: number;            // Daily retries (0–2), preserved across initLevel
+
   // Status / result
-  status: 'idle' | 'playing' | 'complete' | 'abandoned';
+  status: GameStatus;
   score: number;
   stars: 0 | 1 | 2 | 3;
   scoreBreakdown: ScoreBreakdown | null;
@@ -44,7 +56,7 @@ export interface FlowGameState {
   setLevelId: (id: string) => void;
   setCoverage: (pct: number) => void;
   setMoveCount: (n: number) => void;
-  setStatus: (s: FlowGameState['status']) => void;
+  setStatus: (s: GameStatus) => void;
   setScore: (n: number) => void;
   setPath: (colour: Colour, cells: Cell[]) => void;
   clearPath: (colour: Colour) => void;
@@ -52,9 +64,17 @@ export interface FlowGameState {
   triggerWin: (optimalMoves: number) => void;
   triggerAbandon: () => void;
   resetGame: () => void;
+
+  // FL-UX-D-004 mode actions
+  setGameMode: (mode: GameMode) => void;
+  setTimeElapsed: (seconds: number) => void;
+  initLevel: (params: { levelId: string; mode: GameMode; timeLimit: number; classicMoveLimit: number }) => void;
+  onGestureComplete: () => void;
+  incrementRetry: () => void;
+  resetRetry: () => void;
 }
 
-export const useFlowGameStore = create<FlowGameState>((set) => ({
+export const useFlowGameStore = create<FlowGameState>((set, get) => ({
   levelId: '',
   grid: [],
   dots: [],
@@ -63,6 +83,13 @@ export const useFlowGameStore = create<FlowGameState>((set) => ({
   moveCount: 0,
   hintsUsed: 0,
   optimalMoves: 0,
+  gameMode: 'campaign',
+  timeElapsed: 0,
+  timeLimitSeconds: 0,
+  classicMoveLimitTotal: 0,
+  movesRemaining: 0,
+  gestureCount: 0,
+  retryCount: 0,
   status: 'idle',
   score: 0,
   stars: 0,
@@ -122,4 +149,46 @@ export const useFlowGameStore = create<FlowGameState>((set) => ({
       stars: 0,
       scoreBreakdown: null,
     }),
+
+  // ─── FL-UX-D-004 mode layer ────────────────────────────────────────────────
+
+  setGameMode: (mode) => set({ gameMode: mode }),
+
+  setTimeElapsed: (seconds) => set({ timeElapsed: seconds }),
+
+  // Reset all in-game state for a fresh level start. retryCount is preserved
+  // (Daily mode tracks retries across reloads).
+  initLevel: (params) =>
+    set({
+      levelId: params.levelId,
+      gameMode: params.mode,
+      status: 'playing',
+      score: 0,
+      stars: 0,
+      hintsUsed: 0,
+      moveCount: 0,
+      gestureCount: 0,
+      timeElapsed: 0,
+      timeLimitSeconds: params.timeLimit,
+      classicMoveLimitTotal: params.classicMoveLimit,
+      movesRemaining: params.classicMoveLimit,
+      paths: {},
+      coverage: 0,
+      scoreBreakdown: null,
+      retryCount: get().retryCount,
+    }),
+
+  // Called on pointerup when a colour path changed since pointerdown. Decrements
+  // the Classic move budget; exhausting it (Classic only) fails the level.
+  onGestureComplete: () =>
+    set((state) => {
+      const gestureCount = state.gestureCount + 1;
+      const movesRemaining = Math.max(0, state.classicMoveLimitTotal - gestureCount);
+      const isClassic = state.gameMode === 'classic' || state.gameMode === 'daily_classic';
+      const failed = isClassic && movesRemaining === 0 && state.status === 'playing';
+      return { gestureCount, movesRemaining, status: failed ? 'failed' : state.status };
+    }),
+
+  incrementRetry: () => set((state) => ({ retryCount: Math.min(2, state.retryCount + 1) })),
+  resetRetry: () => set({ retryCount: 0 }),
 }));

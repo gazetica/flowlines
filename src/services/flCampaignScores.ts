@@ -28,11 +28,14 @@ const TABLE = 'flowlines_scores';
  * exactly one row per level — best score only (skips the write when an equal or
  * higher score already exists). Fire-and-forget; silent on any error.
  */
+export type CampaignScoreMode = 'campaign' | 'classic' | 'daily_campaign' | 'daily_classic';
+
 export async function submitCampaignScore(
   levelId: string,
   packId: number,
   score: number,
   moves: number,
+  mode: CampaignScoreMode = 'campaign', // FL-UX-D-004: defaults preserve existing callers
 ): Promise<void> {
   try {
     const { alias, country, playerUid } = useFlowSettingsStore.getState();
@@ -56,6 +59,7 @@ export async function submitCampaignScore(
         pack_id: packId,
         level_id: levelId,
         player_uid: playerUid,
+        mode, // FL-UX-D-004 — requires a `mode` column on flowlines_scores
       },
       { onConflict: 'player_uid,level_id' },
     );

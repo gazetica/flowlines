@@ -2,7 +2,7 @@
 // Flow Lines | Gazetica Studio | Sprint 1 Day 3 | Task FL-S1-003
 
 import { describe, it, expect } from 'vitest';
-import { calcScore, calcStars, getScoreBreakdown, type ScoreParams } from './ScoreEngine';
+import { calcScore, calcStars, getScoreBreakdown, ScoreEngine, type ScoreParams, type ScoreInput } from './ScoreEngine';
 
 /** Base params: optimal solve, no hints, not timed → score 200. */
 const base = (over: Partial<ScoreParams> = {}): ScoreParams => ({
@@ -109,5 +109,144 @@ describe('getScoreBreakdown', () => {
   it('perfectClearBonus is always 200', () => {
     expect(getScoreBreakdown(base()).perfectClearBonus).toBe(200);
     expect(getScoreBreakdown(base({ actualMoves: 999, hintsUsed: 3 })).perfectClearBonus).toBe(200);
+  });
+});
+
+// ─── FL-UX-D-004: ScoreEngine.calc (per-mode) ────────────────────────────────
+
+/** Base input: a perfect Campaign solve (timeElapsed 0 → full efficiency). */
+const sin = (over: Partial<ScoreInput> = {}): ScoreInput => ({
+  mode: 'campaign',
+  dotsConnected: true,
+  coveragePct: 100,
+  timeElapsed: 0,
+  timeLimit: 90,
+  movesUsed: 0,
+  classicMoveLimit: 10,
+  optimalMoves: 36,
+  cellMoveCount: 36,
+  hintsUsed: 0,
+  difficulty: 'easy',
+  ...over,
+});
+
+describe('ScoreEngine.calc — Campaign', () => {
+  it('perfect solve (timeElapsed 0, no hints) → 1000, 3 stars, passed', () => {
+    const r = ScoreEngine.calc(sin());
+    expect(r.total).toBe(1000);
+    expect(r.stars).toBe(3);
+    expect(r.passed).toBe(true);
+  });
+  it('timed out (timeElapsed >= timeLimit) → passed false, 0 stars, efficiency 0', () => {
+    const r = ScoreEngine.calc(sin({ timeElapsed: 90 }));
+    expect(r.passed).toBe(false);
+    expect(r.stars).toBe(0);
+    expect(r.breakdown.efficiencyScore).toBe(0);
+  });
+  it('solved with 2 hints → hintPenalty -80, total 920', () => {
+    const r = ScoreEngine.calc(sin({ hintsUsed: 2 }));
+    expect(r.breakdown.hintPenalty).toBe(-80);
+    expect(r.total).toBe(920);
+  });
+  it('50% coverage → coverageScore 125', () => {
+    expect(ScoreEngine.calc(sin({ coveragePct: 50 })).breakdown.coverageScore).toBe(125);
+  });
+  it('cellMoveCount = 2x optimal → bonusScore 0', () => {
+    expect(ScoreEngine.calc(sin({ cellMoveCount: 72 })).breakdown.bonusScore).toBe(0);
+  });
+  it('timeElapsed 30 of 90 → efficiency 200, total 900, 2 stars', () => {
+    const r = ScoreEngine.calc(sin({ timeElapsed: 30 }));
+    expect(r.breakdown.efficiencyScore).toBe(200);
+    expect(r.total).toBe(900);
+    expect(r.stars).toBe(2);
+  });
+  it('dots not connected → dotsScore 0, passed false', () => {
+    const r = ScoreEngine.calc(sin({ dotsConnected: false }));
+    expect(r.breakdown.dotsScore).toBe(0);
+    expect(r.passed).toBe(false);
+  });
+  it('total never below 0 (extreme penalty, timed out)', () => {
+    const r = ScoreEngine.calc(sin({ dotsConnected: false, coveragePct: 0, hintsUsed: 3, cellMoveCount: 999, timeElapsed: 90 }));
+    expect(r.total).toBe(0);
+  });
+  it('total never exceeds 1000 (clamp)', () => {
+    expect(ScoreEngine.calc(sin()).total).toBeLessThanOrEqual(1000);
+  });
+});
+
+describe('ScoreEngine.calc — Classic', () => {
+  const cls = (over: Partial<ScoreInput> = {}) => sin({ mode: 'classic', ...over });
+  it('perfect (0 moves used, under 1 min) → total 1000, 3 stars, passed', () => {
+    const r = ScoreEngine.calc(cls());
+    expect(r.total).toBe(1000); // dots250+cov250+eff300+timeBonus200 (brief said 1100; max is 1000)
+    expect(r.stars).toBe(3);
+    expect(r.passed).toBe(true);
+  });
+  it('move limit exceeded (16 of 15) → passed false, 0 stars, efficiency 0', () => {
+    const r = ScoreEngine.calc(cls({ movesUsed: 16, classicMoveLimit: 15 }));
+    expect(r.passed).toBe(false);
+    expect(r.stars).toBe(0);
+    expect(r.breakdown.efficiencyScore).toBe(0);
+  });
+  it('solved in exactly the move limit → efficiency 0, passed true', () => {
+    const r = ScoreEngine.calc(cls({ movesUsed: 15, classicMoveLimit: 15 }));
+    expect(r.breakdown.efficiencyScore).toBe(0);
+    expect(r.passed).toBe(true);
+  });
+  it('solved in 210s → timeBonus 50', () => {
+    expect(ScoreEngine.calc(cls({ timeElapsed: 210 })).breakdown.bonusScore).toBe(50);
+  });
+  it('solved in 90s (under 120) → timeBonus 150', () => {
+    expect(ScoreEngine.calc(cls({ timeElapsed: 90 })).breakdown.bonusScore).toBe(150);
+  });
+  it('solved in 150s (under 180) → timeBonus 100', () => {
+    expect(ScoreEngine.calc(cls({ timeElapsed: 150 })).breakdown.bonusScore).toBe(100);
+  });
+  it('3 hints → hintPenalty -120', () => {
+    expect(ScoreEngine.calc(cls({ hintsUsed: 3 })).breakdown.hintPenalty).toBe(-120);
+  });
+  it('total never exceeds 1100 (clamp)', () => {
+    expect(ScoreEngine.calc(cls()).total).toBeLessThanOrEqual(1100);
+  });
+  it('mid-efficiency (4 of 10 moves) → 2 stars', () => {
+    const r = ScoreEngine.calc(cls({ movesUsed: 4, classicMoveLimit: 10 }));
+    expect(r.breakdown.efficiencyScore).toBe(180);
+    expect(r.stars).toBe(2);
+  });
+});
+
+describe('ScoreEngine.calc — Zen', () => {
+  const zen = (over: Partial<ScoreInput> = {}) => sin({ mode: 'zen', ...over });
+  it('always passed=true regardless of time/moves', () => {
+    expect(ScoreEngine.calc(zen({ timeElapsed: 9999, movesUsed: 9999 })).passed).toBe(true);
+  });
+  it('dotsConnected=false → dotsScore 0, still passed', () => {
+    const r = ScoreEngine.calc(zen({ dotsConnected: false }));
+    expect(r.breakdown.dotsScore).toBe(0);
+    expect(r.passed).toBe(true);
+  });
+  it('efficiencyScore is always 0', () => {
+    expect(ScoreEngine.calc(zen()).breakdown.efficiencyScore).toBe(0);
+  });
+  it('total clamped to <= 800', () => {
+    expect(ScoreEngine.calc(zen()).total).toBeLessThanOrEqual(800);
+  });
+});
+
+describe('ScoreEngine.calc — Daily + edge cases', () => {
+  it('daily_campaign uses the Campaign formula (perfect → 1000, passed)', () => {
+    const r = ScoreEngine.calc(sin({ mode: 'daily_campaign' }));
+    expect(r.total).toBe(1000);
+    expect(r.passed).toBe(true);
+  });
+  it('daily_classic uses the Classic formula (over-limit → passed false)', () => {
+    const r = ScoreEngine.calc(sin({ mode: 'daily_classic', movesUsed: 99, classicMoveLimit: 10 }));
+    expect(r.passed).toBe(false);
+  });
+  it('coveragePct 0 → coverageScore 0', () => {
+    expect(ScoreEngine.calc(sin({ coveragePct: 0 })).breakdown.coverageScore).toBe(0);
+  });
+  it('hintsUsed 0 → hintPenalty 0', () => {
+    expect(ScoreEngine.calc(sin()).breakdown.hintPenalty).toBe(0);
   });
 });
