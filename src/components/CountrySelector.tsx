@@ -1,62 +1,21 @@
 // CountrySelector.tsx
-// Flow Lines | Gazetica Studio | Sprint 3 Day 16 | Task FL-S3-016
+// Flow Lines | Gazetica Studio | Sprint 3 Day 16 | Task FL-S3-016 · FL-UX-D-001
 //
-// Country picker (30 common countries for now; Sprint 4 expands to 155).
-// Replaces the Numtap @ts-nocheck version — clean, no Numtap imports.
+// Standalone /country picker (used from Settings). Its country data now comes
+// from the shared src/data/countries.ts (170-list). flagOf / COUNTRIES /
+// filterCountries / Country are re-exported here so existing importers
+// (Settings/Result/Daily/Leaderboard) keep working unchanged.
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { skin } from '../styles/skin';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
+import { COUNTRIES, flagOf, filterCountries, type Country } from '../data/countries';
+
+export { COUNTRIES, flagOf, filterCountries };
+export type { Country };
 
 const GOLD = '#FFD700';
-
-export type Country = { code: string; name: string };
-
-export const COUNTRIES: Country[] = [
-  { code: 'IN', name: 'India' },
-  { code: 'US', name: 'United States' },
-  { code: 'DE', name: 'Germany' },
-  { code: 'GB', name: 'United Kingdom' },
-  { code: 'FR', name: 'France' },
-  { code: 'BR', name: 'Brazil' },
-  { code: 'KR', name: 'South Korea' },
-  { code: 'JP', name: 'Japan' },
-  { code: 'CA', name: 'Canada' },
-  { code: 'AU', name: 'Australia' },
-  { code: 'MX', name: 'Mexico' },
-  { code: 'IT', name: 'Italy' },
-  { code: 'ES', name: 'Spain' },
-  { code: 'NL', name: 'Netherlands' },
-  { code: 'PL', name: 'Poland' },
-  { code: 'RU', name: 'Russia' },
-  { code: 'CN', name: 'China' },
-  { code: 'ID', name: 'Indonesia' },
-  { code: 'TR', name: 'Turkey' },
-  { code: 'SA', name: 'Saudi Arabia' },
-  { code: 'NG', name: 'Nigeria' },
-  { code: 'ZA', name: 'South Africa' },
-  { code: 'AR', name: 'Argentina' },
-  { code: 'SE', name: 'Sweden' },
-  { code: 'NO', name: 'Norway' },
-  { code: 'PT', name: 'Portugal' },
-  { code: 'PH', name: 'Philippines' },
-  { code: 'TH', name: 'Thailand' },
-  { code: 'VN', name: 'Vietnam' },
-  { code: 'EG', name: 'Egypt' },
-];
-
-/** Regional-indicator flag emoji from an ISO-2 code (avoids hardcoding emoji). */
-export function flagOf(code: string): string {
-  return [...code.toUpperCase()]
-    .map((c) => String.fromCodePoint(0x1f1e6 + c.charCodeAt(0) - 65))
-    .join('');
-}
-
-export function filterCountries(list: Country[], query: string): Country[] {
-  const q = query.trim().toLowerCase();
-  return q ? list.filter((c) => c.name.toLowerCase().includes(q)) : list;
-}
 
 export default function CountrySelector() {
   const navigate = useNavigate();
