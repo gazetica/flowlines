@@ -98,7 +98,7 @@ export function LanguageScreen() {
   return (
     <div
       style={{
-        position: 'relative', width: '100%', minHeight: '100vh',
+        position: 'relative', width: '100%', height: '100dvh',
         background: 'linear-gradient(160deg, #1A0A3C 0%, #2D1060 100%)',
         display: 'flex', flexDirection: 'column', fontFamily: skin.fontBody, overflow: 'hidden',
       }}

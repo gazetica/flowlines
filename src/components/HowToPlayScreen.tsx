@@ -8,7 +8,7 @@
 // screen, so here we only navigate.
 
 import type { CSSProperties, ReactNode, PointerEvent as ReactPointerEvent } from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { skin } from '../styles/skin';
 import { ParticleCanvas } from './ParticleCanvas';
@@ -16,7 +16,17 @@ import { ParticleCanvas } from './ParticleCanvas';
 const GOLD = '#FFD700';
 const DARK = '#0D0620'; // FL bg-deep (button text on gold)
 
-const PATH_COLOURS: Record<string, string> = {
+const GRID_SIZE = 6;
+
+const DOTS: Record<string, [[number, number], [number, number]]> = {
+  red: [[0, 0], [5, 0]],
+  blue: [[0, 4], [3, 5]],
+  green: [[1, 2], [4, 3]],
+  orange: [[2, 1], [5, 4]],
+  purple: [[0, 2], [4, 0]],
+};
+
+const COLOURS: Record<string, string> = {
   red: '#E74C3C',
   blue: '#3498DB',
   green: '#2ECC71',
@@ -24,143 +34,137 @@ const PATH_COLOURS: Record<string, string> = {
   purple: '#9B59B6',
 };
 
-type RC = [number, number];
-const GRID_N = 6;
-
-// Page-1 dot layout (0-indexed). Visually illustrative, has a clean solution.
-const DOTS: Array<{ colour: string; a: RC; b: RC }> = [
-  { colour: 'red', a: [0, 0], b: [5, 0] },
-  { colour: 'blue', a: [0, 4], b: [3, 5] },
-  { colour: 'green', a: [1, 2], b: [4, 3] },
-  { colour: 'orange', a: [2, 1], b: [5, 4] },
-  { colour: 'purple', a: [0, 2], b: [4, 0] },
-];
-
-function dotColourAt(r: number, c: number): string | null {
-  for (const d of DOTS) {
-    if ((d.a[0] === r && d.a[1] === c) || (d.b[0] === r && d.b[1] === c)) return d.colour;
+/** Which colour (if any) has a dot at [row,col]. */
+function dotColourAt(row: number, col: number): string | null {
+  for (const [colour, [[r1, c1], [r2, c2]]] of Object.entries(DOTS)) {
+    if ((row === r1 && col === c1) || (row === r2 && col === c2)) return colour;
   }
   return null;
 }
 
-type PathState = Record<string, RC[]>;
+function isAdjacent([r1, c1]: [number, number], [r2, c2]: [number, number]): boolean {
+  return Math.abs(r1 - r2) + Math.abs(c1 - c2) === 1;
+}
+
+type Cell = [number, number];
+type PathMap = Record<string, Cell[]>;
 
 // ─── Interactive 6×6 teaching grid (pure React) ──────────────────────────────
+// Capacitor Android WebView drops elementFromPoint / sibling pointerEnter during
+// an active pointer capture. The reliable pattern is: cells are visual-only
+// (pointerEvents:none) and a single invisible overlay handles every pointer
+// event, mapping clientX/Y → cell via getBoundingClientRect.
 
 function InteractiveGrid() {
-  // Pre-draw red's first 2 cells so a path is visible immediately on mount.
-  const [paths, setPaths] = useState<PathState>({ red: [[0, 0], [1, 0]] });
+  const [paths, setPaths] = useState<PathMap>({ red: [[0, 0], [1, 0]] }); // red pre-drawn
   const dragging = useRef<string | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const up = () => { dragging.current = null; };
-    window.addEventListener('pointerup', up);
-    return () => window.removeEventListener('pointerup', up);
-  }, []);
+  function cellFromPoint(clientX: number, clientY: number): Cell | null {
+    const el = gridRef.current;
+    if (!el) return null;
+    const rect = el.getBoundingClientRect();
+    const col = Math.floor((clientX - rect.left) / (rect.width / GRID_SIZE));
+    const row = Math.floor((clientY - rect.top) / (rect.height / GRID_SIZE));
+    if (row < 0 || row >= GRID_SIZE || col < 0 || col >= GRID_SIZE) return null;
+    return [row, col];
+  }
 
-  // Resolve the grid cell under a pointer event via the rendered data-* attrs.
-  const cellFromEvent = (e: { clientX: number; clientY: number }): RC | null => {
-    const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
-    const r = el?.dataset?.row, c = el?.dataset?.col;
-    if (r == null || c == null) return null;
-    return [Number(r), Number(c)];
-  };
-
-  const onDown = (e: ReactPointerEvent) => {
-    const cell = cellFromEvent(e);
+  function handlePointerDown(e: ReactPointerEvent<HTMLDivElement>) {
+    const cell = cellFromPoint(e.clientX, e.clientY);
     if (!cell) return;
     const colour = dotColourAt(cell[0], cell[1]);
-    if (!colour) return; // a drag can only begin on a dot
+    if (!colour) return; // must start on a dot
     dragging.current = colour;
-    containerRef.current?.setPointerCapture(e.pointerId);
     setPaths((prev) => ({ ...prev, [colour]: [cell] })); // start fresh from this dot
-  };
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }
 
-  const onMove = (e: ReactPointerEvent) => {
+  function handlePointerMove(e: ReactPointerEvent<HTMLDivElement>) {
+    if (!dragging.current) return;
     const colour = dragging.current;
-    if (!colour) return;
-    const cell = cellFromEvent(e);
+    const cell = cellFromPoint(e.clientX, e.clientY);
     if (!cell) return;
-    const [r, c] = cell;
+    const [row, col] = cell;
 
     setPaths((prev) => {
       const path = prev[colour] ?? [];
       if (path.length === 0) return prev;
-      const head = path[path.length - 1];
-      if (Math.abs(head[0] - r) + Math.abs(head[1] - c) !== 1) return prev; // not adjacent
+      const last = path[path.length - 1];
+      if (last[0] === row && last[1] === col) return prev;      // same cell
+      if (!isAdjacent(last, [row, col])) return prev;            // not adjacent
 
-      // Retract: re-entering an earlier cell of our own path truncates to it.
-      const own = path.findIndex(([pr, pc]) => pr === r && pc === c);
-      if (own !== -1) {
-        if (own === path.length - 1) return prev;
-        return { ...prev, [colour]: path.slice(0, own + 1) };
+      // Retract onto an earlier cell of our own path.
+      const ownIdx = path.findIndex(([r, c]) => r === row && c === col);
+      if (ownIdx !== -1 && ownIdx < path.length - 1) {
+        return { ...prev, [colour]: path.slice(0, ownIdx + 1) };
       }
-
-      // Can't cross another colour's dot endpoint.
-      const dc = dotColourAt(r, c);
-      if (dc && dc !== colour) return prev;
 
       // Drawing over another colour erases it from that cell onward.
-      const next: PathState = { ...prev };
-      for (const oc of Object.keys(next)) {
-        if (oc === colour) continue;
-        const oi = next[oc].findIndex(([pr, pc]) => pr === r && pc === c);
-        if (oi !== -1) next[oc] = next[oc].slice(0, oi);
+      const next: PathMap = { ...prev };
+      for (const other of Object.keys(next)) {
+        if (other === colour) continue;
+        const idx = next[other].findIndex(([r, c]) => r === row && c === col);
+        if (idx !== -1) next[other] = next[other].slice(0, idx);
       }
-      next[colour] = [...path, cell];
+      next[colour] = [...path, [row, col]];
       return next;
     });
-  };
+  }
 
-  // Which colour (if any) occupies a cell — for the 30%-opacity fill.
-  const occupantAt = (r: number, c: number): string | null => {
-    for (const colour of Object.keys(paths)) {
-      if (paths[colour].some(([pr, pc]) => pr === r && pc === c)) return colour;
-    }
-    return null;
-  };
+  function handlePointerUp() {
+    dragging.current = null;
+  }
+
+  // "row,col" → colour for the filled cells.
+  const filled: Record<string, string> = {};
+  for (const [colour, path] of Object.entries(paths)) {
+    for (const [r, c] of path) filled[`${r},${c}`] = colour;
+  }
 
   return (
-    <div
-      ref={containerRef}
-      onPointerDown={onDown}
-      onPointerMove={onMove}
-      style={{
-        touchAction: 'none',
-        display: 'grid',
-        gridTemplateColumns: `repeat(${GRID_N}, 1fr)`,
-        gap: 3,
-        width: '100%',
-      }}
-    >
-      {Array.from({ length: GRID_N * GRID_N }, (_, i) => {
-        const r = Math.floor(i / GRID_N);
-        const c = i % GRID_N;
-        const dot = dotColourAt(r, c);
-        const occ = occupantAt(r, c);
-        const fill = occ && !dot ? `${PATH_COLOURS[occ]}4D` : 'rgba(255,255,255,0.05)'; // 4D ≈ 30%
-        return (
-          <div
-            key={i}
-            data-row={r}
-            data-col={c}
-            style={{
-              aspectRatio: '1',
-              background: fill,
-              border: '1px solid rgba(127,119,221,0.15)',
-              borderRadius: 4,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            {dot && (
-              <div style={{ width: '60%', height: '60%', borderRadius: '50%', background: PATH_COLOURS[dot] }} />
-            )}
-          </div>
-        );
-      })}
+    <div style={{ position: 'relative', width: '100%', aspectRatio: '1', margin: '0 auto' }}>
+      {/* Visual cells — no pointer events */}
+      <div
+        ref={gridRef}
+        style={{
+          display: 'grid',
+          gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`,
+          gap: 3, width: '100%', height: '100%', pointerEvents: 'none',
+        }}
+      >
+        {Array.from({ length: GRID_SIZE * GRID_SIZE }, (_, i) => {
+          const row = Math.floor(i / GRID_SIZE);
+          const col = i % GRID_SIZE;
+          const fill = filled[`${row},${col}`];
+          const dot = dotColourAt(row, col);
+          return (
+            <div
+              key={i}
+              style={{
+                backgroundColor: fill ? `${COLOURS[fill]}4D` : 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(127,119,221,0.15)',
+                borderRadius: 4,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+            >
+              {dot && (
+                <div style={{ width: '60%', height: '60%', borderRadius: '50%', backgroundColor: COLOURS[dot], flexShrink: 0 }} />
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Invisible overlay — handles every pointer event */}
+      <div
+        style={{ position: 'absolute', inset: 0, touchAction: 'none', cursor: 'crosshair' }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+      />
     </div>
   );
 }
@@ -298,7 +302,16 @@ export function HowToPlayScreen() {
 
       {/* Header */}
       <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px 8px' }}>
-        <button onClick={goBack} style={{ background: 'none', border: 'none', color: GOLD, fontSize: 16, cursor: 'pointer', width: 40, textAlign: 'left' }}>‹</button>
+        <div
+          onPointerDown={goBack}
+          style={{
+            width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', color: GOLD, fontSize: 24, fontWeight: 700,
+            WebkitTapHighlightColor: 'transparent',
+          }}
+        >
+          ‹
+        </div>
         <span style={{ border: '1px solid rgba(255,215,0,0.5)', borderRadius: 6, padding: '5px 12px', fontSize: 11, fontWeight: 700, letterSpacing: 2, color: GOLD, background: 'rgba(255,215,0,0.08)' }}>
           HOW TO PLAY
         </span>
