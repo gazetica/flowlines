@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">numtap</string>
-    <string name="title_activity_main">numtap</string>
-    <string name="package_name">com.gazetica.numtap</string>
-    <string name="custom_url_scheme">com.gazetica.numtap</string>
+    <string name="app_name">Flow Lines</string>
+    <string name="title_activity_main">Flow Lines</string>
+    <string name="package_name">com.gazetica.flowlines</string>
+    <string name="custom_url_scheme">com.gazetica.flowlines</string>
 </resources>
