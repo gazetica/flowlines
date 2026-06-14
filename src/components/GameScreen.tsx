@@ -52,6 +52,8 @@ export function GameScreen() {
   const moveCount = useFlowGameStore((s) => s.moveCount);
   const hintsUsed = useFlowGameStore((s) => s.hintsUsed);
   const gemBalance = useFlowSettingsStore((s) => s.gemBalance);
+  const firstLaunchComplete = useFlowSettingsStore((s) => s.firstLaunchComplete);
+  const [showTutorialHint, setShowTutorialHint] = useState(false);
   const [showAbandonDialog, setShowAbandonDialog] = useState(false);
   const [showBuyHintModal, setShowBuyHintModal] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -185,6 +187,22 @@ export function GameScreen() {
     };
   }, []);
 
+  // B.2: Level 1 contextual tutorial overlay — only for the very first level
+  // (p1_001) and only for players who haven't finished onboarding. Shown 1s
+  // after mount (let the board render), auto-dismissed when a drag begins.
+  useEffect(() => {
+    if (levelData.id === 'p1_001' && !firstLaunchComplete) {
+      const t = setTimeout(() => setShowTutorialHint(true), 1000);
+      return () => clearTimeout(t);
+    }
+  }, [levelData.id, firstLaunchComplete]);
+
+  useEffect(() => {
+    const dismiss = () => setShowTutorialHint(false);
+    window.addEventListener('fl:path-extend', dismiss);
+    return () => window.removeEventListener('fl:path-extend', dismiss);
+  }, []);
+
   const confirmAbandon = () => {
     setShowAbandonDialog(false);
     trackLevelAbandon({ level_id: levelData.id, coverage_pct: useFlowGameStore.getState().coverage });
@@ -227,7 +245,7 @@ export function GameScreen() {
   };
 
   return (
-    <div style={{ width: '100%', height: '100dvh', overflow: 'hidden', background: skin.bgDeep, display: 'flex', flexDirection: 'column' }}>
+    <div style={{ position: 'relative', width: '100%', height: '100dvh', overflow: 'hidden', background: skin.bgDeep, display: 'flex', flexDirection: 'column' }}>
       {/* HUD — moves, coverage %, and live purple→gold coverage bar */}
       <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', background: 'rgba(0,0,0,0.4)' }}>
         <div
@@ -297,6 +315,39 @@ export function GameScreen() {
       {/* Phaser mount point — fills the space below the HUD. minHeight:0 lets the
           flex child shrink instead of overflowing; position:relative anchors the canvas. */}
       <div ref={phaserRef} style={{ flex: 1, minHeight: 0, position: 'relative' }} />
+
+      {/* B.2: Level 1 contextual tutorial overlay (first-time players only) */}
+      {showTutorialHint && (
+        <div
+          onClick={() => setShowTutorialHint(false)}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 10,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'rgba(0,0,0,0.45)',
+          }}
+        >
+          <div style={{ fontSize: 40, animation: 'bounceDown 1s ease-in-out infinite', marginBottom: 12 }}>👇</div>
+          <div
+            style={{
+              background: 'rgba(127,119,221,0.9)',
+              borderRadius: 12,
+              padding: '10px 20px',
+              fontSize: 15,
+              color: 'white',
+              fontFamily: skin.fontBody,
+              textAlign: 'center',
+            }}
+          >
+            Tap a dot and drag to its match
+          </div>
+          <div style={{ marginTop: 8, fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>Tap anywhere to dismiss</div>
+        </div>
+      )}
 
       {/* Buy-hint sheet — shown when a hint ad has no fill and gems are 0 */}
       {showBuyHintModal && (

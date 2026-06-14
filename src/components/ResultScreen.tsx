@@ -15,6 +15,7 @@ import { getNextLevel } from '../game/engine/LevelManager';
 import { onLevelComplete } from '../services/interstitialAdService';
 import { submitCampaignScore } from '../services/flCampaignScores';
 import { trackLevelComplete } from '../services/analytics';
+import { requestAndResolve } from '../services/consentService';
 import { flagOf } from './CountrySelector';
 import { GazeticaPromoCard } from './GazeticaPromoCard';
 
@@ -57,6 +58,7 @@ export function ResultScreen() {
   const playerUid = useFlowSettingsStore((s) => s.playerUid);
   const alias = useFlowSettingsStore((s) => s.alias);
   const country = useFlowSettingsStore((s) => s.country);
+  const packProgress = useFlowSettingsStore((s) => s.packProgress);
   const flag = country ? flagOf(country) : '🌐';
 
   const perfectClear = (breakdown?.perfectClearBonus ?? 0) > 0;
@@ -76,6 +78,15 @@ export function ResultScreen() {
       const pack = Number(m[1]);
       void submitCampaignScore(levelId, pack, score, moveCount);
       trackLevelComplete({ level_id: levelId, pack_id: pack, moves: moveCount, stars, score });
+    }
+
+    // FL-UX-B B.1: UMP consent is deferred to the first win. Fire it once (after
+    // a short beat so the result screen renders first); persist so it never
+    // repeats. Non-EU players skip silently inside requestAndResolve().
+    const settings = useFlowSettingsStore.getState();
+    if (!settings.consentRequested) {
+      settings.markConsentRequested();
+      setTimeout(() => { void requestAndResolve(); }, 800);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -243,6 +254,37 @@ export function ResultScreen() {
               <span style={{ color: GOLD }}>{score}</span>
             </div>
           )}
+        </div>
+
+        {/* Pack progress — never end a session on a zero; show a bar to fill. */}
+        <div
+          style={{
+            margin: '0',
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(127,119,221,0.2)',
+            borderRadius: 12,
+            padding: '12px 16px',
+            width: '100%',
+            boxSizing: 'border-box',
+          }}
+        >
+          <div style={{ fontSize: 10, color: MUTED, fontFamily: skin.fontDisplay, marginBottom: 8, letterSpacing: 1 }}>
+            PACK {currentPack} PROGRESS
+          </div>
+          <div style={{ height: 6, background: 'rgba(127,119,221,0.2)', borderRadius: 3, marginBottom: 6, overflow: 'hidden' }}>
+            <div
+              style={{
+                height: '100%',
+                width: `${(Math.min((packProgress[currentPack]?.solved ?? 0), 50) / 50) * 100}%`,
+                background: 'linear-gradient(90deg, #7F77DD, #EF9F27)',
+                borderRadius: 3,
+                transition: 'width 0.6s ease-out',
+              }}
+            />
+          </div>
+          <div style={{ fontSize: 11, color: skin.purpleLight }}>
+            {packProgress[currentPack]?.solved ?? 0} / 50 levels solved
+          </div>
         </div>
 
         {/* YOUR RANK snippet — own-row highlight style from VD-08 */}

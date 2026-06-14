@@ -130,3 +130,9 @@ html, body, #root {
   from { transform: translateY(40px); opacity: 0; }
   to   { transform: translateY(0);    opacity: 1; }
 }
+
+/* —— FL-UX-B: Level 1 tutorial hint arrow —— */
+@keyframes bounceDown {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(10px); }
+}

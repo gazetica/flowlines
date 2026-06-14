@@ -25,6 +25,7 @@ const KEYS = {
   DAILY_STREAK:    'FL_DAILY_STREAK',
   LAST_DAILY:      'FL_LAST_DAILY_DATE',
   FIRST_LAUNCH:    'FL_FIRST_LAUNCH',
+  CONSENT_REQ:     'FL_CONSENT_REQUESTED',
 } as const;
 
 interface PackLevelProgress {
@@ -55,6 +56,7 @@ interface FlowSettingsState {
 
   // Onboarding
   firstLaunchComplete: boolean;
+  consentRequested: boolean;
 
   // Hydration flag
   hydrated: boolean;
@@ -73,6 +75,7 @@ interface FlowSettingsState {
   incrementDailyStreak: () => Promise<void>;
   resetDailyStreak: () => Promise<void>;
   completeFirstLaunch: () => void;
+  markConsentRequested: () => void;
   hydrate: () => Promise<void>;
 }
 
@@ -90,6 +93,7 @@ export const useFlowSettingsStore = create<FlowSettingsState>((set, get) => ({
   dailyStreakFL: 0,
   lastDailyDateFL: '',
   firstLaunchComplete: false,
+  consentRequested: false,
   hydrated: false,
 
   setAlias: async (v) => {
@@ -187,6 +191,13 @@ export const useFlowSettingsStore = create<FlowSettingsState>((set, get) => ({
     void Preferences.set({ key: KEYS.FIRST_LAUNCH, value: 'true' });
   },
 
+  // markConsentRequested — set once the UMP consent flow has been triggered
+  // (FL-UX-B: deferred to after the first win) so it never fires twice.
+  markConsentRequested: () => {
+    set({ consentRequested: true });
+    void Preferences.set({ key: KEYS.CONSENT_REQ, value: 'true' });
+  },
+
   // Hydrate — called once on app startup to load persisted state.
   hydrate: async () => {
     const read = async (key: string) =>
@@ -203,6 +214,7 @@ export const useFlowSettingsStore = create<FlowSettingsState>((set, get) => ({
     const streak = parseInt((await read(KEYS.DAILY_STREAK)) || '0', 10);
     const lastDaily = (await read(KEYS.LAST_DAILY)) || '';
     const firstLaunchComplete = (await read(KEYS.FIRST_LAUNCH)) === 'true';
+    const consentRequested = (await read(KEYS.CONSENT_REQ)) === 'true';
 
     let packProgress: Record<number, PackLevelProgress> = {};
     try {
@@ -232,6 +244,7 @@ export const useFlowSettingsStore = create<FlowSettingsState>((set, get) => ({
       dailyStreakFL: streak,
       lastDailyDateFL: lastDaily,
       firstLaunchComplete,
+      consentRequested,
       packProgress,
       hydrated: true,
     });

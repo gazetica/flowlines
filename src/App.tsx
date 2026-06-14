@@ -9,7 +9,6 @@ import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import { useSettingsStore } from './store/settingsStore';
-import { requestAndResolve } from './services/consentService';
 import { initAdmob } from './services/admob';
 import { initialiseBilling } from './services/billing';
 import * as analytics from './services/analytics';
@@ -33,14 +32,13 @@ import CountrySelector from './components/CountrySelector';
 import IAPScreen from './components/IAPScreen';
 
 export function App() {
-  // T-016: GDPR/UMP consent must resolve BEFORE AdMob initialises. Native-only.
+  // FL-UX-B: UMP consent is now deferred to after the player's first win
+  // (ResultScreen), per the FTUE methodology — no GDPR modal before level 1.
+  // AdMob still initialises on launch so ads are ready when consent resolves.
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
     analytics.sessionStart();
-    (async () => {
-      await requestAndResolve();
-      await initAdmob();
-    })();
+    void initAdmob();
     void initialiseBilling();
   }, []);
 
