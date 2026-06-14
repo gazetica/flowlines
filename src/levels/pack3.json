@@ -55,7 +55,10 @@
         "r2": 3,
         "c2": 5
       }
-    ]
+    ],
+    "difficulty": "easy",
+    "timeLimit": 150,
+    "classicMoveLimit": 21
   },
   {
     "id": "p3_002",
@@ -113,7 +116,10 @@
         "r2": 6,
         "c2": 2
       }
-    ]
+    ],
+    "difficulty": "easy",
+    "timeLimit": 150,
+    "classicMoveLimit": 21
   },
   {
     "id": "p3_003",
@@ -171,7 +177,10 @@
         "r2": 2,
         "c2": 5
       }
-    ]
+    ],
+    "difficulty": "easy",
+    "timeLimit": 150,
+    "classicMoveLimit": 21
   },
   {
     "id": "p3_004",
@@ -229,7 +238,10 @@
         "r2": 3,
         "c2": 7
       }
-    ]
+    ],
+    "difficulty": "easy",
+    "timeLimit": 150,
+    "classicMoveLimit": 21
   },
   {
     "id": "p3_005",
@@ -287,7 +299,10 @@
         "r2": 2,
         "c2": 3
       }
-    ]
+    ],
+    "difficulty": "easy",
+    "timeLimit": 150,
+    "classicMoveLimit": 21
   },
   {
     "id": "p3_006",
@@ -345,7 +360,10 @@
         "r2": 4,
         "c2": 2
       }
-    ]
+    ],
+    "difficulty": "easy",
+    "timeLimit": 150,
+    "classicMoveLimit": 21
   },
   {
     "id": "p3_007",
@@ -403,7 +421,10 @@
         "r2": 5,
         "c2": 6
       }
-    ]
+    ],
+    "difficulty": "easy",
+    "timeLimit": 150,
+    "classicMoveLimit": 21
   },
   {
     "id": "p3_008",
@@ -461,7 +482,10 @@
         "r2": 6,
         "c2": 2
       }
-    ]
+    ],
+    "difficulty": "easy",
+    "timeLimit": 150,
+    "classicMoveLimit": 21
   },
   {
     "id": "p3_009",
@@ -519,7 +543,10 @@
         "r2": 3,
         "c2": 2
       }
-    ]
+    ],
+    "difficulty": "easy",
+    "timeLimit": 150,
+    "classicMoveLimit": 21
   },
   {
     "id": "p3_010",
@@ -577,7 +604,10 @@
         "r2": 4,
         "c2": 7
       }
-    ]
+    ],
+    "difficulty": "easy",
+    "timeLimit": 150,
+    "classicMoveLimit": 21
   },
   {
     "id": "p3_011",
@@ -635,7 +665,10 @@
         "r2": 4,
         "c2": 3
       }
-    ]
+    ],
+    "difficulty": "easy",
+    "timeLimit": 150,
+    "classicMoveLimit": 21
   },
   {
     "id": "p3_012",
@@ -693,7 +726,10 @@
         "r2": 0,
         "c2": 6
       }
-    ]
+    ],
+    "difficulty": "easy",
+    "timeLimit": 150,
+    "classicMoveLimit": 21
   },
   {
     "id": "p3_013",
@@ -751,7 +787,10 @@
         "r2": 5,
         "c2": 6
       }
-    ]
+    ],
+    "difficulty": "easy",
+    "timeLimit": 150,
+    "classicMoveLimit": 21
   },
   {
     "id": "p3_014",
@@ -809,7 +848,10 @@
         "r2": 1,
         "c2": 0
       }
-    ]
+    ],
+    "difficulty": "easy",
+    "timeLimit": 150,
+    "classicMoveLimit": 21
   },
   {
     "id": "p3_015",
@@ -867,7 +909,10 @@
         "r2": 0,
         "c2": 1
       }
-    ]
+    ],
+    "difficulty": "easy",
+    "timeLimit": 150,
+    "classicMoveLimit": 21
   },
   {
     "id": "p3_016",
@@ -925,7 +970,10 @@
         "r2": 5,
         "c2": 7
       }
-    ]
+    ],
+    "difficulty": "medium",
+    "timeLimit": 100,
+    "classicMoveLimit": 14
   },
   {
     "id": "p3_017",
@@ -983,7 +1031,10 @@
         "r2": 3,
         "c2": 3
       }
-    ]
+    ],
+    "difficulty": "medium",
+    "timeLimit": 100,
+    "classicMoveLimit": 14
   },
   {
     "id": "p3_018",
@@ -1041,7 +1092,10 @@
         "r2": 1,
         "c2": 2
       }
-    ]
+    ],
+    "difficulty": "medium",
+    "timeLimit": 100,
+    "classicMoveLimit": 14
   },
   {
     "id": "p3_019",
@@ -1099,7 +1153,10 @@
         "r2": 6,
         "c2": 6
       }
-    ]
+    ],
+    "difficulty": "medium",
+    "timeLimit": 100,
+    "classicMoveLimit": 14
   },
   {
     "id": "p3_020",
@@ -1157,7 +1214,10 @@
         "r2": 6,
         "c2": 4
       }
-    ]
+    ],
+    "difficulty": "medium",
+    "timeLimit": 100,
+    "classicMoveLimit": 14
   },
   {
     "id": "p3_021",
@@ -1215,7 +1275,10 @@
         "r2": 6,
         "c2": 4
       }
-    ]
+    ],
+    "difficulty": "medium",
+    "timeLimit": 100,
+    "classicMoveLimit": 14
   },
   {
     "id": "p3_022",
@@ -1273,7 +1336,10 @@
         "r2": 1,
         "c2": 5
       }
-    ]
+    ],
+    "difficulty": "medium",
+    "timeLimit": 100,
+    "classicMoveLimit": 14
   },
   {
     "id": "p3_023",
@@ -1331,7 +1397,10 @@
         "r2": 4,
         "c2": 6
       }
-    ]
+    ],
+    "difficulty": "medium",
+    "timeLimit": 100,
+    "classicMoveLimit": 14
   },
   {
     "id": "p3_024",
@@ -1389,7 +1458,10 @@
         "r2": 0,
         "c2": 7
       }
-    ]
+    ],
+    "difficulty": "medium",
+    "timeLimit": 100,
+    "classicMoveLimit": 14
   },
   {
     "id": "p3_025",
@@ -1447,7 +1519,10 @@
         "r2": 5,
         "c2": 4
       }
-    ]
+    ],
+    "difficulty": "medium",
+    "timeLimit": 100,
+    "classicMoveLimit": 14
   },
   {
     "id": "p3_026",
@@ -1505,7 +1580,10 @@
         "r2": 2,
         "c2": 0
       }
-    ]
+    ],
+    "difficulty": "medium",
+    "timeLimit": 100,
+    "classicMoveLimit": 14
   },
   {
     "id": "p3_027",
@@ -1563,7 +1641,10 @@
         "r2": 1,
         "c2": 5
       }
-    ]
+    ],
+    "difficulty": "medium",
+    "timeLimit": 100,
+    "classicMoveLimit": 14
   },
   {
     "id": "p3_028",
@@ -1621,7 +1702,10 @@
         "r2": 2,
         "c2": 6
       }
-    ]
+    ],
+    "difficulty": "medium",
+    "timeLimit": 100,
+    "classicMoveLimit": 14
   },
   {
     "id": "p3_029",
@@ -1679,7 +1763,10 @@
         "r2": 3,
         "c2": 1
       }
-    ]
+    ],
+    "difficulty": "medium",
+    "timeLimit": 100,
+    "classicMoveLimit": 14
   },
   {
     "id": "p3_030",
@@ -1737,7 +1824,10 @@
         "r2": 1,
         "c2": 1
       }
-    ]
+    ],
+    "difficulty": "medium",
+    "timeLimit": 100,
+    "classicMoveLimit": 14
   },
   {
     "id": "p3_031",
@@ -1795,7 +1885,10 @@
         "r2": 2,
         "c2": 2
       }
-    ]
+    ],
+    "difficulty": "hard",
+    "timeLimit": 70,
+    "classicMoveLimit": 9
   },
   {
     "id": "p3_032",
@@ -1853,7 +1946,10 @@
         "r2": 3,
         "c2": 2
       }
-    ]
+    ],
+    "difficulty": "hard",
+    "timeLimit": 70,
+    "classicMoveLimit": 9
   },
   {
     "id": "p3_033",
@@ -1911,7 +2007,10 @@
         "r2": 6,
         "c2": 0
       }
-    ]
+    ],
+    "difficulty": "hard",
+    "timeLimit": 70,
+    "classicMoveLimit": 9
   },
   {
     "id": "p3_034",
@@ -1969,7 +2068,10 @@
         "r2": 5,
         "c2": 5
       }
-    ]
+    ],
+    "difficulty": "hard",
+    "timeLimit": 70,
+    "classicMoveLimit": 9
   },
   {
     "id": "p3_035",
@@ -2027,7 +2129,10 @@
         "r2": 2,
         "c2": 1
       }
-    ]
+    ],
+    "difficulty": "hard",
+    "timeLimit": 70,
+    "classicMoveLimit": 9
   },
   {
     "id": "p3_036",
@@ -2085,7 +2190,10 @@
         "r2": 3,
         "c2": 4
       }
-    ]
+    ],
+    "difficulty": "hard",
+    "timeLimit": 70,
+    "classicMoveLimit": 9
   },
   {
     "id": "p3_037",
@@ -2143,7 +2251,10 @@
         "r2": 0,
         "c2": 4
       }
-    ]
+    ],
+    "difficulty": "hard",
+    "timeLimit": 70,
+    "classicMoveLimit": 9
   },
   {
     "id": "p3_038",
@@ -2201,7 +2312,10 @@
         "r2": 3,
         "c2": 6
       }
-    ]
+    ],
+    "difficulty": "hard",
+    "timeLimit": 70,
+    "classicMoveLimit": 9
   },
   {
     "id": "p3_039",
@@ -2259,7 +2373,10 @@
         "r2": 7,
         "c2": 3
       }
-    ]
+    ],
+    "difficulty": "hard",
+    "timeLimit": 70,
+    "classicMoveLimit": 9
   },
   {
     "id": "p3_040",
@@ -2317,7 +2434,10 @@
         "r2": 2,
         "c2": 1
       }
-    ]
+    ],
+    "difficulty": "hard",
+    "timeLimit": 70,
+    "classicMoveLimit": 9
   },
   {
     "id": "p3_041",
@@ -2375,7 +2495,10 @@
         "r2": 0,
         "c2": 6
       }
-    ]
+    ],
+    "difficulty": "hard",
+    "timeLimit": 70,
+    "classicMoveLimit": 9
   },
   {
     "id": "p3_042",
@@ -2433,7 +2556,10 @@
         "r2": 3,
         "c2": 1
       }
-    ]
+    ],
+    "difficulty": "hard",
+    "timeLimit": 70,
+    "classicMoveLimit": 9
   },
   {
     "id": "p3_043",
@@ -2491,7 +2617,10 @@
         "r2": 7,
         "c2": 5
       }
-    ]
+    ],
+    "difficulty": "hardest",
+    "timeLimit": 70,
+    "classicMoveLimit": 7
   },
   {
     "id": "p3_044",
@@ -2549,7 +2678,10 @@
         "r2": 6,
         "c2": 0
       }
-    ]
+    ],
+    "difficulty": "hardest",
+    "timeLimit": 70,
+    "classicMoveLimit": 7
   },
   {
     "id": "p3_045",
@@ -2607,7 +2739,10 @@
         "r2": 1,
         "c2": 5
       }
-    ]
+    ],
+    "difficulty": "hardest",
+    "timeLimit": 70,
+    "classicMoveLimit": 7
   },
   {
     "id": "p3_046",
@@ -2665,7 +2800,10 @@
         "r2": 5,
         "c2": 1
       }
-    ]
+    ],
+    "difficulty": "hardest",
+    "timeLimit": 70,
+    "classicMoveLimit": 7
   },
   {
     "id": "p3_047",
@@ -2723,7 +2861,10 @@
         "r2": 4,
         "c2": 1
       }
-    ]
+    ],
+    "difficulty": "hardest",
+    "timeLimit": 70,
+    "classicMoveLimit": 7
   },
   {
     "id": "p3_048",
@@ -2781,7 +2922,10 @@
         "r2": 1,
         "c2": 7
       }
-    ]
+    ],
+    "difficulty": "hardest",
+    "timeLimit": 70,
+    "classicMoveLimit": 7
   },
   {
     "id": "p3_049",
@@ -2839,7 +2983,10 @@
         "r2": 5,
         "c2": 0
       }
-    ]
+    ],
+    "difficulty": "hardest",
+    "timeLimit": 70,
+    "classicMoveLimit": 7
   },
   {
     "id": "p3_050",
@@ -2897,6 +3044,9 @@
         "r2": 3,
         "c2": 3
       }
-    ]
+    ],
+    "difficulty": "hardest",
+    "timeLimit": 70,
+    "classicMoveLimit": 7
   }
 ]

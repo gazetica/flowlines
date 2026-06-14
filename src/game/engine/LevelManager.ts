@@ -5,6 +5,7 @@
 // Imports all four pack JSON files so they bundle into the APK — this closes
 // the "level JSON tree-shaken" issue from Day 12. Packs 3 & 4 are empty for now.
 
+import type { Difficulty } from '../../types/level';
 import pack1 from '../../levels/pack1.json';
 import pack2 from '../../levels/pack2.json';
 import pack3 from '../../levels/pack3.json';
@@ -22,6 +23,12 @@ export type LevelData = {
   grid: number;
   colours: number;
   optimalMoves: number;
+  // FL-UX-D-003 migration fields (optional here so the TEST_LEVEL harness + the
+  // build-time generators, which don't set them, still satisfy LevelData; the
+  // bundled JSON always carries them — see src/types/level.ts `Level`).
+  difficulty?: Difficulty;
+  timeLimit?: number;
+  classicMoveLimit?: number;
   dots: DotPair[];
 };
 
