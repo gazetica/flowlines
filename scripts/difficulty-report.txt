@@ -1,0 +1,131 @@
+
+PACK 1 DIFFICULTY AUDIT
+========================================================================
+ID        Grid   C  OptMv  MinP  MaxP  Var  Rating    Flag
+p1_001    6x6    5  36     3     14    11   easy      
+p1_002    6x6    5  36     3     14    11   easy      
+p1_003    6x6    5  36     4     18    14   medium    
+p1_004    6x6    5  36     3     16    13   medium    
+p1_005    6x6    5  36     5     12    7    easy      
+p1_006    6x6    5  36     3     11    8    easy      
+p1_007    6x6    5  36     4     12    8    easy      
+p1_008    6x6    5  36     3     12    9    easy      
+p1_009    6x6    5  36     4     13    9    easy      
+p1_010    6x6    5  36     3     20    17   medium    
+p1_011    6x6    5  36     3     14    11   easy      
+p1_012    6x6    5  36     4     14    10   easy      
+p1_013    6x6    5  36     3     16    13   medium    
+p1_014    6x6    5  36     3     13    10   easy      
+p1_015    6x6    5  36     3     12    9    easy      
+p1_016    6x6    5  36     3     14    11   easy      
+p1_017    6x6    5  36     3     11    8    easy      
+p1_018    6x6    5  36     5     12    7    easy      
+p1_019    6x6    5  36     3     17    14   medium    
+p1_020    6x6    5  36     4     14    10   easy      
+p1_021    6x6    5  36     3     15    12   easy      
+p1_022    6x6    5  36     4     14    10   easy      
+p1_023    6x6    5  36     3     10    7    easy      
+p1_024    6x6    5  36     3     12    9    easy      
+p1_025    6x6    5  36     3     12    9    easy      
+p1_026    6x6    5  36     6     8     2    trivial   variance 2 — paths near-equal (monotonous)
+p1_027    6x6    5  36     3     12    9    easy      
+p1_028    6x6    5  36     3     13    10   easy      
+p1_029    6x6    5  36     3     13    10   easy      
+p1_030    6x6    5  36     4     17    13   medium    
+p1_031    6x6    5  36     5     11    6    easy      
+p1_032    6x6    5  36     3     13    10   easy      
+p1_033    6x6    5  36     4     14    10   easy      
+p1_034    6x6    5  36     4     14    10   easy      
+p1_035    6x6    5  36     3     16    13   medium    
+p1_036    6x6    5  36     3     11    8    easy      
+p1_037    6x6    5  36     4     12    8    easy      
+p1_038    6x6    5  36     5     10    5    trivial   variance 5 — paths near-equal (monotonous)
+p1_039    6x6    5  36     4     18    14   medium    
+p1_040    6x6    5  36     4     10    6    easy      
+p1_041    6x6    5  36     4     12    8    easy      
+p1_042    6x6    5  36     3     15    12   easy      
+p1_043    6x6    5  36     4     19    15   medium    
+p1_044    6x6    5  36     5     9     4    trivial   variance 4 — paths near-equal (monotonous)
+p1_045    6x6    5  36     3     13    10   easy      
+p1_046    6x6    5  36     3     10    7    easy      
+p1_047    6x6    5  36     3     14    11   easy      
+p1_048    6x6    5  36     3     12    9    easy      
+p1_049    6x6    5  36     3     16    13   medium    
+p1_050    6x6    5  36     5     12    7    easy      
+
+PACK 2 DIFFICULTY AUDIT
+========================================================================
+ID        Grid   C  OptMv  MinP  MaxP  Var  Rating    Flag
+p2_001    7x7    6  49     3     24    21   medium    
+p2_002    7x7    6  49     4     17    13   easy      
+p2_003    7x7    6  49     3     19    16   easy      
+p2_004    7x7    6  49     5     12    7    trivial   variance 7 — paths near-equal (monotonous)
+p2_005    7x7    6  49     3     13    10   easy      
+p2_006    7x7    6  49     4     20    16   easy      
+p2_007    7x7    6  49     5     12    7    trivial   variance 7 — paths near-equal (monotonous)
+p2_008    7x7    6  49     6     13    7    trivial   variance 7 — paths near-equal (monotonous)
+p2_009    7x7    6  49     3     13    10   easy      
+p2_010    7x7    6  49     3     14    11   easy      
+p2_011    7x7    6  49     4     18    14   easy      
+p2_012    7x7    6  49     3     15    12   easy      
+p2_013    7x7    6  49     3     17    14   easy      
+p2_014    7x7    6  49     3     16    13   easy      
+p2_015    7x7    6  49     5     14    9    easy      
+p2_016    7x7    6  49     5     13    8    easy      
+p2_017    7x7    6  49     4     11    7    trivial   variance 7 — paths near-equal (monotonous)
+p2_018    7x7    6  49     4     15    11   easy      
+p2_019    7x7    6  49     4     17    13   easy      
+p2_020    7x7    6  49     5     13    8    easy      
+p2_021    7x7    6  49     3     19    16   easy      
+p2_022    7x7    6  49     3     18    15   easy      
+p2_023    7x7    6  49     3     13    10   easy      
+p2_024    7x7    6  49     5     14    9    easy      
+p2_025    7x7    6  49     3     16    13   easy      
+p2_026    7x7    6  49     4     11    7    trivial   variance 7 — paths near-equal (monotonous)
+p2_027    7x7    6  49     4     11    7    trivial   variance 7 — paths near-equal (monotonous)
+p2_028    7x7    6  49     3     13    10   easy      
+p2_029    7x7    6  49     3     17    14   easy      
+p2_030    7x7    6  49     3     14    11   easy      
+p2_031    7x7    6  49     3     12    9    easy      
+p2_032    7x7    6  49     5     14    9    easy      
+p2_033    7x7    6  49     3     16    13   easy      
+p2_034    7x7    6  49     4     19    15   easy      
+p2_035    7x7    6  49     5     15    10   easy      
+p2_036    7x7    6  49     5     13    8    easy      
+p2_037    7x7    6  49     4     18    14   easy      
+p2_038    7x7    6  49     3     17    14   easy      
+p2_039    7x7    6  49     3     17    14   easy      
+p2_040    7x7    6  49     3     17    14   easy      
+p2_041    7x7    6  49     6     12    6    trivial   variance 6 — paths near-equal (monotonous)
+p2_042    7x7    6  49     5     14    9    easy      
+p2_043    7x7    6  49     4     16    12   easy      
+p2_044    7x7    6  49     5     14    9    easy      
+p2_045    7x7    6  49     3     16    13   easy      
+p2_046    7x7    6  49     5     12    7    trivial   variance 7 — paths near-equal (monotonous)
+p2_047    7x7    6  49     6     15    9    easy      
+p2_048    7x7    6  49     3     16    13   easy      
+p2_049    7x7    6  49     3     16    13   easy      
+p2_050    7x7    6  49     4     13    9    easy      
+
+SUMMARY
+  Total levels audited:        100
+  Trivial (minPath<=2 / low var): 11
+  Hard (variance > 60% of grid^2): 0
+  Well-distributed (easy/medium):  89
+
+RECOMMENDED REGENERATION CANDIDATES:
+  p1_026  — variance 2 — paths near-equal (monotonous)
+  p1_038  — variance 5 — paths near-equal (monotonous)
+  p1_044  — variance 4 — paths near-equal (monotonous)
+  p2_004  — variance 7 — paths near-equal (monotonous)
+  p2_007  — variance 7 — paths near-equal (monotonous)
+  p2_008  — variance 7 — paths near-equal (monotonous)
+  p2_017  — variance 7 — paths near-equal (monotonous)
+  p2_026  — variance 7 — paths near-equal (monotonous)
+  p2_027  — variance 7 — paths near-equal (monotonous)
+  p2_041  — variance 6 — paths near-equal (monotonous)
+  p2_046  — variance 7 — paths near-equal (monotonous)
+
+(Note: --deep multi-solution counting is unavailable — PathSolver.solve
+ returns a single solution and is LOCKED, so alternative-path counting is
+ out of scope. Metrics above derive from that one canonical solution.)

@@ -48,6 +48,7 @@ export default function DailyScreen() {
   const gateClosed = lastDaily === today;
 
   const [dailyRows, setDailyRows] = useState<DailyScoreRow[]>([]);
+  const [completionMessage, setCompletionMessage] = useState<string | null>(null);
 
   // On mount: record a fresh completion (streak + gems + Supabase score), then
   // always refresh today's daily leaderboard so the completed card can show it.
@@ -66,7 +67,18 @@ export default function DailyScreen() {
           await store.resetDailyStreak();
           await store.incrementDailyStreak(); // start fresh streak at 1
         }
-        await store.addGems(3); // daily reward
+        // C.2: Day 7 (and every 7th day) awards +7 gems instead of +3.
+        const newStreak = useFlowSettingsStore.getState().dailyStreakFL;
+        const isWeekMilestone = newStreak > 0 && newStreak % 7 === 0;
+        const gemReward = isWeekMilestone ? 7 : 3;
+        await store.addGems(gemReward);
+        if (!cancelled) {
+          setCompletionMessage(
+            isWeekMilestone
+              ? `🔥 ${newStreak}-Day Streak! Bonus: +${gemReward} 💎`
+              : `+${gemReward} 💎 added!`,
+          );
+        }
         const g = useFlowGameStore.getState();
         await submitDailyScore(g.score, g.moveCount); // flowlines_daily_scores
       }
@@ -109,6 +121,9 @@ export default function DailyScreen() {
             <div style={{ fontFamily: skin.fontDisplay, fontSize: 18, color: skin.purpleLight }}>✓ COMPLETED</div>
             <div style={{ fontSize: 13, color: skin.muted, marginTop: 10 }}>Come back tomorrow for a new puzzle</div>
             <div style={{ fontSize: 12, color: GOLD, marginTop: 12 }}>Current streak: {streak} day{streak === 1 ? '' : 's'} 🔥</div>
+            {completionMessage && (
+              <div style={{ color: '#EF9F27', fontSize: 14, marginTop: 6 }}>{completionMessage}</div>
+            )}
 
             {dailyRows.length > 0 && (
               <div style={{ marginTop: 16, textAlign: 'left' }}>

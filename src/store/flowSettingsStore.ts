@@ -26,6 +26,7 @@ const KEYS = {
   LAST_DAILY:      'FL_LAST_DAILY_DATE',
   FIRST_LAUNCH:    'FL_FIRST_LAUNCH',
   CONSENT_REQ:     'FL_CONSENT_REQUESTED',
+  NOTIF_SCHED:     'FL_NOTIF_SCHEDULED',
 } as const;
 
 interface PackLevelProgress {
@@ -57,6 +58,7 @@ interface FlowSettingsState {
   // Onboarding
   firstLaunchComplete: boolean;
   consentRequested: boolean;
+  notificationScheduled: boolean;
 
   // Hydration flag
   hydrated: boolean;
@@ -76,6 +78,7 @@ interface FlowSettingsState {
   resetDailyStreak: () => Promise<void>;
   completeFirstLaunch: () => void;
   markConsentRequested: () => void;
+  markNotificationScheduled: () => void;
   hydrate: () => Promise<void>;
 }
 
@@ -94,6 +97,7 @@ export const useFlowSettingsStore = create<FlowSettingsState>((set, get) => ({
   lastDailyDateFL: '',
   firstLaunchComplete: false,
   consentRequested: false,
+  notificationScheduled: false,
   hydrated: false,
 
   setAlias: async (v) => {
@@ -198,6 +202,13 @@ export const useFlowSettingsStore = create<FlowSettingsState>((set, get) => ({
     void Preferences.set({ key: KEYS.CONSENT_REQ, value: 'true' });
   },
 
+  // markNotificationScheduled — set once the daily reminder has been scheduled
+  // (FL-UX-C: after first win) so the permission is never requested twice.
+  markNotificationScheduled: () => {
+    set({ notificationScheduled: true });
+    void Preferences.set({ key: KEYS.NOTIF_SCHED, value: 'true' });
+  },
+
   // Hydrate — called once on app startup to load persisted state.
   hydrate: async () => {
     const read = async (key: string) =>
@@ -215,6 +226,7 @@ export const useFlowSettingsStore = create<FlowSettingsState>((set, get) => ({
     const lastDaily = (await read(KEYS.LAST_DAILY)) || '';
     const firstLaunchComplete = (await read(KEYS.FIRST_LAUNCH)) === 'true';
     const consentRequested = (await read(KEYS.CONSENT_REQ)) === 'true';
+    const notificationScheduled = (await read(KEYS.NOTIF_SCHED)) === 'true';
 
     let packProgress: Record<number, PackLevelProgress> = {};
     try {
@@ -245,6 +257,7 @@ export const useFlowSettingsStore = create<FlowSettingsState>((set, get) => ({
       lastDailyDateFL: lastDaily,
       firstLaunchComplete,
       consentRequested,
+      notificationScheduled,
       packProgress,
       hydrated: true,
     });

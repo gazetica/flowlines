@@ -16,6 +16,7 @@ import { onLevelComplete } from '../services/interstitialAdService';
 import { submitCampaignScore } from '../services/flCampaignScores';
 import { trackLevelComplete } from '../services/analytics';
 import { requestAndResolve } from '../services/consentService';
+import { requestNotificationPermission, scheduleDailyReminder } from '../services/notificationService';
 import { flagOf } from './CountrySelector';
 import { GazeticaPromoCard } from './GazeticaPromoCard';
 
@@ -87,6 +88,17 @@ export function ResultScreen() {
     if (!settings.consentRequested) {
       settings.markConsentRequested();
       setTimeout(() => { void requestAndResolve(); }, 800);
+    }
+
+    // FL-UX-C C.1: request notification permission once (after first win) and
+    // schedule the 20:00 daily reminder if granted. Persisted → never asks twice.
+    if (!settings.notificationScheduled) {
+      void requestNotificationPermission().then((granted) => {
+        if (granted) {
+          void scheduleDailyReminder();
+          settings.markNotificationScheduled();
+        }
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

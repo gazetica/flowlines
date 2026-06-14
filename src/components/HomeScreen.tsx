@@ -79,6 +79,9 @@ export function HomeScreen() {
         {/* Progress summary */}
         <div style={{ fontSize: 12, color: skin.muted }}>
           Solved: {totalSolved} &nbsp;|&nbsp; Streak: {dailyStreak}
+          {dailyStreak > 0 && dailyStreak % 7 === 0 && (
+            <span style={{ color: '#EF9F27', marginLeft: 4 }}>✨</span>
+          )}
         </div>
 
         {/* CONTINUE card */}
