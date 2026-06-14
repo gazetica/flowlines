@@ -102,12 +102,14 @@ export function unload(): void {
 
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
 
+// WAV (not mp3): the assets are synthesised via Python stdlib (no ffmpeg to
+// transcode) — Howler picks the codec by extension (see scripts/generate_sounds.py).
 const FL_SFX: Record<string, Sfx> = {
-  pathDraw: { src: '/sounds/path-draw.mp3', volume: 0.3, howl: null },
-  lockIn:   { src: '/sounds/lock-in.mp3',   volume: 0.7, howl: null },
-  undo:     { src: '/sounds/undo.mp3',      volume: 0.7, howl: null },
-  win:      { src: '/sounds/win.mp3',       volume: 0.7, howl: null },
-  hint:     { src: '/sounds/hint.mp3',      volume: 0.7, howl: null },
+  pathDraw: { src: '/sounds/path-draw.wav', volume: 0.3, howl: null },
+  lockIn:   { src: '/sounds/lock-in.wav',   volume: 0.7, howl: null },
+  undo:     { src: '/sounds/undo.wav',      volume: 0.7, howl: null },
+  win:      { src: '/sounds/win.wav',       volume: 0.7, howl: null },
+  hint:     { src: '/sounds/hint.wav',      volume: 0.7, howl: null },
 };
 
 /** FL Sound toggle gate (read live from flowSettingsStore). */
