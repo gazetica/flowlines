@@ -135,20 +135,49 @@ def gen_hint(rate=44100):
     return write_wav("hint.wav", out, rate)
 
 
-# ── music-loop: 3 sine pads + slow LFO, low-passed, seamless (30s) ───────────
-def gen_music_loop(rate=22050):
-    dur = 30.0
-    n = int(rate * dur)
-    base = [220.0, 330.0, 440.0]  # integer cycles over 30s → seamless seam
-    out = []
+# ── ambient-drops: water-drop soundscape over a soft flow (30s, seamless) ────
+def gen_ambient_drops(duration=30, sr=22050):
+    """Gentle water drops over a low filtered-noise flow. Drops are scheduled
+    only inside [0.8, duration-1.2]s so the loop seam lands in a silent gap →
+    seamless Howler loop. Deterministic (re-seeded so call order can't shift it)."""
+    random.seed(1234)
+    n = int(duration * sr)
+    out = [0.0] * n
+
+    # Layer 1 — soft background flow: white noise → LP 300Hz, very low gain.
+    flow = lowpass([random.uniform(-1, 1) for _ in range(n)], sr, 300)
     for i in range(n):
-        t = i / rate
-        lfo = 1.0 + 0.15 * math.sin(2 * math.pi * 0.1 * t)  # 3 whole LFO cycles
-        s = sum(math.sin(2 * math.pi * f * t) for f in base) / len(base)
-        out.append(s * 0.5 * lfo)
-    out = lowpass(out, rate, 600)
-    edge_fade(out, rate, 10)  # tiny anti-click only (kept seamless; see report)
-    return write_wav("music-loop.wav", out, rate)
+        out[i] += flow[i] * 0.04
+
+    def add_drop(start_s, f0, vol, dur_s, decay):
+        start = int(start_s * sr)
+        for i in range(int(dur_s * sr)):
+            if start + i >= n:
+                break
+            t = i / sr
+            f = f0 - (f0 * 0.5) * (t / dur_s)        # chirp down ~half an octave
+            env = math.exp(-t * decay) if t > 0.003 else t / 0.003
+            out[start + i] += math.sin(2 * math.pi * f * t) * vol * env
+
+    # Layer 2 — sporadic surface drops (~every 0.8–2.5s), ~15–20 over 30s.
+    drops = 0
+    t = 0.8
+    while t < duration - 1.2:
+        add_drop(t, random.uniform(600, 1200), random.uniform(0.3, 0.7), 0.15, 26)
+        drops += 1
+        t += random.uniform(0.8, 2.5)
+
+    # Layer 3 — occasional deep resonant drop (every 5–8s) for depth.
+    t = random.uniform(5, 8)
+    while t < duration - 1.2:
+        add_drop(t, 180, 0.25, 0.4, 7)
+        t += random.uniform(5, 8)
+
+    peak = max(1e-6, max(abs(s) for s in out))
+    out = [s / peak * 0.7 for s in out]  # normalise to 0.7 peak
+    edge_fade(out, sr, 500)              # 0.5s fade in/out at the loop seam
+    print(f"  (ambient-drops: ~{drops} surface drops)")
+    return write_wav("ambient-drops.wav", out, sr)
 
 
 print("Generating Flow Lines audio ->", OUT)
@@ -157,5 +186,5 @@ gen_lock_in()
 gen_undo()
 gen_win()
 gen_hint()
-gen_music_loop()
+gen_ambient_drops()
 print("Done.")

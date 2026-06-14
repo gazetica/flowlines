@@ -110,7 +110,7 @@ export function teardown(): void {
 
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
 
-const FL_MUSIC_SRC = '/sounds/music-loop.wav'; // synthesised WAV (no ffmpeg); see scripts/generate_sounds.py
+const FL_MUSIC_SRC = '/sounds/ambient-drops.wav'; // water-drop ambient (no ffmpeg); see scripts/generate_sounds.py
 const FL_MUSIC_VOLUME = 0.35;
 
 let flHowl: Howl | null = null;
