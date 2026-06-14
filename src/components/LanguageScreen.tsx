@@ -12,7 +12,7 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { skin } from '../styles/skin';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
-import { ParticleCanvas } from './ParticleCanvas';
+import { FloatingPathCanvas } from './FloatingPathCanvas';
 import { COUNTRIES, flagOf, filterCountries } from '../data/countries';
 
 const GOLD = '#FFD700';
@@ -103,7 +103,7 @@ export function LanguageScreen() {
         display: 'flex', flexDirection: 'column', fontFamily: skin.fontBody, overflow: 'hidden',
       }}
     >
-      <ParticleCanvas />
+      <FloatingPathCanvas />
 
       {/* Header */}
       <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', padding: '16px 20px 0' }}>

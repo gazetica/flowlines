@@ -11,7 +11,7 @@ import type { CSSProperties, ReactNode, PointerEvent as ReactPointerEvent } from
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { skin } from '../styles/skin';
-import { ParticleCanvas } from './ParticleCanvas';
+import { FloatingPathCanvas } from './FloatingPathCanvas';
 
 const GOLD = '#FFD700';
 const DARK = '#0D0620'; // FL bg-deep (button text on gold)
@@ -297,7 +297,7 @@ export function HowToPlayScreen() {
         display: 'flex', flexDirection: 'column', fontFamily: skin.fontBody,
       }}
     >
-      <ParticleCanvas />
+      <FloatingPathCanvas />
       <style>{`@keyframes htpFade { from { opacity: 0 } to { opacity: 1 } }`}</style>
 
       {/* Header */}
