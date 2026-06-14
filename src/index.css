@@ -119,3 +119,14 @@ html, body, #root {
   transition: border-color 0.15s ease;
 }
 .btn-outline:hover { border-color: rgba(30,139,195,0.7); }
+
+/* —— FL-UX-A: screen transitions (animation driven inline by PageTransition) —— */
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+@keyframes fadeUpIn {
+  from { transform: translateY(40px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}

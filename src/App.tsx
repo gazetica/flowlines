@@ -16,6 +16,7 @@ import * as analytics from './services/analytics';
 import * as musicService from './services/musicService';
 import { useFlowSettingsStore } from './store/flowSettingsStore';
 
+import { PageTransition } from './components/PageTransition';
 import SplashScreen from './components/SplashScreen';
 import HomeScreen from './components/HomeScreen';
 import GameScreen from './components/GameScreen';
@@ -57,7 +58,8 @@ export function App() {
 
   return (
     <BrowserRouter>
-      <Routes>
+      <PageTransition>
+        <Routes>
         <Route path="/" element={<SplashScreen />} />
         <Route path="/home" element={<HomeScreen />} />
         <Route path="/game" element={<GameScreen />} />
@@ -73,8 +75,9 @@ export function App() {
         <Route path="/country" element={<CountrySelector />} />
         <Route path="/store" element={<IAPScreen />} />
         {/* Unknown routes return to splash, which re-routes appropriately. */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </PageTransition>
     </BrowserRouter>
   );
 }

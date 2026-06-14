@@ -93,3 +93,78 @@ export function unload(): void {
   }
   loaded = false;
 }
+
+// ─── FL-UX-A: Flow Lines sound effects ───────────────────────────────────────
+// Separate from the Numtap SFX above (those use the Numtap settings store + tick/
+// correct/wrong assets). FL effects read the FL Sound toggle live so a mid-game
+// change takes effect at once, and the assets live under /sounds/ (Mahendra adds
+// the files in Task A.1 — until then Howler simply no-ops on a missing file).
+
+import { useFlowSettingsStore } from '../store/flowSettingsStore';
+
+const FL_SFX: Record<string, Sfx> = {
+  pathDraw: { src: '/sounds/path-draw.mp3', volume: 0.3, howl: null },
+  lockIn:   { src: '/sounds/lock-in.mp3',   volume: 0.7, howl: null },
+  undo:     { src: '/sounds/undo.mp3',      volume: 0.7, howl: null },
+  win:      { src: '/sounds/win.mp3',       volume: 0.7, howl: null },
+  hint:     { src: '/sounds/hint.mp3',      volume: 0.7, howl: null },
+};
+
+/** FL Sound toggle gate (read live from flowSettingsStore). */
+function flCanPlay(): boolean {
+  return useFlowSettingsStore.getState().soundEnabled;
+}
+
+/** Lazily build an FL Howl. `loop` is set once at construction (drag loop only). */
+function flHowl(key: string, loop = false): Howl {
+  const sfx = FL_SFX[key];
+  if (!sfx.howl) {
+    sfx.howl = new Howl({ src: [sfx.src], volume: sfx.volume, loop, html5: false, preload: true });
+  }
+  return sfx.howl;
+}
+
+/** Soft drag swoosh — loops at low volume while the player is drawing a path. */
+export function playPathDraw(): void {
+  if (!flCanPlay()) return;
+  const h = flHowl('pathDraw', true);
+  if (!h.playing()) h.play();
+}
+
+/** Stop the drag loop immediately (on pointer release). */
+export function stopPathDraw(): void {
+  FL_SFX.pathDraw.howl?.stop();
+}
+
+/** Short chime — a colour pair connected. */
+export function playLockIn(): void {
+  if (!flCanPlay()) return;
+  flHowl('lockIn').play();
+}
+
+/** Short snap — a path was retracted. */
+export function playUndo(): void {
+  if (!flCanPlay()) return;
+  flHowl('undo').play();
+}
+
+/** Short fanfare — level complete. (Suffixed Fl: the Numtap playWin above owns
+ *  the bare name and a different asset/store.) */
+export function playWinFl(): void {
+  if (!flCanPlay()) return;
+  flHowl('win').play();
+}
+
+/** Soft ping — a hint cell was revealed. */
+export function playHint(): void {
+  if (!flCanPlay()) return;
+  flHowl('hint').play();
+}
+
+/** Free FL buffers (call on GameScreen unmount). */
+export function unloadFl(): void {
+  for (const key of Object.keys(FL_SFX)) {
+    FL_SFX[key].howl?.unload();
+    FL_SFX[key].howl = null;
+  }
+}

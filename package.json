@@ -19,6 +19,7 @@
     "@capacitor/browser": "^8.0.3",
     "@capacitor/cli": "^8.3.4",
     "@capacitor/core": "^8.3.4",
+    "@capacitor/haptics": "^8.0.2",
     "@capacitor/preferences": "^8.0.1",
     "@supabase/supabase-js": "^2.107.0",
     "howler": "^2.2.4",

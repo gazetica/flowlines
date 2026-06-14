@@ -326,6 +326,9 @@ export class GameScene extends Phaser.Scene {
     this.grid = occupyCell(this.grid, cell.row, cell.col, colour);
     this.renderPath(colour, this.activePath);
     this.dispatchCoverage();
+    // FL-UX-A (additive emit, no logic change): a drag has begun — React starts
+    // the path-draw audio loop and stops it on fl:path-release.
+    window.dispatchEvent(new CustomEvent('fl:path-extend'));
   }
 
   private onPointerMove(pointer: Phaser.Input.Pointer): void {
@@ -401,6 +404,8 @@ export class GameScene extends Phaser.Scene {
     this.isDrawing = false;
     this.activeColour = null;
     this.activePath = [];
+    // FL-UX-A (additive emit, no logic change): drag ended — React stops the loop.
+    window.dispatchEvent(new CustomEvent('fl:path-release'));
   }
 
   // ─── Path helpers ────────────────────────────────────────────────────────────
@@ -459,6 +464,9 @@ export class GameScene extends Phaser.Scene {
     this.renderPath(colour, path);
     this.dispatchCoverage();
     this.playLockInAnimation(colour); // Task 13.1 — visual only
+    // FL-UX-A (additive emit, no logic change): a colour pair connected — React
+    // plays the lock-in chime + medium haptic.
+    window.dispatchEvent(new CustomEvent('fl:colour-locked'));
     this.checkWin();
   }
 

@@ -16,6 +16,11 @@ import { useFlowGameStore } from '../store/flowGameStore';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
 import { showHintAd, loadHintAd } from '../services/rewardedAdService';
 import { trackLevelStart, trackLevelAbandon, trackHintRequested, trackAdImpression } from '../services/analytics';
+import {
+  playPathDraw, stopPathDraw, playLockIn, playUndo, playWinFl, playHint,
+} from '../services/soundService';
+import { startGameMusic, stopGameMusic, pauseGameMusic, resumeGameMusic } from '../services/musicService';
+import { hapticLockIn, hapticWin, hapticUndo } from '../services/hapticService';
 import BuyHintModal from './BuyHintModal';
 
 const MAX_HINTS = 3;
@@ -104,6 +109,19 @@ export function GameScreen() {
       });
     });
 
+    // RESIZE mode sets cameras.main width/height only after its first (async)
+    // resize event, which can land AFTER GameScene.create()/loadLevel() runs its
+    // layout — leaving the grid computed against stale dims (rendered low). Once
+    // the dims have settled, refresh the scale and re-run the public loadLevel so
+    // computeLayout re-centres the grid with correct camera dimensions.
+    const resizeTimer = setTimeout(() => {
+      const g = gameRef.current;
+      if (!g) return;
+      g.scale.refresh();
+      const scene = g.scene.getScene('GameScene') as GameScene | null;
+      scene?.loadLevel(config);
+    }, 150);
+
     // Win → compute score/stars with the real optimalMoves. Daily mode returns
     // to /daily (records streak + reward); otherwise go to the result screen.
     const handleWin = () => {
@@ -122,12 +140,49 @@ export function GameScreen() {
     });
 
     return () => {
+      clearTimeout(resizeTimer);
       window.removeEventListener('fl:win', handleWin);
       void backHandler.then((h) => h.remove());
       gameRef.current?.destroy(true);
       gameRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Audio + haptics: gameplay music on mount (fades out on unmount) and SFX/
+  // haptics driven by the GameScene window events (fl:path-extend/release/
+  // colour-locked/undo/win). Each play self-gates on its Settings toggle.
+  useEffect(() => {
+    startGameMusic();
+
+    const onPathExtend = () => playPathDraw();
+    const onPathRelease = () => stopPathDraw();
+    const onColourLocked = () => { playLockIn(); void hapticLockIn(); };
+    const onUndoFx = () => { playUndo(); void hapticUndo(); };
+    const onWinFx = () => { playWinFl(); void hapticWin(); };
+
+    window.addEventListener('fl:path-extend', onPathExtend);
+    window.addEventListener('fl:path-release', onPathRelease);
+    window.addEventListener('fl:colour-locked', onColourLocked);
+    window.addEventListener('fl:undo', onUndoFx);
+    window.addEventListener('fl:win', onWinFx);
+
+    // Pause/resume the gameplay loop with app background/foreground.
+    const lifecycle = App.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) resumeGameMusic();
+      else pauseGameMusic();
+    });
+
+    return () => {
+      stopPathDraw();
+      stopGameMusic();
+      window.removeEventListener('fl:path-extend', onPathExtend);
+      window.removeEventListener('fl:path-release', onPathRelease);
+      window.removeEventListener('fl:colour-locked', onColourLocked);
+      window.removeEventListener('fl:undo', onUndoFx);
+      window.removeEventListener('fl:win', onWinFx);
+      void lifecycle.then((h) => h.remove());
+    };
   }, []);
 
   const confirmAbandon = () => {
@@ -155,6 +210,7 @@ export function GameScreen() {
         { grid: levelData.grid, dots: levelData.dots as DotPair[] },
         (row, col) => {
           scene.showHint(row, col);
+          playHint(); // soft ping on hint reveal
           useFlowGameStore.getState().useHint(); // 0 gems awarded (FL rule)
         },
       );
@@ -176,15 +232,32 @@ export function GameScreen() {
       <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', background: 'rgba(0,0,0,0.4)' }}>
         <div
           style={{
+            position: 'relative',
             display: 'flex',
             justifyContent: 'space-between',
+            alignItems: 'center',
             padding: '8px 16px 4px',
             fontFamily: skin.fontDisplay,
             color: skin.white,
             fontSize: 12,
           }}
         >
-          <span>Moves: {moveCount}</span>
+          {/* Level ID — top-centre, so players always know where they are. */}
+          <span
+            style={{
+              position: 'absolute',
+              left: '50%',
+              top: 6,
+              transform: 'translateX(-50%)',
+              fontFamily: skin.fontDisplay,
+              fontSize: 8,
+              color: skin.muted,
+              letterSpacing: 1,
+            }}
+          >
+            P{levelData.pack} · L{String(levelIndex).padStart(3, '0')}
+          </span>
+          <span>Moves: <span style={{ color: skin.gold }}>{moveCount}</span></span>
           <span>Coverage: {coverage}%</span>
           {/* HINT — remaining count (not used). Gold/active until exhausted. */}
           <button
@@ -213,7 +286,7 @@ export function GameScreen() {
             style={{
               height: '100%',
               width: `${coverage}%`,
-              background: skin.coverageGradient,
+              background: 'linear-gradient(90deg, #7F77DD, #EF9F27)',
               borderRadius: 2,
               transition: 'width 0.1s ease-out',
             }}

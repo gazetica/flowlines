@@ -102,3 +102,56 @@ export function teardown(): void {
   enabled = false;
   backgrounded = false;
 }
+
+// ─── FL-UX-A: Flow Lines gameplay ambient loop ───────────────────────────────
+// A dedicated gameplay track (separate Howl from the Numtap bg_music above) that
+// GameScreen starts on mount and fades out on unmount. Respects the FL Music
+// toggle. Asset added by Mahendra in Task A.1 — Howler no-ops on a missing file.
+
+import { useFlowSettingsStore } from '../store/flowSettingsStore';
+
+const FL_MUSIC_SRC = '/sounds/music-loop.mp3';
+const FL_MUSIC_VOLUME = 0.35;
+
+let flHowl: Howl | null = null;
+
+function ensureFlHowl(): Howl {
+  if (!flHowl) {
+    flHowl = new Howl({
+      src: [FL_MUSIC_SRC],
+      loop: true,
+      volume: FL_MUSIC_VOLUME,
+      html5: false,
+      preload: true,
+    });
+  }
+  return flHowl;
+}
+
+/** Start the gameplay loop (only if the FL Music toggle is on). Idempotent. */
+export function startGameMusic(): void {
+  if (!useFlowSettingsStore.getState().musicEnabled) return;
+  const h = ensureFlHowl();
+  h.volume(FL_MUSIC_VOLUME);
+  if (!h.playing()) h.play();
+}
+
+/** Fade the gameplay loop out over 500ms, then stop. */
+export function stopGameMusic(): void {
+  const h = flHowl;
+  if (!h || !h.playing()) return;
+  h.fade(h.volume(), 0, 500);
+  h.once('fade', () => h.stop());
+}
+
+/** Pause the gameplay loop (app backgrounded). */
+export function pauseGameMusic(): void {
+  flHowl?.pause();
+}
+
+/** Resume the gameplay loop on foreground — only if the Music toggle is on. */
+export function resumeGameMusic(): void {
+  if (!useFlowSettingsStore.getState().musicEnabled) return;
+  const h = flHowl;
+  if (h && !h.playing()) h.play();
+}
