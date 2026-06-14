@@ -38,8 +38,11 @@ describe('LevelManager', () => {
     expect(getLevel(1, 0)).toBeNull();
   });
 
-  it('getLevel(3, 1) returns null (pack 3 empty)', () => {
-    expect(getLevel(3, 1)).toBeNull();
+  it('getLevel(3, 1) returns the first Pack 3 level (populated FL-S5A-025b)', () => {
+    const lvl = getLevel(3, 1);
+    expect(lvl).not.toBeNull();
+    expect(lvl?.id).toBe('p3_001');
+    expect(lvl?.grid).toBe(8);
   });
 
   it('getLevel(99, 1) returns null (unknown pack)', () => {
@@ -58,8 +61,9 @@ describe('LevelManager', () => {
     expect(getPackSize(1)).toBe(50);
   });
 
-  it('getPackSize(3) === 0', () => {
-    expect(getPackSize(3)).toBe(0);
+  it('getPackSize(3) === 50 and getPackSize(4) === 50 (packs populated FL-S5A-025b)', () => {
+    expect(getPackSize(3)).toBe(50);
+    expect(getPackSize(4)).toBe(50);
   });
 
   it("getLevelById('p1_001') returns the correct level", () => {

@@ -8,7 +8,7 @@ import { useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { skin } from '../styles/skin';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
-import { getPackSize } from '../game/engine/LevelManager';
+import { getPackSize, getPackLevelsWithCDN } from '../game/engine/LevelManager';
 
 const GOLD = '#FFD700';
 const GRIDS: Record<number, number> = { 1: 6, 2: 7, 3: 8, 4: 9 };
@@ -36,6 +36,17 @@ export default function LevelSelectScreen() {
   useEffect(() => {
     currentRef.current?.scrollIntoView({ block: 'center' });
   }, []);
+
+  // FL-S5A-025c: fire-and-forget CDN refresh. The UI already shows bundled
+  // levels instantly; this just logs when the CDN advertises a different level
+  // count (e.g. a new pack drop). Fails silently — bundled stays the fallback.
+  useEffect(() => {
+    void getPackLevelsWithCDN(packNum).then((levels) => {
+      if (levels.length !== getPackSize(packNum)) {
+        console.log(`[CDN] Pack ${packNum}: ${levels.length} levels (bundled: ${getPackSize(packNum)})`);
+      }
+    });
+  }, [packNum]);
 
   return (
     <div style={{ width: '100%', height: '100vh', background: skin.bgDeep, display: 'flex', flexDirection: 'column', fontFamily: skin.fontBody }}>

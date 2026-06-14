@@ -67,3 +67,21 @@ export function getNextLevel(levelId: string): LevelData | null {
   const index = Number(match[2]);
   return getLevel(packId, index + 1);
 }
+
+// ─── FL-S5A-025c: optional CDN override (additive — existing exports unchanged) ─
+// All functions above stay synchronous and bundled-only. This new async export
+// layers a Cloudflare R2 override on top: CDN levels win when reachable + valid,
+// otherwise it falls back to the bundled pack. Never throws (cdnLevelService
+// returns null on any failure).
+
+import { fetchPackFromCDN } from '../../services/cdnLevelService';
+
+/**
+ * Pack levels with a CDN-first, bundled-fallback strategy. Used for background
+ * refresh / future Pack 5+ drops. Synchronous callers keep using getPackLevels().
+ */
+export async function getPackLevelsWithCDN(packId: number): Promise<LevelData[]> {
+  const cdnLevels = await fetchPackFromCDN(packId);
+  if (cdnLevels && cdnLevels.length > 0) return cdnLevels;
+  return getPackLevels(packId);
+}
