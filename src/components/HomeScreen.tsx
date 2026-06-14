@@ -1,183 +1,422 @@
 // HomeScreen.tsx
-// Flow Lines | Gazetica Studio | Sprint 3 Day 14 | Task FL-S3-014 (VD-02)
+// Flow Lines | Gazetica Studio | UX Sprint D | Task FL-UX-D-006 (VD-02)
 //
-// Main hub: header + gem badge, progress summary, CONTINUE card, 2×2 mode grid,
-// daily-streak row, BottomNav. Reads (never mutates) flowSettingsStore.
+// Main hub, rebuilt around the FL-UX-D-004 mode architecture:
+//   • Campaign hero card (orange) — anchor mode, independent progression
+//   • Classic hero card (purple) — secondary mode, independent progression
+//   • Daily + Zen 2-column row
+//   • 7-day streak dot row (gold fills, today pulses)
+//   • FloatingPathCanvas living background
+// Reads flowSettingsStore (never mutates). Shared BottomNav reused as-is.
 
 import type { CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { skin } from '../styles/skin';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
+import type { PackModeProgress } from '../store/flowSettingsStore';
+import type { Difficulty } from '../types/level';
+import { flagOf } from '../data/countries';
+import { FloatingPathCanvas } from './FloatingPathCanvas';
 import { BottomNav } from './BottomNav';
 
 const GOLD = '#FFD700';
+const CAMPAIGN_ACCENT = '#E67E22';
+const CLASSIC_ACCENT = '#9B8FFF';
+const ZEN_ACCENT = '#1ABC9C';
 
-function GemBadge({ balance }: { balance: number }) {
+const DAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
+type ModeProgress = Record<number, PackModeProgress>;
+
+interface CurrentPack {
+  packId: number;
+  levelIndex: number;
+  solved: number;
+  difficulty: Difficulty;
+}
+
+function getDifficultyForLevel(levelIndex: number): Difficulty {
+  if (levelIndex <= 15) return 'easy';
+  if (levelIndex <= 30) return 'medium';
+  if (levelIndex <= 42) return 'hard';
+  return 'hardest';
+}
+
+// First pack whose campaign/classic progression isn't finished. Defaults to
+// Pack 1 · Level 1 for a fresh player; Pack 4 · Level 50 once all done.
+function findCurrentPack(progress: ModeProgress): CurrentPack {
+  for (const packId of [1, 2, 3, 4]) {
+    const p = progress[packId];
+    if (!p || p.highestLevelReached < 50) {
+      const levelIndex = p ? p.highestLevelReached : 1; // next level to play (1-indexed)
+      return { packId, levelIndex, solved: p?.solved ?? 0, difficulty: getDifficultyForLevel(levelIndex) };
+    }
+  }
+  return { packId: 4, levelIndex: 50, solved: 50, difficulty: 'hardest' };
+}
+
+function HeroCard({
+  label, icon, accent, gradient, cur, ctaRoute, ctaIdle,
+}: {
+  label: string;
+  icon: string;
+  accent: string;
+  gradient: string;
+  cur: CurrentPack;
+  ctaRoute: string;
+  ctaIdle: string;   // CTA verb for fresh player ("START") vs ongoing ("PLAY")
+}) {
+  const navigate = useNavigate();
+  const fresh = cur.solved === 0 && cur.levelIndex <= 1;
+  const pct = Math.min(100, (cur.solved / 50) * 100);
+
+  const badge: CSSProperties = {
+    background: `${accent}26`,
+    border: `1px solid ${accent}4D`,
+    borderRadius: 8,
+    padding: '3px 8px',
+    fontSize: 10,
+    fontWeight: 700,
+    color: accent,
+    letterSpacing: 0.5,
+  };
+
   return (
     <div
       style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 4,
-        background: 'rgba(255,215,0,0.12)',
-        border: '1px solid rgba(255,215,0,0.3)',
-        borderRadius: 10,
-        padding: '4px 10px',
-        color: GOLD,
-        fontFamily: skin.fontDisplay,
-        fontSize: 12,
+        margin: '0 20px 12px',
+        background: gradient,
+        border: `1px solid ${accent}59`,
+        borderRadius: 16,
+        padding: 16,
+        position: 'relative',
+        overflow: 'hidden',
       }}
     >
-      <span>💎</span>
-      <span>{balance}</span>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{ fontSize: 13, fontWeight: 700, color: accent, letterSpacing: 1.5 }}>
+          {icon} {label}
+        </span>
+        <span style={badge}>{cur.difficulty.toUpperCase()}</span>
+      </div>
+
+      <div style={{ fontSize: 15, fontWeight: 600, color: '#FFFFFF', margin: '6px 0 4px' }}>
+        Pack {cur.packId} · Level {cur.levelIndex}
+      </div>
+
+      <div
+        style={{
+          height: 4,
+          background: 'rgba(255,255,255,0.08)',
+          borderRadius: 2,
+          overflow: 'hidden',
+          marginBottom: 4,
+        }}
+      >
+        <div style={{ height: '100%', width: `${pct}%`, background: gradientForBar(accent) }} />
+      </div>
+
+      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 14 }}>
+        {cur.solved}/50 levels
+      </div>
+
+      <button
+        onPointerDown={() => navigate(ctaRoute)}
+        style={{
+          background: accent,
+          color: skin.bgDeep,
+          border: 'none',
+          borderRadius: 10,
+          padding: '13px 16px',
+          fontSize: 14,
+          fontWeight: 700,
+          letterSpacing: 1,
+          width: '100%',
+          cursor: 'pointer',
+        }}
+      >
+        ▶  {fresh ? `START ${ctaIdle}` : `PLAY ${ctaIdle}`}
+      </button>
     </div>
   );
 }
 
-const MODES: Array<{ title: string; icon: string; subtitle: string; route: string; accent: string; tint: string; circle: string }> = [
-  { title: 'CLASSIC', icon: '🎁', subtitle: 'Packs 1–4',      route: '/packs', accent: '#7F77DD', tint: 'rgba(127,119,221,0.06)', circle: 'rgba(127,119,221,0.15)' },
-  { title: 'TIMED',   icon: '⏱', subtitle: '3 min rush',      route: '/packs', accent: '#E24B4A', tint: 'rgba(226,75,74,0.06)',  circle: 'rgba(226,75,74,0.15)' },
-  { title: 'DAILY',   icon: '📅', subtitle: "Today's puzzle",  route: '/daily', accent: '#EF9F27', tint: 'rgba(239,159,39,0.08)', circle: 'rgba(239,159,39,0.15)' },
-  { title: 'ZEN',     icon: '🧘', subtitle: 'No timer',        route: '/packs', accent: '#639922', tint: 'rgba(99,153,34,0.06)',  circle: 'rgba(99,153,34,0.15)' },
-];
+// Per-mode fill gradient for the progress bar.
+function gradientForBar(accent: string): string {
+  if (accent === CAMPAIGN_ACCENT) return 'linear-gradient(90deg, #E67E22, #FFD700)';
+  return 'linear-gradient(90deg, #7F77DD, #9B59B6)';
+}
 
 export function HomeScreen() {
   const navigate = useNavigate();
+  const alias = useFlowSettingsStore((s) => s.alias);
+  const country = useFlowSettingsStore((s) => s.country);
   const gemBalance = useFlowSettingsStore((s) => s.gemBalance);
-  const packProgress = useFlowSettingsStore((s) => s.packProgress);
-  const dailyStreak = useFlowSettingsStore((s) => s.dailyStreakFL);
+  const campaignProgress = useFlowSettingsStore((s) => s.campaignProgress);
+  const classicProgress = useFlowSettingsStore((s) => s.classicProgress);
+  const dailyProgress = useFlowSettingsStore((s) => s.dailyProgress);
 
-  const totalSolved = [1, 2, 3, 4].reduce((sum, p) => sum + (packProgress[p]?.solved ?? 0), 0);
+  const campaign = findCurrentPack(campaignProgress);
+  const classic = findCurrentPack(classicProgress);
 
-  // Current pack = highest pack with 0 < solved < 50 (in progress).
-  const inProgressPack = [4, 3, 2, 1].find(
-    (p) => (packProgress[p]?.solved ?? 0) > 0 && (packProgress[p]?.solved ?? 0) < 50,
-  );
-  const continueMode = inProgressPack !== undefined;
-  const currentPack = inProgressPack ?? 1;
-  const nextLevel = (packProgress[currentPack]?.solved ?? 0) + 1;
+  const { streakCount, campaignChallengeComplete, classicChallengeComplete } = dailyProgress;
+  const dailyDone = (campaignChallengeComplete ? 1 : 0) + (classicChallengeComplete ? 1 : 0);
 
-  const onContinue = () =>
-    navigate(continueMode ? `/game?pack=${currentPack}&level=${nextLevel}` : '/packs');
+  // Daily status line
+  let dailyStatus: string;
+  let dailyStatusColour: string;
+  if (dailyDone === 0) { dailyStatus = '2 puzzles waiting'; dailyStatusColour = 'rgba(255,255,255,0.6)'; }
+  else if (dailyDone === 1) { dailyStatus = '1 of 2 done ✓'; dailyStatusColour = GOLD; }
+  else { dailyStatus = 'All done today! ✓'; dailyStatusColour = '#2ECC71'; }
 
-  const card: CSSProperties = {
-    background: 'rgba(255,255,255,0.04)',
-    border: '1px solid rgba(127,119,221,0.2)',
-    borderRadius: 8,
-  };
+  const remainingForBonus = 7 - streakCount;
 
   return (
-    <div style={{ width: '100%', height: '100vh', background: skin.bgDeep, display: 'flex', flexDirection: 'column', fontFamily: skin.fontBody }}>
-      {/* Header */}
-      <div className="flex justify-between items-center px-4 py-3">
-        <span style={{ fontFamily: skin.fontDisplay, fontSize: 16, color: GOLD, letterSpacing: 2 }}>FLOW LINES</span>
-        <GemBadge balance={gemBalance} />
-      </div>
+    <div
+      style={{
+        position: 'relative',
+        minHeight: '100dvh',
+        background: 'linear-gradient(160deg, #1A0A3C 0%, #2D1060 100%)',
+        display: 'flex',
+        flexDirection: 'column',
+        fontFamily: skin.fontBody,
+      }}
+    >
+      <FloatingPathCanvas />
+      <style>{`@keyframes flHomePulse { 0%,100% { opacity: 1 } 50% { opacity: 0.6 } }`}</style>
 
       {/* Scrollable content */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-        {/* Progress summary */}
-        <div style={{ fontSize: 12, color: skin.muted }}>
-          Solved: {totalSolved} &nbsp;|&nbsp; Streak: {dailyStreak}
-          {dailyStreak > 0 && dailyStreak % 7 === 0 && (
-            <span style={{ color: '#EF9F27', marginLeft: 4 }}>✨</span>
-          )}
-        </div>
-
-        {/* CONTINUE card */}
-        <button
-          onClick={onContinue}
+      <div
+        style={{
+          position: 'relative',
+          zIndex: 1,
+          flex: 1,
+          overflowY: 'auto',
+          paddingBottom: 16,
+        }}
+      >
+        {/* Section 1 — Top Bar */}
+        <div
           style={{
-            width: '100%',
-            textAlign: 'left',
-            background: GOLD,
-            color: skin.bgDeep,
-            border: 'none',
-            borderRadius: 12,
-            padding: 16,
-            cursor: 'pointer',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            padding: '16px 20px 12px',
           }}
         >
-          <div style={{ fontFamily: skin.fontDisplay, fontSize: 18, fontWeight: 700 }}>
-            ▶ {continueMode ? 'CONTINUE' : 'START PLAYING'}
-          </div>
-          {continueMode && (
-            <div style={{ fontSize: 11, marginTop: 4, opacity: 0.7 }}>
-              Classic · Pack {currentPack} · Level {nextLevel}
-            </div>
-          )}
-        </button>
-
-        {/* Mode grid 2×2 */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-          {MODES.map((m) => (
-            <button
-              key={m.title}
-              onClick={() => navigate(m.route)}
+          <div>
+            <div
               style={{
-                ...card,
-                background: m.tint,
-                borderLeft: `3px solid ${m.accent}`,
-                padding: 14,
-                cursor: 'pointer',
-                textAlign: 'left',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 4,
+                fontFamily: skin.fontDisplay,
+                fontSize: 22,
+                fontWeight: 700,
+                color: GOLD,
+                letterSpacing: 2,
               }}
             >
-              <div
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: '50%',
-                  background: m.circle,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 22,
-                  marginBottom: 6,
-                }}
-              >
-                {m.icon}
-              </div>
-              <span style={{ fontFamily: skin.fontDisplay, fontSize: 11, color: skin.purpleLight, letterSpacing: 1 }}>{m.title}</span>
-              <span style={{ fontSize: 9, color: skin.muted }}>{m.subtitle}</span>
-            </button>
-          ))}
+              FLOW LINES
+            </div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', letterSpacing: 0.5, marginTop: 2 }}>
+              {alias || 'Player'} · {flagOf(country)}
+            </div>
+          </div>
+
+          <button
+            onPointerDown={() => navigate('/store')}
+            style={{
+              background: 'rgba(255,215,0,0.12)',
+              border: '1px solid rgba(255,215,0,0.35)',
+              borderRadius: 20,
+              padding: '6px 12px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              cursor: 'pointer',
+            }}
+          >
+            <span style={{ fontSize: 16 }}>💎</span>
+            <span style={{ fontSize: 15, fontWeight: 700, color: GOLD }}>{gemBalance}</span>
+          </button>
         </div>
 
-        {/* Daily streak row */}
-        <div style={{ ...card, padding: 14 }}>
-          <div style={{ fontSize: 10, color: skin.muted, letterSpacing: 1, marginBottom: 10 }}>DAILY STREAK</div>
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between' }}>
+        {/* Section 2 — Campaign hero card */}
+        <HeroCard
+          label="CAMPAIGN"
+          icon="🎯"
+          accent={CAMPAIGN_ACCENT}
+          gradient="linear-gradient(135deg, rgba(230,126,34,0.12) 0%, rgba(255,215,0,0.06) 100%)"
+          cur={campaign}
+          ctaRoute="/packs?mode=campaign"
+          ctaIdle="CAMPAIGN"
+        />
+
+        {/* Section 3 — Classic hero card */}
+        <HeroCard
+          label="CLASSIC"
+          icon="♟"
+          accent={CLASSIC_ACCENT}
+          gradient="linear-gradient(135deg, rgba(127,119,221,0.12) 0%, rgba(155,89,182,0.06) 100%)"
+          cur={classic}
+          ctaRoute="/packs?mode=classic"
+          ctaIdle="CLASSIC"
+        />
+
+        {/* Section 4 — Daily + Zen row */}
+        <div style={{ margin: '0 20px 12px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          {/* Daily */}
+          <div
+            style={{
+              background: 'rgba(255,215,0,0.06)',
+              border: '1px solid rgba(255,215,0,0.25)',
+              borderRadius: 14,
+              padding: '14px 12px',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
+            <div style={{ fontSize: 12, fontWeight: 700, color: GOLD }}>📅 DAILY</div>
+            <div style={{ fontSize: 12, color: dailyStatusColour, margin: '6px 0' }}>{dailyStatus}</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>
+              🔥 {streakCount} day streak
+            </div>
+            <button
+              onPointerDown={() => navigate('/daily')}
+              style={{
+                marginTop: 'auto',
+                background: 'rgba(255,215,0,0.15)',
+                border: '1px solid rgba(255,215,0,0.3)',
+                borderRadius: 8,
+                padding: 8,
+                fontSize: 11,
+                fontWeight: 700,
+                color: GOLD,
+                textAlign: 'center',
+                cursor: 'pointer',
+              }}
+            >
+              PLAY DAILY
+            </button>
+          </div>
+
+          {/* Zen */}
+          <div
+            style={{
+              background: 'rgba(26,188,156,0.06)',
+              border: '1px solid rgba(26,188,156,0.25)',
+              borderRadius: 14,
+              padding: '14px 12px',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
+            <div style={{ fontSize: 12, fontWeight: 700, color: ZEN_ACCENT }}>🧘 ZEN</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', margin: '6px 0 10px' }}>
+              Your grid<br />Your pace
+            </div>
+            <button
+              onPointerDown={() => navigate('/packs?mode=zen')}
+              style={{
+                marginTop: 'auto',
+                background: 'rgba(26,188,156,0.15)',
+                border: '1px solid rgba(26,188,156,0.3)',
+                borderRadius: 8,
+                padding: 8,
+                fontSize: 11,
+                fontWeight: 700,
+                color: ZEN_ACCENT,
+                textAlign: 'center',
+                cursor: 'pointer',
+              }}
+            >
+              EXPLORE
+            </button>
+          </div>
+        </div>
+
+        {/* Section 5 — Daily streak row */}
+        <div
+          style={{
+            margin: '0 20px 16px',
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(127,119,221,0.2)',
+            borderRadius: 14,
+            padding: '14px 16px',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(127,119,221,0.8)', letterSpacing: 1.5 }}>
+              DAILY STREAK
+            </span>
+            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>
+              {streakCount > 0 ? `Day ${Math.min(streakCount, 7)} of 7` : 'Start your streak!'}
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 6 }}>
             {Array.from({ length: 7 }, (_, i) => {
-              // Fill `dailyStreak` dots from the right.
-              const filled = i >= 7 - Math.min(7, dailyStreak);
+              const completed = i < streakCount;
+              const isToday = i === streakCount && streakCount < 7;
+              const base: CSSProperties = {
+                flex: 1,
+                aspectRatio: '1 / 1',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 14,
+                fontWeight: 700,
+              };
+              if (completed) {
+                return (
+                  <div key={i} style={{ ...base, background: 'rgba(255,215,0,0.2)', border: '1.5px solid #FFD700', color: GOLD }}>
+                    ✓
+                  </div>
+                );
+              }
+              if (isToday) {
+                return (
+                  <div
+                    key={i}
+                    style={{
+                      ...base,
+                      background: 'rgba(127,119,221,0.15)',
+                      border: '1.5px solid rgba(127,119,221,0.5)',
+                      color: 'rgba(255,255,255,0.5)',
+                      animation: 'flHomePulse 2s infinite',
+                    }}
+                  >
+                    {DAY_LETTERS[i]}
+                  </div>
+                );
+              }
               return (
                 <div
                   key={i}
                   style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 13,
-                    background: filled ? 'rgba(255,215,0,0.3)' : 'rgba(127,119,221,0.12)',
-                    color: filled ? GOLD : skin.muted,
+                    ...base,
+                    background: 'rgba(255,255,255,0.04)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    color: 'rgba(255,255,255,0.2)',
                   }}
                 >
-                  {filled ? '✓' : '·'}
+                  {DAY_LETTERS[i]}
                 </div>
               );
             })}
           </div>
+
+          {streakCount >= 5 && streakCount <= 7 && (
+            <div style={{ fontSize: 11, color: GOLD, textAlign: 'center', marginTop: 8 }}>
+              🔥 {remainingForBonus} more day{remainingForBonus === 1 ? '' : 's'} for +7 💎
+            </div>
+          )}
         </div>
       </div>
 
-      <BottomNav />
+      {/* Section 6 — Bottom navigation (shared, Home tab active by route) */}
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        <BottomNav />
+      </div>
     </div>
   );
 }
