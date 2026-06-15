@@ -66,9 +66,26 @@ function formatTime(seconds: number): string {
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
+// FL-UX-D-008j: synthesised timer tick (no audio file). Normal = subtle high
+// click; intense (last 10s) = louder, lower, slightly longer for urgency.
+function playTick(audioCtx: AudioContext, intensity: 'normal' | 'intense') {
+  const oscillator = audioCtx.createOscillator();
+  const gainNode = audioCtx.createGain();
+  oscillator.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
+  oscillator.type = 'sine';
+  oscillator.frequency.setValueAtTime(intensity === 'intense' ? 880 : 1200, audioCtx.currentTime);
+  gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+  gainNode.gain.linearRampToValueAtTime(intensity === 'intense' ? 0.18 : 0.08, audioCtx.currentTime + 0.005);
+  gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + (intensity === 'intense' ? 0.12 : 0.06));
+  oscillator.start(audioCtx.currentTime);
+  oscillator.stop(audioCtx.currentTime + 0.15);
+}
+
 export function GameScreen() {
   const phaserRef = useRef<HTMLDivElement>(null);
   const gameRef = useRef<Phaser.Game | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null); // FL-UX-D-008j tick sound
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -89,6 +106,7 @@ export function GameScreen() {
   const alias = useFlowSettingsStore((s) => s.alias);
   const country = useFlowSettingsStore((s) => s.country);
   const onGestureComplete = useFlowGameStore((s) => s.onGestureComplete);
+  const gestureCount = useFlowGameStore((s) => s.gestureCount);
 
   const [showTutorialHint, setShowTutorialHint] = useState(false);
   const [showAbandonDialog, setShowAbandonDialog] = useState(false);
@@ -124,9 +142,6 @@ export function GameScreen() {
   const timeRemaining = Math.max(0, timeLimitSeconds - timeElapsed);
   const timerDanger = timeRemaining <= 20 && timeRemaining > 0;
   const movesDanger = movesRemaining <= 3;
-
-  const bestTime = campaignProgress[packId]?.bestTimes?.[levelData.id];
-  const bestMoves = classicProgress[packId]?.bestMoves?.[levelData.id];
 
   // FL-UX-D-008b: tiles remaining (replaces the centre coverage% stat).
   const gridSize = levelData.grid ?? 6;
@@ -245,6 +260,19 @@ export function GameScreen() {
     return () => window.removeEventListener('fl:gestureComplete', handleGesture);
   }, [isClassic, onGestureComplete]);
 
+  // ─── FL-UX-D-008j: Campaign timer tick (Web Audio, fires each second). Skips
+  // silently until the AudioContext is created on first pointer interaction.
+  useEffect(() => {
+    if (!isCampaign) return;
+    if (status !== 'playing') return;
+    if (!audioCtxRef.current) return;
+    if (timeLimitSeconds <= 0) return;
+    playTick(audioCtxRef.current, timeRemaining <= 10 ? 'intense' : 'normal');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeElapsed]);
+
+  useEffect(() => () => { void audioCtxRef.current?.close(); }, []);
+
   // ─── FL-UX-D-008: Campaign timeout → fail.
   useEffect(() => {
     if (!isCampaign) return;
@@ -353,28 +381,21 @@ export function GameScreen() {
       ? 'linear-gradient(90deg, #7F77DD, #9B59B6)'
       : 'linear-gradient(90deg, #1ABC9C, #2ECC71)';
 
-  const statLabel: CSSProperties = { fontSize: 9, color: 'rgba(255,255,255,0.4)', letterSpacing: 1 };
+  const statLabel: CSSProperties = { fontSize: 9, color: 'rgba(255,255,255,0.4)', letterSpacing: 1, marginBottom: 2 };
+  const statValue: CSSProperties = { fontFamily: 'monospace', fontWeight: 700, lineHeight: 1 };
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100dvh', overflow: 'hidden', background: '#110527', display: 'flex', flexDirection: 'column' }}>
       {/* ── HUD ────────────────────────────────────────────────────────────── */}
       <div style={{ flexShrink: 0, background: 'rgba(13,6,32,0.92)', borderBottom: '1px solid rgba(127,119,221,0.25)' }}>
         <div style={{ padding: '8px 14px 6px' }}>
-          {/* Breadcrumb row */}
+          {/* Breadcrumb row (no back arrow — device back button only, FL-UX-D-008g) */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <button
-                onPointerDown={() => navigate(-1)}
-                style={{ background: 'none', border: 'none', color: skin.gold, fontSize: 24, cursor: 'pointer', lineHeight: 1, padding: 0 }}
-              >
-                ‹
-              </button>
-              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', letterSpacing: 0.5 }}>
-                {isZen
-                  ? `Zen · ${zenGrid}×${zenGrid} · ${cap(String(difficulty))}`
-                  : `Pack ${levelData.pack} · L${String(levelIndex).padStart(2, '0')} · ${cap(String(difficulty))}`}
-              </span>
-            </div>
+            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', letterSpacing: 0.5 }}>
+              {isZen
+                ? `Zen · ${zenGrid}×${zenGrid} · ${cap(String(difficulty))}`
+                : `Pack ${levelData.pack} · L${String(levelIndex).padStart(2, '0')} · ${cap(String(difficulty))}`}
+            </span>
             {isZen ? (
               <span style={{ background: 'rgba(26,188,156,0.15)', border: '1px solid rgba(26,188,156,0.35)', borderRadius: 8, padding: '3px 8px', fontSize: 10, fontWeight: 700, color: ZEN_TEAL }}>
                 ZEN
@@ -386,67 +407,42 @@ export function GameScreen() {
             )}
           </div>
 
-          {/* Stat row */}
-          {isCampaign && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-              <div>
-                <div style={statLabel}>TIMER</div>
-                <div style={{ fontFamily: 'monospace', fontSize: 26, fontWeight: 700, color: timerDanger ? DANGER : skin.gold, animation: timerDanger ? 'flTimerPulse 0.5s infinite' : undefined }}>
-                  {formatTime(timeRemaining)}
+          {/* Stat row — baseline aligned, TILES primary (FL-UX-D-008j) */}
+          {(isCampaign || isClassic) && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '4px 0 2px' }}>
+              <div style={{ textAlign: 'left', minWidth: 60 }}>
+                <div style={statLabel}>{isCampaign ? 'TIMER' : 'MOVES LEFT'}</div>
+                <div style={{
+                  ...statValue, fontSize: 26,
+                  color: isCampaign ? (timerDanger ? DANGER : skin.gold) : (movesDanger ? DANGER : PURPLE),
+                  animation: (isCampaign && timerDanger) || (isClassic && movesDanger) ? 'flTimerPulse 0.5s ease-in-out infinite' : 'none',
+                }}>
+                  {isCampaign ? formatTime(timeRemaining) : movesRemaining}
                 </div>
               </div>
-              <div style={{ textAlign: 'center' }}>
+              <div style={{ textAlign: 'center', flex: 1 }}>
                 <div style={statLabel}>TILES</div>
-                <div style={{ fontSize: 26, fontWeight: 700, color: tilesRemaining === 0 ? '#2ECC71' : '#FFFFFF' }}>{tilesRemaining}</div>
+                <div style={{ ...statValue, fontSize: 36, color: tilesRemaining === 0 ? '#2ECC71' : skin.gold }}>{tilesRemaining}</div>
               </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={statLabel}>MOVES</div>
-                <div style={{ fontSize: 20, fontWeight: 700, color: 'rgba(255,255,255,0.8)' }}>{moveCount}</div>
-              </div>
-            </div>
-          )}
-
-          {isClassic && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-              <div>
-                <div style={statLabel}>MOVES LEFT</div>
-                <div style={{ fontFamily: 'monospace', fontSize: 26, fontWeight: 700, color: movesDanger ? DANGER : PURPLE, animation: movesDanger ? 'flTimerPulse 0.5s infinite' : undefined }}>
-                  {movesRemaining}
+              <div style={{ textAlign: 'right', minWidth: 60 }}>
+                <div style={statLabel}>{isCampaign ? 'MOVES' : 'TIME'}</div>
+                <div style={{ ...statValue, fontSize: 20, color: 'rgba(255,255,255,0.75)' }}>
+                  {isCampaign ? moveCount : formatTime(timeElapsed)}
                 </div>
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={statLabel}>TILES</div>
-                <div style={{ fontSize: 26, fontWeight: 700, color: tilesRemaining === 0 ? '#2ECC71' : '#FFFFFF' }}>{tilesRemaining}</div>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={statLabel}>TIME</div>
-                <div style={{ fontSize: 18, color: 'rgba(255,255,255,0.5)' }}>{formatTime(timeElapsed)}</div>
               </div>
             </div>
           )}
 
           {isZen && (
-            <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: 4 }}>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 40, alignItems: 'baseline', padding: '4px 0 2px' }}>
               <div style={{ textAlign: 'center' }}>
                 <div style={statLabel}>MOVES</div>
-                <div style={{ fontSize: 24, fontWeight: 700, color: '#FFFFFF' }}>{moveCount}</div>
+                <div style={{ ...statValue, fontSize: 26, color: ZEN_TEAL }}>{moveCount}</div>
               </div>
               <div style={{ textAlign: 'center' }}>
                 <div style={statLabel}>TILES</div>
-                <div style={{ fontSize: 24, fontWeight: 700, color: tilesRemaining === 0 ? '#2ECC71' : '#FFFFFF' }}>{tilesRemaining}</div>
+                <div style={{ ...statValue, fontSize: 36, color: tilesRemaining === 0 ? '#2ECC71' : skin.gold }}>{tilesRemaining}</div>
               </div>
-            </div>
-          )}
-
-          {/* Record row (Campaign / Classic only) */}
-          {isCampaign && (
-            <div style={{ fontSize: 10, color: bestTime !== undefined && timeElapsed < bestTime ? '#2ECC71' : 'rgba(255,255,255,0.25)', textAlign: 'center', marginBottom: 4 }}>
-              vs Record: {bestTime !== undefined ? formatTime(bestTime) : '—:——'}
-            </div>
-          )}
-          {isClassic && (
-            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', textAlign: 'center', marginBottom: 4 }}>
-              vs Record: {bestMoves !== undefined ? `${bestMoves}` : '—'} moves
             </div>
           )}
         </div>
@@ -466,13 +462,21 @@ export function GameScreen() {
       <div
         id="phaser-container"
         ref={phaserRef}
+        onPointerDown={() => {
+          // FL-UX-D-008j: WebView audio policy requires AudioContext creation
+          // after a user gesture — lazily create it on first board touch.
+          if (!audioCtxRef.current) {
+            const Ctor = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+            audioCtxRef.current = new Ctor();
+          }
+        }}
         style={{
           flex: 1,
           minHeight: 0,
           position: 'relative',
           overflow: 'hidden',
-          margin: '8px 12px',
-          borderRadius: 16,
+          margin: '6px 10px',
+          borderRadius: 14,
           border: '1px solid rgba(127,119,221,0.35)',
           background: '#0D0620',
           boxShadow: '0 0 0 1px rgba(127,119,221,0.1), 0 4px 24px rgba(0,0,0,0.4)',
@@ -542,35 +546,29 @@ export function GameScreen() {
         </button>
       </div>
 
-      {/* Layer 3 — YOU vs LEADER (Campaign / Classic; self-competition for now) */}
+      {/* Layer 3 — YOU vs LEADER, two equal cards, Row2 aligned to name (FL-UX-D-008j) */}
       {(isCampaign || isClassic) && (
-        <div style={{ margin: '4px 12px 8px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(127,119,221,0.15)', borderRadius: 12, overflow: 'hidden', display: 'flex' }}>
-          <div style={{ flex: 1, padding: '8px 12px', borderRight: '1px solid rgba(127,119,221,0.12)' }}>
-            <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', letterSpacing: 1.5, marginBottom: 4 }}>YOU</div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', fontWeight: 600, marginBottom: 4 }}>{leaderFlag} {alias || 'Player'}</div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
-              <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)' }}>Score</span>
-              <span style={{ fontSize: 12, color: '#FFFFFF' }}>—</span>
+        <div style={{ display: 'flex', gap: 8, padding: '4px 10px 8px' }}>
+          {/* YOU card */}
+          <div style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(127,119,221,0.2)', borderRadius: 10, padding: '8px 10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 6 }}>
+              <span style={{ fontSize: 8, fontWeight: 700, color: 'rgba(127,119,221,0.7)', letterSpacing: 1.5, minWidth: 28 }}>YOU</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.85)' }}>{leaderFlag} {alias || 'Player'}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
-              <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)' }}>{isClassic ? 'Moves' : 'Time'}</span>
-              <span style={{ fontSize: 12, color: '#FFFFFF' }}>{isClassic ? moveCount : formatTime(timeElapsed)}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingLeft: 33 }}>
+              <div><span style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)' }}>Score </span><span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>—</span></div>
+              <div><span style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)' }}>{isCampaign ? 'Time ' : 'Moves '}</span><span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>{isCampaign ? formatTime(timeElapsed) : gestureCount}</span></div>
             </div>
           </div>
-          <div style={{ flex: 1, padding: '8px 12px' }}>
-            <div style={{ fontSize: 9, color: 'rgba(255,215,0,0.5)', letterSpacing: 1.5, marginBottom: 4 }}>LEADER</div>
-            <div style={{ fontSize: 12, color: skin.gold, fontWeight: 600, marginBottom: 4 }}>{leaderFlag} {leaderAlias}</div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
-              <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)' }}>Score</span>
-              <span style={{ fontSize: 12, color: skin.gold }}>{leaderScore !== null ? leaderScore : '—'}</span>
+          {/* LEADER card */}
+          <div style={{ flex: 1, background: 'rgba(255,215,0,0.03)', border: '1px solid rgba(255,215,0,0.18)', borderRadius: 10, padding: '8px 10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 6 }}>
+              <span style={{ fontSize: 8, fontWeight: 700, color: 'rgba(255,215,0,0.6)', letterSpacing: 1.5, minWidth: 40 }}>LEADER</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: skin.gold }}>{leaderFlag} {leaderAlias}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
-              <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)' }}>{isClassic ? 'Moves' : 'Time'}</span>
-              <span style={{ fontSize: 12, color: 'rgba(255,215,0,0.7)' }}>
-                {isClassic
-                  ? (leaderMoves !== null ? leaderMoves : '—')
-                  : (leaderTime !== null ? formatTime(leaderTime) : '—')}
-              </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingLeft: 45 }}>
+              <div><span style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)' }}>Score </span><span style={{ fontSize: 11, fontWeight: 700, color: skin.gold }}>{leaderScore !== null ? leaderScore : '—'}</span></div>
+              <div><span style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)' }}>{isCampaign ? 'Time ' : 'Moves '}</span><span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,215,0,0.7)' }}>{isCampaign ? (leaderTime !== null ? formatTime(leaderTime) : '—') : (leaderMoves !== null ? leaderMoves : '—')}</span></div>
             </div>
           </div>
         </div>

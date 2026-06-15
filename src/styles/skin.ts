@@ -70,7 +70,7 @@ export const skin = {
     gapSmall:         3,    // cell gap for 6×6 and 7×7 grids
     gapLarge:         2,    // cell gap for 8×8 and 9×9 grids
     cellMinSize:     28,    // minimum cell px for finger accuracy
-    pathStrokeRatio: 0.40,  // path stroke width = cellSize × 0.40
+    pathStrokeRatio: 0.28,  // path stroke width = cellSize × 0.28 (FL-UX-D-008i: −30%)
     dotSizeRatio:    0.42,  // dot endpoint diameter = cellSize × 0.42
     cellRadius:       3,    // border-radius on grid cells (px)
   },

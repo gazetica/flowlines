@@ -37,6 +37,12 @@ function toHex(colour: string): number {
   return Phaser.Display.Color.ValueToColor(colour).color;
 }
 
+/** FL-UX-D-008i: first-letter glyph per colour. V=Violet (purple) so it stays
+ * distinct from P=Pink. */
+const DOT_LETTERS: Record<string, string> = {
+  red: 'R', blue: 'B', green: 'G', yellow: 'Y', purple: 'V', orange: 'O', teal: 'T', pink: 'P',
+};
+
 export class GameScene extends Phaser.Scene {
   private levelConfig: LevelConfig | null = null;
 
@@ -56,6 +62,9 @@ export class GameScene extends Phaser.Scene {
   // the other static layers, so repeated loadLevel() calls don't stack duplicate
   // (offset) dot sets (the "figure-8 double dot" bug).
   private dotEndpointGraphics?: Phaser.GameObjects.Graphics;
+  // FL-UX-D-008i: colour-letter labels inside each endpoint (Graphics can't draw
+  // text). Destroyed+rebuilt each drawDots() so they don't stack on re-render.
+  private dotLetters: Phaser.GameObjects.Text[] = [];
 
   // Per-colour path layers (line + cell fill), kept separate so each can be
   // cleared and redrawn independently without accumulating draw calls.
@@ -67,6 +76,10 @@ export class GameScene extends Phaser.Scene {
   private activePath: Cell[] = [];
   private readonly allPaths: Map<Colour, Cell[]> = new Map();
   private isDrawing = false;
+  // FL-UX-D-008h: colours whose two endpoints are connected. Locked colours can't
+  // be restarted (onPointerDown) or extended further (onPointerMove) — prevents
+  // dragging past a completed connection and wasting a move erasing it.
+  private readonly lockedColours: Set<Colour> = new Set();
 
   // Hint pulse state (FL-S3-013 Task 13.3).
   private hintGraphics?: Phaser.GameObjects.Graphics;
@@ -103,6 +116,9 @@ export class GameScene extends Phaser.Scene {
     this.activePath = [];
     this.isDrawing = false;
     this.allPaths.clear();
+    this.lockedColours.clear(); // FL-UX-D-008h
+    this.dotLetters.forEach((t) => t.destroy()); // FL-UX-D-008i
+    this.dotLetters = [];
     for (const g of this.pathGraphics.values()) g.destroy();
     for (const g of this.cellFillGraphics.values()) g.destroy();
     this.pathGraphics.clear();
@@ -137,15 +153,19 @@ export class GameScene extends Phaser.Scene {
 
     this.gap = N <= 7 ? 3 : 2;
     this.pad = 8;
+    // FL-UX-D-008h: size the cell to the SMALLER available dimension so the square
+    // grid fits both width and height, then centre with equal padding on all sides
+    // (was width-only + a +20 top nudge → big top gap / bottom clip).
+    const availW = w - this.pad * 2 - this.gap * (N - 1);
+    const availH = h - this.pad * 2 - this.gap * (N - 1);
     this.cellSize = Math.max(
       skin.grid.cellMinSize,
-      Math.floor((w - this.pad * 2 - this.gap * (N - 1)) / N),
+      Math.floor(Math.min(availW, availH) / N),
     );
 
-    const gridWidth = this.cellSize * N + this.gap * (N - 1);
-    const gridHeight = gridWidth; // square
-    this.gridOffsetX = (w - gridWidth) / 2;
-    this.gridOffsetY = (h - gridHeight) / 2 + 20; // nudge down to leave HUD room
+    const gridPixel = this.cellSize * N + this.gap * (N - 1);
+    this.gridOffsetX = Math.floor((w - gridPixel) / 2);
+    this.gridOffsetY = Math.floor((h - gridPixel) / 2);
   }
 
   /**
@@ -202,10 +222,21 @@ export class GameScene extends Phaser.Scene {
       for (let col = 0; col < N; col++) {
         const x = this.cellX(col);
         const y = this.cellY(row);
-        g.fillStyle(0xffffff, 0.03);
+        g.fillStyle(0xffffff, 0.04);
         g.fillRoundedRect(x, y, this.cellSize, this.cellSize, radius);
-        g.lineStyle(1, toHex(skin.purple), 0.12);
+        // FL-UX-D-008h: visible cell border (dark purple-grey) so the grid reads
+        // before any path is drawn, plus a top+left highlight for a 3D lift.
+        g.lineStyle(1, 0x3d3560, 0.8);
         g.strokeRoundedRect(x, y, this.cellSize, this.cellSize, radius);
+        g.lineStyle(1, toHex(skin.purple), 0.25);
+        g.beginPath();
+        g.moveTo(x + radius, y + 1);
+        g.lineTo(x + this.cellSize - radius, y + 1);
+        g.strokePath();
+        g.beginPath();
+        g.moveTo(x + 1, y + radius);
+        g.lineTo(x + 1, y + this.cellSize - radius);
+        g.strokePath();
       }
     }
   }
@@ -214,18 +245,34 @@ export class GameScene extends Phaser.Scene {
     this.dotEndpointGraphics?.destroy();
     const g = this.add.graphics();
     this.dotEndpointGraphics = g;
+    // FL-UX-D-008i: rebuild letter labels each render (drawDots runs per renderBoard).
+    this.dotLetters.forEach((t) => t.destroy());
+    this.dotLetters = [];
+
     const dotRadius = (this.cellSize * skin.grid.dotSizeRatio) / 2;
-    const glowRadius = dotRadius + 2;
+    const fontSize = Math.max(8, Math.round(this.cellSize * skin.grid.dotSizeRatio * 0.45));
 
     for (const dot of this.levelConfig!.dots) {
       const hex = toHex(skin.pathColors[dot.colour]);
+      const letter = DOT_LETTERS[dot.colour] ?? dot.colour[0].toUpperCase();
       for (const [r, c] of [[dot.r1, dot.c1], [dot.r2, dot.c2]] as const) {
         const cx = this.cellCentreX(c);
         const cy = this.cellCentreY(r);
-        g.fillStyle(hex, 0.18);
-        g.fillCircle(cx, cy, glowRadius);
+        // FL-UX-D-008j sharp dot: solid fill → glass highlight → crisp white ring
+        // (no shadow drop — that softened the edge).
         g.fillStyle(hex, 1);
         g.fillCircle(cx, cy, dotRadius);
+        g.fillStyle(0xffffff, 0.22);
+        g.fillCircle(cx - dotRadius * 0.28, cy - dotRadius * 0.28, dotRadius * 0.22);
+        g.lineStyle(1.5, 0xffffff, 0.35);
+        g.strokeCircle(cx, cy, dotRadius - 0.5);
+        // Colour letter, centred, above all graphics layers.
+        const text = this.add
+          .text(cx, cy, letter, { fontSize: `${fontSize}px`, fontFamily: 'monospace', fontStyle: 'normal', color: '#FFFFFF' })
+          .setOrigin(0.5, 0.5)
+          .setAlpha(0.85)
+          .setDepth(10);
+        this.dotLetters.push(text);
       }
     }
   }
@@ -317,6 +364,12 @@ export class GameScene extends Phaser.Scene {
 
     const colour = gridCell.colour;
 
+    // FL-UX-D-008i: tapping a connected colour's endpoint REROUTES it — unlock so
+    // the player can redraw it fresh (clearColourPath below wipes the old path).
+    if (this.lockedColours.has(colour)) {
+      this.lockedColours.delete(colour);
+    }
+
     // If this colour already has a path, clear it first (start fresh).
     if (this.allPaths.has(colour)) {
       this.clearColourPath(colour);
@@ -337,6 +390,9 @@ export class GameScene extends Phaser.Scene {
   private onPointerMove(pointer: Phaser.Input.Pointer): void {
     if (!this.isDrawing || !this.activeColour) return;
     if (!pointer.isDown) return;
+    // FL-UX-D-008h: once this colour connected mid-drag, freeze it — no extending
+    // or retracting past the completed connection.
+    if (this.lockedColours.has(this.activeColour)) return;
 
     const cell = this.getCellFromPointer(pointer.x, pointer.y);
     if (!cell) return;
@@ -465,6 +521,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private onPathComplete(colour: Colour, path: Cell[]): void {
+    this.lockedColours.add(colour); // FL-UX-D-008h — lock once connected
     this.allPaths.set(colour, [...path]);
     useFlowGameStore.getState().setPath(colour, path);
     this.renderPath(colour, path);
