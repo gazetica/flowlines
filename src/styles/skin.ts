@@ -71,7 +71,7 @@ export const skin = {
     gapLarge:         2,    // cell gap for 8×8 and 9×9 grids
     cellMinSize:     28,    // minimum cell px for finger accuracy
     pathStrokeRatio: 0.40,  // path stroke width = cellSize × 0.40
-    dotSizeRatio:    0.70,  // dot endpoint diameter = cellSize × 0.70
+    dotSizeRatio:    0.50,  // dot endpoint diameter = cellSize × 0.50
     cellRadius:       3,    // border-radius on grid cells (px)
   },
 
