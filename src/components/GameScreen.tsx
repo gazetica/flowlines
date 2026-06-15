@@ -20,6 +20,7 @@ import type { GameMode } from '../game/engine/ScoreEngine';
 import { skin } from '../styles/skin';
 import { useFlowGameStore } from '../store/flowGameStore';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
+import { flagOf } from '../data/countries';
 import { showHintAd, loadHintAd } from '../services/rewardedAdService';
 import { trackLevelStart, trackLevelAbandon, trackHintRequested, trackAdImpression } from '../services/analytics';
 import {
@@ -54,7 +55,10 @@ const TEST_LEVEL: LevelData = {
   ],
 };
 
+// FL-UX-D-008b: plain seconds under 3 minutes (all Pack timeLimits are ≤180s),
+// switch to M:SS only at 180s+.
 function formatTime(seconds: number): string {
+  if (seconds < 180) return String(seconds);
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
   return `${m}:${String(s).padStart(2, '0')}`;
@@ -82,6 +86,8 @@ export function GameScreen() {
   const firstLaunchComplete = useFlowSettingsStore((s) => s.firstLaunchComplete);
   const campaignProgress = useFlowSettingsStore((s) => s.campaignProgress);
   const classicProgress = useFlowSettingsStore((s) => s.classicProgress);
+  const alias = useFlowSettingsStore((s) => s.alias);
+  const country = useFlowSettingsStore((s) => s.country);
 
   const [showTutorialHint, setShowTutorialHint] = useState(false);
   const [showAbandonDialog, setShowAbandonDialog] = useState(false);
@@ -120,6 +126,21 @@ export function GameScreen() {
 
   const bestTime = campaignProgress[packId]?.bestTimes?.[levelData.id];
   const bestMoves = classicProgress[packId]?.bestMoves?.[levelData.id];
+
+  // FL-UX-D-008b: tiles remaining (replaces the centre coverage% stat).
+  const gridSize = levelData.grid ?? 6;
+  const totalTiles = gridSize * gridSize;
+  const filledTiles = Math.round((coverage / 100) * totalTiles);
+  const tilesRemaining = Math.max(0, totalTiles - filledTiles);
+
+  // FL-UX-D-008b: YOU vs LEADER panel — personal best stands in as "leader"
+  // (self-competition) until the Supabase leaderboard fetch is wired separately.
+  const modeProg = isClassic ? classicProgress[packId] : campaignProgress[packId];
+  const leaderScore = modeProg?.bestScores?.[levelData.id] ?? null;
+  const leaderTime = modeProg?.bestTimes?.[levelData.id] ?? null;
+  const leaderMoves = modeProg?.bestMoves?.[levelData.id] ?? null;
+  const leaderAlias = alias || 'Player';
+  const leaderFlag = flagOf(country || 'IN');
 
   // ─── Phaser mount (UNCHANGED from prior implementation) ──────────────────────
   useEffect(() => {
@@ -305,35 +326,16 @@ export function GameScreen() {
     }
   };
 
-  // RESET — reload the level in GameScene (only public reset path available) and
-  // re-init the store mode/limits.
-  const handleReset = () => {
-    const scene = gameRef.current?.scene.getScene('GameScene') as GameScene | undefined;
-    if (!scene) return;
-    scene.loadLevel({ grid: levelData.grid, dots: levelData.dots as LevelConfig['dots'] });
-    useFlowGameStore.getState().initLevel({
-      levelId: levelData.id,
-      mode,
-      timeLimit: isCampaign ? (levelData.timeLimit ?? 90) : 0,
-      classicMoveLimit: isClassic ? (levelData.classicMoveLimit ?? 15) : 0,
-    });
-  };
-
-  // UNDO — GameScene exposes no undo method (only loadLevel/showHint) and is
-  // LOCKED, so a functional button-driven undo isn't possible yet. Stubbed +
-  // flagged; the in-game drag-back retraction still works as the real undo.
-  const handleUndo = () => {
-    console.log('Undo requested — needs a GameScene undo hook (GameScene locked).');
-    flashToast('Drag back over a path to undo');
-  };
-
-  // Rescue / hint stubs (new; ads wired in a later brief).
+  // Rescue / extension stubs (new; rewarded ads wired in a later brief).
+  // Note: the UNDO and RESET buttons were removed in FL-UX-D-008b (Numtap pattern
+  // has no dedicated undo/reset — drag-back over a path is the undo mechanic).
   const handleTimeExtension = () => console.log('Time extension requested — rewarded ad to be wired in ad brief');
   const handleMoveExtension = () => console.log('Move extension requested — rewarded ad to be wired in ad brief');
 
   const showRescuePills = (isCampaign || isClassic) && status === 'playing';
   const showTimePill = isCampaign && timeRemaining <= 30;
   const showMovePill = isClassic && movesRemaining <= 5;
+  const hasRightPill = showTimePill || showMovePill;
 
   const coverageGradient = isCampaign
     ? 'linear-gradient(90deg, #E67E22, #FFD700)'
@@ -384,8 +386,8 @@ export function GameScreen() {
                 </div>
               </div>
               <div style={{ textAlign: 'center' }}>
-                <div style={statLabel}>COVERAGE</div>
-                <div style={{ fontSize: 20, fontWeight: 700, color: '#FFFFFF' }}>{coverage}%</div>
+                <div style={statLabel}>TILES</div>
+                <div style={{ fontSize: 26, fontWeight: 700, color: tilesRemaining === 0 ? '#2ECC71' : '#FFFFFF' }}>{tilesRemaining}</div>
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={statLabel}>MOVES</div>
@@ -403,8 +405,8 @@ export function GameScreen() {
                 </div>
               </div>
               <div style={{ textAlign: 'center' }}>
-                <div style={statLabel}>COVERAGE</div>
-                <div style={{ fontSize: 20, fontWeight: 700, color: '#FFFFFF' }}>{coverage}%</div>
+                <div style={statLabel}>TILES</div>
+                <div style={{ fontSize: 26, fontWeight: 700, color: tilesRemaining === 0 ? '#2ECC71' : '#FFFFFF' }}>{tilesRemaining}</div>
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={statLabel}>TIME</div>
@@ -420,8 +422,8 @@ export function GameScreen() {
                 <div style={{ fontSize: 24, fontWeight: 700, color: '#FFFFFF' }}>{moveCount}</div>
               </div>
               <div style={{ textAlign: 'center' }}>
-                <div style={statLabel}>COVERAGE</div>
-                <div style={{ fontSize: 24, fontWeight: 700, color: '#FFFFFF' }}>{coverage}%</div>
+                <div style={statLabel}>TILES</div>
+                <div style={{ fontSize: 24, fontWeight: 700, color: tilesRemaining === 0 ? '#2ECC71' : '#FFFFFF' }}>{tilesRemaining}</div>
               </div>
             </div>
           )}
@@ -439,70 +441,130 @@ export function GameScreen() {
           )}
         </div>
 
-        {/* Coverage bar — full width, mode gradient */}
-        <div style={{ height: 5, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${coverage}%`, background: coverageGradient, transition: 'width 300ms ease' }} />
+        {/* Coverage bar — full width, mode gradient, with % label above */}
+        <div style={{ position: 'relative' }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0 14px', marginBottom: 2 }}>
+            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', letterSpacing: 0.5 }}>{coverage}%</span>
+          </div>
+          <div style={{ height: 5, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${coverage}%`, background: coverageGradient, transition: 'width 300ms ease', borderRadius: '0 2px 2px 0' }} />
+          </div>
         </div>
       </div>
 
-      {/* ── Phaser mount ───────────────────────────────────────────────────── */}
-      <div id="phaser-container" ref={phaserRef} style={{ flex: 1, minHeight: 0, position: 'relative', overflow: 'hidden' }} />
+      {/* ── Phaser mount (Numtap-style grid card) ──────────────────────────── */}
+      <div
+        id="phaser-container"
+        ref={phaserRef}
+        style={{
+          flex: 1,
+          minHeight: 0,
+          position: 'relative',
+          overflow: 'hidden',
+          margin: '8px 12px',
+          borderRadius: 16,
+          border: '1px solid rgba(127,119,221,0.35)',
+          background: '#0D0620',
+          boxShadow: '0 0 0 1px rgba(127,119,221,0.1), 0 4px 24px rgba(0,0,0,0.4)',
+        }}
+      />
 
-      {/* ── Rescue pills (Campaign / Classic, while playing) ───────────────── */}
+      {/* ── Bottom panel — Numtap 3-layer pattern ──────────────────────────── */}
+
+      {/* Layer 1 — rescue pills (Campaign / Classic, while playing) */}
       {showRescuePills && (
-        <div style={{ display: 'flex', gap: 8, padding: '6px 14px', background: 'rgba(13,6,32,0.7)' }}>
-          {!hintsExhausted && (
-            <button
-              onPointerDown={() => void onHint()}
-              style={{ flex: 1, background: 'rgba(255,215,0,0.08)', border: '1px dashed rgba(255,215,0,0.35)', borderRadius: 10, padding: '8px 10px', textAlign: 'center', cursor: 'pointer' }}
-            >
-              <div style={{ fontSize: 11, fontWeight: 700, color: skin.gold }}>💡 GET HINT</div>
-              <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)' }}>Watch ad · reveal next cell</div>
-            </button>
-          )}
+        <div style={{ display: 'flex', gap: 8, padding: '8px 12px 4px' }}>
+          <button
+            onPointerDown={() => void onHint()}
+            disabled={hintBusy}
+            style={{ flex: hasRightPill ? 1 : undefined, width: hasRightPill ? undefined : '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, background: 'rgba(26,188,156,0.08)', border: '1.5px dashed rgba(26,188,156,0.5)', borderRadius: 20, padding: '8px 12px', cursor: hintBusy ? 'default' : 'pointer' }}
+          >
+            <div style={{ fontSize: 11, fontWeight: 700, color: ZEN_TEAL }}>💡 GET A CLUE</div>
+            <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)' }}>Watch ad · reveal next cell</div>
+          </button>
           {showTimePill && (
             <button
               onPointerDown={handleTimeExtension}
-              style={{ flex: 1, background: 'rgba(230,126,34,0.08)', border: '1px dashed rgba(230,126,34,0.4)', borderRadius: 10, padding: '8px 10px', textAlign: 'center', cursor: 'pointer' }}
+              style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, background: 'rgba(230,126,34,0.08)', border: '1.5px dashed rgba(230,126,34,0.55)', borderRadius: 20, padding: '8px 12px', cursor: 'pointer' }}
             >
-              <div style={{ fontSize: 11, fontWeight: 700, color: ORANGE }}>⏱ +30 SECONDS</div>
-              <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)' }}>Watch ad to extend</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: ORANGE }}>⏱ LOW ON TIME</div>
+              <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)' }}>Watch ad — Add +30s</div>
             </button>
           )}
           {showMovePill && (
             <button
               onPointerDown={handleMoveExtension}
-              style={{ flex: 1, background: 'rgba(127,119,221,0.08)', border: '1px dashed rgba(127,119,221,0.4)', borderRadius: 10, padding: '8px 10px', textAlign: 'center', cursor: 'pointer' }}
+              style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, background: 'rgba(127,119,221,0.08)', border: '1.5px dashed rgba(127,119,221,0.55)', borderRadius: 20, padding: '8px 12px', cursor: 'pointer' }}
             >
-              <div style={{ fontSize: 11, fontWeight: 700, color: PURPLE }}>➕ +5 MOVES</div>
-              <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)' }}>Watch ad to extend</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: PURPLE }}>➕ LOW ON MOVES</div>
+              <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)' }}>Watch ad — Add +5 moves</div>
             </button>
           )}
         </div>
       )}
 
-      {/* ── Action row ─────────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', gap: 8, padding: '8px 14px 12px', background: 'rgba(13,6,32,0.92)', borderTop: '1px solid rgba(127,119,221,0.12)' }}>
+      {/* Layer 2 — action cards: REMOVE ADS | WATCH AD | USE HINT */}
+      <div style={{ display: 'flex', gap: 8, padding: '4px 12px 6px' }}>
         <button
-          onPointerDown={handleUndo}
-          style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(127,119,221,0.2)', borderRadius: 10, padding: '12px 8px', textAlign: 'center', color: 'rgba(255,255,255,0.65)', cursor: 'pointer' }}
+          onPointerDown={() => navigate('/store')}
+          style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(127,119,221,0.2)', borderRadius: 12, padding: '10px 6px', cursor: 'pointer' }}
         >
-          <span style={{ fontSize: 18 }}>↩</span> <span style={{ fontSize: 11, fontWeight: 700 }}>UNDO</span>
+          <span style={{ fontSize: 20 }}>🚫</span>
+          <span style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.7)', letterSpacing: 0.5 }}>REMOVE ADS</span>
+          <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.35)' }}>Play without interruptions</span>
+        </button>
+        <button
+          onPointerDown={() => console.log('Watch ad for gems — to be wired in ad brief')}
+          style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, background: 'rgba(52,152,219,0.08)', border: '1px solid rgba(52,152,219,0.3)', borderRadius: 12, padding: '10px 6px', cursor: 'pointer' }}
+        >
+          <span style={{ fontSize: 20 }}>📺</span>
+          <span style={{ fontSize: 9, fontWeight: 700, color: '#3498DB', letterSpacing: 0.5 }}>WATCH AD</span>
+          <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.35)' }}>+3 gems free</span>
         </button>
         <button
           onPointerDown={() => void onHint()}
-          disabled={hintBusy}
-          style={{ flex: 1, background: 'rgba(255,215,0,0.10)', border: '1px solid rgba(255,215,0,0.35)', borderRadius: 10, padding: '12px 8px', textAlign: 'center', color: skin.gold, cursor: hintBusy ? 'default' : 'pointer', opacity: hintsExhausted ? 0.5 : 1 }}
+          disabled={hintBusy || hintsExhausted}
+          style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.3)', borderRadius: 12, padding: '10px 6px', cursor: hintBusy ? 'default' : 'pointer', opacity: hintsExhausted ? 0.4 : 1, pointerEvents: hintsExhausted ? 'none' : 'auto' }}
         >
-          <span style={{ fontSize: 18 }}>💡</span> <span style={{ fontSize: 11, fontWeight: 700 }}>HINT</span>
-        </button>
-        <button
-          onPointerDown={handleReset}
-          style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(127,119,221,0.2)', borderRadius: 10, padding: '12px 8px', textAlign: 'center', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}
-        >
-          <span style={{ fontSize: 18 }}>⟳</span> <span style={{ fontSize: 11, fontWeight: 700 }}>RESET</span>
+          <span style={{ fontSize: 20 }}>💡</span>
+          <span style={{ fontSize: 9, fontWeight: 700, color: skin.gold, letterSpacing: 0.5 }}>USE HINT</span>
+          <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.35)' }}>💡 ×{hintsRemaining} left</span>
         </button>
       </div>
+
+      {/* Layer 3 — YOU vs LEADER (Campaign / Classic; self-competition for now) */}
+      {(isCampaign || isClassic) && (
+        <div style={{ margin: '4px 12px 8px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(127,119,221,0.15)', borderRadius: 12, overflow: 'hidden', display: 'flex' }}>
+          <div style={{ flex: 1, padding: '8px 12px', borderRight: '1px solid rgba(127,119,221,0.12)' }}>
+            <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', letterSpacing: 1.5, marginBottom: 4 }}>YOU</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', fontWeight: 600, marginBottom: 4 }}>{leaderFlag} {alias || 'Player'}</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
+              <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)' }}>Score</span>
+              <span style={{ fontSize: 12, color: '#FFFFFF' }}>—</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
+              <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)' }}>{isClassic ? 'Moves' : 'Time'}</span>
+              <span style={{ fontSize: 12, color: '#FFFFFF' }}>{isClassic ? moveCount : formatTime(timeElapsed)}</span>
+            </div>
+          </div>
+          <div style={{ flex: 1, padding: '8px 12px' }}>
+            <div style={{ fontSize: 9, color: 'rgba(255,215,0,0.5)', letterSpacing: 1.5, marginBottom: 4 }}>LEADER</div>
+            <div style={{ fontSize: 12, color: skin.gold, fontWeight: 600, marginBottom: 4 }}>{leaderFlag} {leaderAlias}</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
+              <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)' }}>Score</span>
+              <span style={{ fontSize: 12, color: skin.gold }}>{leaderScore !== null ? leaderScore : '—'}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
+              <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)' }}>{isClassic ? 'Moves' : 'Time'}</span>
+              <span style={{ fontSize: 12, color: 'rgba(255,215,0,0.7)' }}>
+                {isClassic
+                  ? (leaderMoves !== null ? leaderMoves : '—')
+                  : (leaderTime !== null ? formatTime(leaderTime) : '—')}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Failed overlay (stub — full result UX is FL-UX-D-009) ───────────── */}
       {status === 'failed' && (

@@ -85,6 +85,14 @@ html, body, #root {
 #phaser-container { overflow: hidden; }
 #phaser-container > *:not(canvas) { display: none !important; }
 
+/* —— FL-UX-D-008b: canvas fills the grid card and clips to its rounded corners —— */
+#phaser-container canvas {
+  border-radius: 14px;
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
 /* —— Gold glow text —— */
 .text-gold-glow {
   color: var(--gold);
