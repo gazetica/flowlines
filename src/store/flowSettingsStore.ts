@@ -9,6 +9,7 @@
 
 import { create } from 'zustand';
 import { Preferences } from '@capacitor/preferences';
+import type { Difficulty } from '../types/level';
 
 // Preference key constants — FL_ prefix prevents collision with Numtap.
 const KEYS = {
@@ -30,7 +31,19 @@ const KEYS = {
   CAMPAIGN_PROG:   'FL_CAMPAIGN_PROGRESS',
   CLASSIC_PROG:    'FL_CLASSIC_PROGRESS',
   DAILY_PROG:      'FL_DAILY_PROGRESS',
+  ZEN_CONFIG:      'FL_ZEN_CONFIG',
 } as const;
+
+// FL-UX-D-007: last-used Zen session configuration (persisted across launches).
+export interface ZenConfig {
+  grid: 6 | 7 | 8 | 9;
+  difficulty: Difficulty;
+  timerSeconds: number; // 0 = off
+  moveLimit: number;    // 0 = off
+}
+function defaultZenConfig(): ZenConfig {
+  return { grid: 6, difficulty: 'easy', timerSeconds: 0, moveLimit: 0 };
+}
 
 interface PackLevelProgress {
   solved: number;
@@ -97,6 +110,9 @@ interface FlowSettingsState {
   classicProgress: ModeProgress;
   dailyProgress: DailyProgress;
 
+  // FL-UX-D-007 Zen session config
+  zenConfig: ZenConfig;
+
   // Onboarding
   firstLaunchComplete: boolean;
   consentRequested: boolean;
@@ -136,6 +152,7 @@ interface FlowSettingsState {
   isPackUnlocked: (packId: number, mode: 'campaign' | 'classic') => boolean;
   recordDailyComplete: (challenge: 'campaign' | 'classic') => void;
   resetDailyIfNewDay: () => void;
+  setZenConfig: (config: Partial<ZenConfig>) => void;
 
   hydrate: () => Promise<void>;
 }
@@ -156,6 +173,7 @@ export const useFlowSettingsStore = create<FlowSettingsState>((set, get) => ({
   campaignProgress: defaultModeProgress(),
   classicProgress: defaultModeProgress(),
   dailyProgress: defaultDailyProgress(),
+  zenConfig: defaultZenConfig(),
   firstLaunchComplete: false,
   consentRequested: false,
   notificationScheduled: false,
@@ -342,6 +360,13 @@ export const useFlowSettingsStore = create<FlowSettingsState>((set, get) => ({
     if (gemAward > 0) void get().addGems(gemAward);
   },
 
+  // FL-UX-D-007: merge + persist the last-used Zen session config.
+  setZenConfig: (config) => {
+    const next: ZenConfig = { ...get().zenConfig, ...config };
+    set({ zenConfig: next });
+    void Preferences.set({ key: KEYS.ZEN_CONFIG, value: JSON.stringify(next) });
+  },
+
   // Reset per-day daily flags when the UTC day rolls over; reset the streak if the
   // last streak day was more than one day ago.
   resetDailyIfNewDay: () => {
@@ -420,6 +445,12 @@ export const useFlowSettingsStore = create<FlowSettingsState>((set, get) => ({
       if (raw) dailyProgress = { ...dailyProgress, ...JSON.parse(raw) };
     } catch { /* ignore */ }
 
+    let zenConfig = defaultZenConfig();
+    try {
+      const raw = await read(KEYS.ZEN_CONFIG);
+      if (raw) zenConfig = { ...zenConfig, ...JSON.parse(raw) };
+    } catch { /* ignore */ }
+
     // Generate or load the player UID (NTxxxxxx — shared cross-game identity).
     let playerUid = await read(KEYS.PLAYER_UID);
     if (!playerUid) {
@@ -446,6 +477,7 @@ export const useFlowSettingsStore = create<FlowSettingsState>((set, get) => ({
       campaignProgress,
       classicProgress,
       dailyProgress,
+      zenConfig,
       hydrated: true,
     });
   },

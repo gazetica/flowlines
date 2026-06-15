@@ -1,17 +1,25 @@
 // LevelSelectScreen.tsx
-// Flow Lines | Gazetica Studio | Sprint 3 Day 15 | Task FL-S3-015 (VD-04)
+// Flow Lines | Gazetica Studio | UX Sprint D | Task FL-UX-D-007 (VD-04)
 //
-// 5×10 level grid for a pack: star ratings, current/locked/playable states,
-// scrolls the current level into view on mount.
+// Mode-aware 5×10 level grid. Reads /levels/:packId?mode=campaign|classic|zen.
+// Tiles: completed (stars), current (▶, pulses on campaign), locked (🔒). Star
+// ratings + difficulty section dividers (MEDIUM/HARD/HARDEST). Routes to /game
+// carrying the mode (and replay=true for already-completed levels).
 
 import { useEffect, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { skin } from '../styles/skin';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
-import { getPackSize, getPackLevelsWithCDN } from '../game/engine/LevelManager';
+import { FloatingPathCanvas } from './FloatingPathCanvas';
 
 const GOLD = '#FFD700';
 const GRIDS: Record<number, number> = { 1: 6, 2: 7, 3: 8, 4: 9 };
+const PACK_SIZE = 50;
+
+type Mode = 'campaign' | 'classic' | 'zen';
+
+// Difficulty tier dividers injected before these 1-based level indices.
+const DIVIDERS: Record<number, string> = { 16: 'MEDIUM', 31: 'HARD', 43: 'HARDEST' };
 
 function starString(stars: number): string {
   if (stars >= 3) return '★★★';
@@ -22,106 +30,151 @@ function starString(stars: number): string {
 
 export default function LevelSelectScreen() {
   const navigate = useNavigate();
-  const { packId } = useParams<{ packId: string }>();
-  const packNum = parseInt(packId ?? '1', 10);
+  const { packId: packIdParam } = useParams<{ packId: string }>();
+  const [searchParams] = useSearchParams();
+  const packId = parseInt(packIdParam ?? '1', 10);
+  const mode = ((searchParams.get('mode') ?? 'campaign') as Mode);
+  const grid = GRIDS[packId] ?? 6;
 
-  const packProgress = useFlowSettingsStore((s) => s.packProgress);
-  const solved = packProgress[packNum]?.solved ?? 0;
-  const starsMap = packProgress[packNum]?.stars ?? {};
-  const size = getPackSize(packNum);
-  const grid = GRIDS[packNum] ?? 6;
-  const currentLevel = solved + 1; // 1-based; this and below are playable
+  const campaignProgress = useFlowSettingsStore((s) => s.campaignProgress);
+  const classicProgress = useFlowSettingsStore((s) => s.classicProgress);
+  const modeProgress = mode === 'classic' ? classicProgress : campaignProgress;
+  const packProgress = modeProgress[packId];
+
+  const highest = packProgress?.highestLevelReached ?? 1;
+  const solved = packProgress?.solved ?? 0;
+
+  const getStars = (levelIndex: number): 0 | 1 | 2 | 3 => {
+    const id = `p${packId}_${String(levelIndex).padStart(3, '0')}`;
+    return (packProgress?.stars[id] ?? 0) as 0 | 1 | 2 | 3;
+  };
 
   const currentRef = useRef<HTMLButtonElement | null>(null);
   useEffect(() => {
     currentRef.current?.scrollIntoView({ block: 'center' });
   }, []);
 
-  // FL-S5A-025c: fire-and-forget CDN refresh. The UI already shows bundled
-  // levels instantly; this just logs when the CDN advertises a different level
-  // count (e.g. a new pack drop). Fails silently — bundled stays the fallback.
-  useEffect(() => {
-    void getPackLevelsWithCDN(packNum).then((levels) => {
-      if (levels.length !== getPackSize(packNum)) {
-        console.log(`[CDN] Pack ${packNum}: ${levels.length} levels (bundled: ${getPackSize(packNum)})`);
-      }
-    });
-  }, [packNum]);
-
   return (
-    <div style={{ width: '100%', height: '100vh', background: skin.bgDeep, display: 'flex', flexDirection: 'column', fontFamily: skin.fontBody }}>
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <button onClick={() => navigate('/packs')} style={{ background: 'none', border: 'none', color: skin.white, fontSize: 18, cursor: 'pointer' }}>‹</button>
-          <span style={{ fontFamily: skin.fontDisplay, fontSize: 15, color: GOLD, letterSpacing: 1 }}>PACK {packNum} · {grid}×{grid}</span>
-        </div>
-        <span style={{ fontSize: 12, color: skin.muted }}>{solved}/{size}</span>
-      </div>
+    <div
+      style={{
+        position: 'relative',
+        minHeight: '100dvh',
+        width: '100%',
+        background: 'linear-gradient(160deg, #1A0A3C 0%, #2D1060 100%)',
+        overflowX: 'hidden',
+        touchAction: 'pan-y',
+        paddingBottom: 24,
+        fontFamily: skin.fontBody,
+      }}
+    >
+      <FloatingPathCanvas />
+      <style>{`@keyframes flLevelPulse {
+        0%,100% { box-shadow: 0 0 0 2px rgba(230,126,34,0.4); }
+        50%     { box-shadow: 0 0 0 4px rgba(230,126,34,0.2); }
+      }`}</style>
 
-      {size === 0 ? (
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: skin.muted, fontSize: 13 }}>
-          No levels yet — coming soon
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button
+              onPointerDown={() => navigate(`/packs?mode=${mode}`)}
+              style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'flex-start', background: 'none', border: 'none', color: GOLD, fontSize: 24, cursor: 'pointer' }}
+            >
+              ‹
+            </button>
+            <span style={{ fontFamily: skin.fontDisplay, fontSize: 15, color: GOLD, letterSpacing: 1 }}>
+              PACK {packId} · {grid}×{grid}
+            </span>
+          </div>
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{solved}/{PACK_SIZE}</span>
         </div>
-      ) : (
-        <div style={{ flex: 1, overflowY: 'auto', padding: '4px 16px 24px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
-            {Array.from({ length: size }, (_, i) => {
+
+        {/* Level grid */}
+        <div style={{ padding: '4px 16px 24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6 }}>
+            {Array.from({ length: PACK_SIZE }, (_, i) => {
               const levelIndex = i + 1; // 1-based
-              const id = `p${packNum}_${String(levelIndex).padStart(3, '0')}`;
-              const stars = starsMap[id] ?? 0;
-              const isCurrent = levelIndex === currentLevel;
-              const playable = levelIndex <= currentLevel;
-              const locked = !playable;
+              const divider = DIVIDERS[levelIndex];
+              const stars = getStars(levelIndex);
+              const state: 'completed' | 'current' | 'locked' =
+                levelIndex < highest ? 'completed' : levelIndex === highest ? 'current' : 'locked';
 
-              let bg = 'rgba(255,255,255,0.03)';
-              let border = '1px solid rgba(127,119,221,0.15)';
-              let textColour: string = skin.muted;
-              if (stars >= 3) {
-                bg = 'rgba(255,215,0,0.15)'; border = '1px solid rgba(255,215,0,0.5)'; textColour = GOLD;
-              } else if (stars >= 1) {
-                bg = 'rgba(127,119,221,0.2)'; border = '1px solid rgba(127,119,221,0.5)'; textColour = skin.purpleLight;
-              }
-              if (isCurrent) {
-                border = `2px solid ${GOLD}`; textColour = GOLD;
-              }
+              const tile = (() => {
+                if (state === 'locked') {
+                  return (
+                    <button
+                      key={levelIndex}
+                      disabled
+                      style={{
+                        aspectRatio: '1', borderRadius: 10, border: '1px solid rgba(255,255,255,0.05)',
+                        background: 'rgba(255,255,255,0.02)', opacity: 0.35, pointerEvents: 'none',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14,
+                      }}
+                    >
+                      🔒
+                    </button>
+                  );
+                }
 
+                if (state === 'current') {
+                  const pulse = mode === 'campaign';
+                  return (
+                    <button
+                      key={levelIndex}
+                      ref={currentRef}
+                      onPointerDown={() => navigate(`/game?pack=${packId}&level=${levelIndex}&mode=${mode}`)}
+                      style={{
+                        aspectRatio: '1', borderRadius: 10,
+                        background: 'rgba(127,119,221,0.18)', border: '1.5px solid #7F77DD',
+                        boxShadow: pulse ? '0 0 0 2px rgba(230,126,34,0.4)' : undefined,
+                        animation: pulse ? 'flLevelPulse 1.5s ease-in-out infinite' : undefined,
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 1,
+                        cursor: 'pointer', fontFamily: skin.fontDisplay,
+                      }}
+                    >
+                      <span style={{ fontSize: 16, color: GOLD }}>▶</span>
+                      <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>{levelIndex}</span>
+                    </button>
+                  );
+                }
+
+                // completed
+                const three = stars >= 3;
+                const starColour = stars >= 3 ? GOLD : stars === 2 ? 'rgba(255,215,0,0.7)' : 'rgba(255,215,0,0.5)';
+                return (
+                  <button
+                    key={levelIndex}
+                    onPointerDown={() => navigate(`/game?pack=${packId}&level=${levelIndex}&mode=${mode}&replay=true`)}
+                    style={{
+                      aspectRatio: '1', borderRadius: 10,
+                      background: three ? 'rgba(255,215,0,0.15)' : 'rgba(127,119,221,0.12)',
+                      border: three ? '1.5px solid rgba(255,215,0,0.5)' : '1px solid rgba(127,119,221,0.3)',
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+                      cursor: 'pointer', fontFamily: skin.fontDisplay,
+                    }}
+                  >
+                    <span style={{ fontSize: 13, fontWeight: 700, color: '#FFFFFF' }}>{levelIndex}</span>
+                    {stars > 0 && <span style={{ fontSize: 8, color: starColour }}>{starString(stars)}</span>}
+                  </button>
+                );
+              })();
+
+              if (!divider) return tile;
               return (
-                <button
-                  key={id}
-                  ref={isCurrent ? currentRef : undefined}
-                  disabled={locked}
-                  onClick={() => playable && navigate(`/game?pack=${packNum}&level=${levelIndex}`)}
-                  style={{
-                    aspectRatio: '1',
-                    background: bg,
-                    border,
-                    borderRadius: 8,
-                    cursor: playable ? 'pointer' : 'default',
-                    color: textColour,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 2,
-                    fontFamily: skin.fontDisplay,
-                    opacity: locked ? 0.5 : 1,
-                  }}
-                >
-                  {locked && !isCurrent ? (
-                    <span style={{ fontSize: 14 }}>🔒</span>
-                  ) : (
-                    <>
-                      <span style={{ fontSize: 14 }}>{isCurrent && stars === 0 ? '▶' : levelIndex}</span>
-                      {stars > 0 && <span style={{ fontSize: 8, color: GOLD }}>{starString(stars)}</span>}
-                    </>
-                  )}
-                </button>
+                <div key={`wrap-${levelIndex}`} style={{ display: 'contents' }}>
+                  <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 8, margin: '6px 0 2px' }}>
+                    <div style={{ flex: 1, height: 1, background: 'rgba(127,119,221,0.15)' }} />
+                    <span style={{ fontSize: 9, color: 'rgba(127,119,221,0.5)', letterSpacing: 1.5 }}>{divider}</span>
+                    <div style={{ flex: 1, height: 1, background: 'rgba(127,119,221,0.15)' }} />
+                  </div>
+                  {tile}
+                </div>
               );
             })}
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

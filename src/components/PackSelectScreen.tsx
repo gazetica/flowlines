@@ -1,172 +1,363 @@
 // PackSelectScreen.tsx
-// Flow Lines | Gazetica Studio | Sprint 3 Day 15 | Task FL-S3-015 (VD-03)
+// Flow Lines | Gazetica Studio | UX Sprint D | Task FL-UX-D-007 (VD-03)
 //
-// Pack grid with locked/active/complete states, unlock rules, progress bars,
-// IAP placeholder cards, and a newly-unlocked card animation.
+// Mode-aware pack chooser. Reads ?mode=campaign|classic|zen.
+//   campaign / classic — 4 progression pack cards (completed/active/locked)
+//                         + IAP row (Hint Pack / Remove Ads).
+//   zen                 — a session-configuration card (grid/difficulty/timer/
+//                         move limit), persisted to flowSettingsStore.zenConfig.
+// In-flow layout (position:relative, minHeight:100dvh) + FloatingPathCanvas, per
+// the FL-UX-D-006d/006e layout decisions (no position:fixed).
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import type { CSSProperties } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { skin } from '../styles/skin';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
-import { getPackSize } from '../game/engine/LevelManager';
-import { trackPackUnlocked } from '../services/analytics';
+import type { ZenConfig } from '../store/flowSettingsStore';
+import type { Difficulty } from '../types/level';
+import { FloatingPathCanvas } from './FloatingPathCanvas';
 import { BottomNav } from './BottomNav';
 
 const GOLD = '#FFD700';
 
-type PackMeta = { id: number; grid: number; colours: number };
-const PACKS: PackMeta[] = [
-  { id: 1, grid: 6, colours: 5 },
-  { id: 2, grid: 7, colours: 6 },
-  { id: 3, grid: 8, colours: 7 },
-  { id: 4, grid: 9, colours: 8 },
+type Mode = 'campaign' | 'classic' | 'zen';
+
+const PACK_META = [
+  { packId: 1, grid: 6, label: 'Pack 1' },
+  { packId: 2, grid: 7, label: 'Pack 2' },
+  { packId: 3, grid: 8, label: 'Pack 3' },
+  { packId: 4, grid: 9, label: 'Pack 4' },
 ];
 
-type ProgressMap = Record<number, { solved: number; stars: Record<string, number> }>;
+const MODE_CFG: Record<Mode, {
+  icon: string; name: string; accent: string; tint: string; border: string;
+  title: string; tagline: string; barGradient: string; cta: string; ctaBg: string;
+}> = {
+  campaign: {
+    icon: '🎯', name: 'CAMPAIGN', accent: '#E67E22',
+    tint: 'rgba(230,126,34,0.08)', border: 'rgba(230,126,34,0.2)',
+    title: 'CAMPAIGN PACKS', tagline: 'Time pressure · 4 parameters · level fails on timeout',
+    barGradient: 'linear-gradient(90deg, #E67E22, #FFD700)', cta: '▶ CONTINUE CAMPAIGN', ctaBg: '#E67E22',
+  },
+  classic: {
+    icon: '♟', name: 'CLASSIC', accent: '#9B8FFF',
+    tint: 'rgba(127,119,221,0.08)', border: 'rgba(127,119,221,0.2)',
+    title: 'CLASSIC PACKS', tagline: 'Move budget · 4 parameters · level fails on move limit',
+    barGradient: 'linear-gradient(90deg, #7F77DD, #9B59B6)', cta: '▶ CONTINUE CLASSIC', ctaBg: '#7F77DD',
+  },
+  zen: {
+    icon: '🧘', name: 'ZEN', accent: '#1ABC9C',
+    tint: 'rgba(26,188,156,0.08)', border: 'rgba(26,188,156,0.2)',
+    title: 'ZEN MODE', tagline: 'No limits · your pace · choose any grid',
+    barGradient: 'linear-gradient(90deg, #1ABC9C, #2ECC71)', cta: '▶ EXPLORE', ctaBg: '#1ABC9C',
+  },
+};
 
-/** Unlock rules (Project Report): P1 always; P2 ≥25 P1; P3 P1===50; P4 P2===50. */
-function isUnlocked(packId: number, progress: ProgressMap): boolean {
-  const solved = (p: number) => progress[p]?.solved ?? 0;
-  switch (packId) {
-    case 1: return true;
-    case 2: return solved(1) >= 25;
-    case 3: return solved(1) === 50;
-    case 4: return solved(2) === 50;
-    default: return false;
-  }
+function difficultyForLevel(levelIndex: number): Difficulty {
+  if (levelIndex <= 15) return 'easy';
+  if (levelIndex <= 30) return 'medium';
+  if (levelIndex <= 42) return 'hard';
+  return 'hardest';
+}
+
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+// ─── Segmented selector used by the Zen config card ───────────────────────────
+function Segmented<T extends string | number>({
+  options, value, onChange, accent, labelOf,
+}: {
+  options: T[]; value: T; onChange: (v: T) => void; accent: string; labelOf?: (v: T) => string;
+}) {
+  return (
+    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+      {options.map((opt) => {
+        const active = opt === value;
+        return (
+          <button
+            key={String(opt)}
+            onPointerDown={() => onChange(opt)}
+            style={{
+              flex: '1 1 auto',
+              minWidth: 56,
+              background: active ? `${accent}26` : 'rgba(255,255,255,0.04)',
+              border: `1px solid ${active ? accent : 'rgba(127,119,221,0.2)'}`,
+              borderRadius: 8,
+              padding: '8px 6px',
+              fontSize: 12,
+              fontWeight: 700,
+              color: active ? accent : 'rgba(255,255,255,0.55)',
+              cursor: 'pointer',
+            }}
+          >
+            {labelOf ? labelOf(opt) : String(opt)}
+          </button>
+        );
+      })}
+    </div>
+  );
 }
 
 export default function PackSelectScreen() {
   const navigate = useNavigate();
-  const packProgress = useFlowSettingsStore((s) => s.packProgress) as ProgressMap;
+  const [searchParams] = useSearchParams();
+  const mode = ((searchParams.get('mode') ?? 'campaign') as Mode);
+  const cfg = MODE_CFG[mode] ?? MODE_CFG.campaign;
 
-  const [shakeId, setShakeId] = useState<number | null>(null);
-  const [newlyUnlocked, setNewlyUnlocked] = useState<number | null>(null);
+  const campaignProgress = useFlowSettingsStore((s) => s.campaignProgress);
+  const classicProgress = useFlowSettingsStore((s) => s.classicProgress);
+  const isPackUnlocked = useFlowSettingsStore((s) => s.isPackUnlocked);
+  const zenConfig = useFlowSettingsStore((s) => s.zenConfig);
+  const setZenConfig = useFlowSettingsStore((s) => s.setZenConfig);
 
-  // Detect a pack that became unlocked during this session (skip first mount).
-  const prevUnlocked = useRef<Record<number, boolean> | null>(null);
-  useEffect(() => {
-    const current: Record<number, boolean> = {};
-    for (const p of PACKS) current[p.id] = isUnlocked(p.id, packProgress);
-    if (prevUnlocked.current) {
-      const justUnlocked = PACKS.find((p) => current[p.id] && !prevUnlocked.current![p.id]);
-      if (justUnlocked) {
-        setNewlyUnlocked(justUnlocked.id);
-        trackPackUnlocked({ pack_id: justUnlocked.id });
-        const t = setTimeout(() => setNewlyUnlocked(null), 800);
-        prevUnlocked.current = current;
-        return () => clearTimeout(t);
-      }
-    }
-    prevUnlocked.current = current;
-  }, [packProgress]);
+  // zen shares campaign's pack structure as a fallback (not actually shown in zen)
+  const modeProgress = mode === 'classic' ? classicProgress : campaignProgress;
 
-  const cards = useMemo(() => PACKS.map((p) => {
-    const size = getPackSize(p.id);
-    const solved = packProgress[p.id]?.solved ?? 0;
-    const unlocked = isUnlocked(p.id, packProgress);
-    const complete = size > 0 && solved >= size;
-    const active = unlocked && solved > 0 && !complete;
-    return { ...p, size, solved, unlocked, complete, active };
-  }), [packProgress]);
+  const headerRow = (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px' }}>
+      <button
+        onPointerDown={() => navigate(-1)}
+        style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'flex-start', background: 'none', border: 'none', color: GOLD, fontSize: 24, cursor: 'pointer' }}
+      >
+        ‹
+      </button>
+      <span style={{ fontFamily: skin.fontDisplay, fontSize: 16, color: GOLD, letterSpacing: 2 }}>{cfg.title}</span>
+    </div>
+  );
 
-  const onTapPack = (packId: number, unlocked: boolean) => {
-    if (!unlocked) {
-      setShakeId(packId);
-      setTimeout(() => setShakeId(null), 320);
-      return;
-    }
-    navigate(`/levels/${packId}`);
+  const heroBanner = (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 20px', background: cfg.tint, borderBottom: `1px solid ${cfg.border}` }}>
+      <span style={{ fontSize: 12, color: cfg.accent, fontWeight: 700, letterSpacing: 1.5 }}>{cfg.icon} {cfg.name}</span>
+      <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginLeft: 'auto', textAlign: 'right' }}>{cfg.tagline}</span>
+    </div>
+  );
+
+  return (
+    <div
+      style={{
+        position: 'relative',
+        minHeight: '100dvh',
+        width: '100%',
+        background: 'linear-gradient(160deg, #1A0A3C 0%, #2D1060 100%)',
+        overflowX: 'hidden',
+        touchAction: 'pan-y',
+        paddingBottom: 72,
+        fontFamily: skin.fontBody,
+      }}
+    >
+      <FloatingPathCanvas />
+      <style>{`@keyframes flLevelPulse {
+        0%,100% { box-shadow: 0 0 0 2px rgba(230,126,34,0.4); }
+        50%     { box-shadow: 0 0 0 4px rgba(230,126,34,0.2); }
+      }`}</style>
+
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        {headerRow}
+        {heroBanner}
+
+        {mode === 'zen' ? (
+          <ZenConfigCard cfg={cfg} zenConfig={zenConfig} setZenConfig={setZenConfig} navigate={navigate} />
+        ) : (
+          <>
+            <div style={{ marginTop: 12 }}>
+              {PACK_META.map((meta) => {
+                const p = modeProgress[meta.packId];
+                const solved = p?.solved ?? 0;
+                const highest = p?.highestLevelReached ?? 1;
+                const unlocked = isPackUnlocked(meta.packId, mode === 'classic' ? 'classic' : 'campaign');
+                const state: 'completed' | 'active' | 'locked' = !unlocked ? 'locked' : solved >= 50 ? 'completed' : 'active';
+                const threeStars = Object.values(p?.stars ?? {}).filter((v) => v === 3).length;
+                const allThree = solved >= 50 && threeStars >= 50;
+
+                const goLevels = () => navigate(`/levels/${meta.packId}?mode=${mode}`);
+
+                if (state === 'locked') {
+                  return (
+                    <div
+                      key={meta.packId}
+                      style={{
+                        margin: '0 20px 12px', borderRadius: 14, padding: 16,
+                        background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(127,119,221,0.1)',
+                        opacity: 0.45, pointerEvents: 'none',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 15, fontWeight: 700, color: 'rgba(255,255,255,0.4)' }}>
+                          PACK {meta.packId} · {meta.grid}×{meta.grid} Grid
+                        </span>
+                        <span style={{ fontSize: 18 }}>🔒</span>
+                      </div>
+                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 6 }}>
+                        {meta.packId === 2 && 'Solve 25 Pack 1 levels to unlock'}
+                        {meta.packId === 3 && 'Complete Pack 1 to unlock'}
+                        {meta.packId === 4 && 'Complete Pack 2 to unlock'}
+                      </div>
+                    </div>
+                  );
+                }
+
+                if (state === 'completed') {
+                  return (
+                    <div
+                      key={meta.packId}
+                      onPointerDown={goLevels}
+                      style={{
+                        margin: '0 20px 12px', borderRadius: 14, padding: 16, cursor: 'pointer',
+                        background: 'rgba(255,215,0,0.06)', border: '1.5px solid rgba(255,215,0,0.4)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 15, fontWeight: 700, color: '#FFFFFF' }}>
+                          PACK {meta.packId} · {meta.grid}×{meta.grid} Grid
+                        </span>
+                        <span style={{ fontSize: 13, color: allThree ? GOLD : 'rgba(255,255,255,0.6)' }}>★★★ {solved}/50</span>
+                      </div>
+                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', margin: '6px 0 8px' }}>
+                        All {solved} levels complete
+                      </div>
+                      <div style={{ height: 3, background: 'rgba(255,215,0,0.15)', borderRadius: 2, overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: '100%', background: GOLD }} />
+                      </div>
+                    </div>
+                  );
+                }
+
+                // active
+                const pct = Math.min(100, (solved / 50) * 100);
+                return (
+                  <div
+                    key={meta.packId}
+                    style={{
+                      margin: '0 20px 12px', borderRadius: 14, padding: 16,
+                      background: 'rgba(255,255,255,0.05)', border: '1.5px solid rgba(127,119,221,0.5)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: 15, fontWeight: 700, color: '#FFFFFF' }}>
+                        PACK {meta.packId} · {meta.grid}×{meta.grid} Grid
+                      </span>
+                      <span style={{
+                        background: `${cfg.accent}26`, border: `1px solid ${cfg.accent}4D`, borderRadius: 8,
+                        padding: '3px 8px', fontSize: 10, fontWeight: 700, color: cfg.accent,
+                      }}>
+                        {cap(difficultyForLevel(highest))}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', margin: '6px 0 8px' }}>
+                      {solved}/50 levels · Level {highest} next
+                    </div>
+                    <div style={{ height: 4, background: 'rgba(255,255,255,0.08)', borderRadius: 2, overflow: 'hidden', marginBottom: 14 }}>
+                      <div style={{ height: '100%', width: `${pct}%`, background: cfg.barGradient }} />
+                    </div>
+                    <button
+                      onPointerDown={goLevels}
+                      style={{
+                        width: '100%', background: cfg.ctaBg, color: skin.bgDeep, border: 'none',
+                        borderRadius: 10, padding: 12, fontSize: 14, fontWeight: 700, cursor: 'pointer',
+                      }}
+                    >
+                      {cfg.cta}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* IAP row — campaign / classic only */}
+            <div style={{ margin: '0 20px 16px', display: 'flex', gap: 12 }}>
+              {[
+                { icon: '💡', label: 'Hint Pack', price: '$0.99' },
+                { icon: '🚫', label: 'Remove Ads', price: '$2.99' },
+              ].map((iap) => (
+                <button
+                  key={iap.label}
+                  onPointerDown={() => navigate('/store')}
+                  style={{
+                    flex: 1, background: 'rgba(255,215,0,0.06)', border: '1px solid rgba(255,215,0,0.2)',
+                    borderRadius: 12, padding: '14px 12px', textAlign: 'center', cursor: 'pointer',
+                  }}
+                >
+                  <div style={{ fontSize: 22 }}>{iap.icon}</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: GOLD, marginTop: 4 }}>{iap.label}</div>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>{iap.price}</div>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 2 }}>
+        <BottomNav />
+      </div>
+    </div>
+  );
+}
+
+// ─── Zen configuration card ───────────────────────────────────────────────────
+function ZenConfigCard({
+  cfg, zenConfig, setZenConfig, navigate,
+}: {
+  cfg: typeof MODE_CFG[Mode];
+  zenConfig: ZenConfig;
+  setZenConfig: (c: Partial<ZenConfig>) => void;
+  navigate: (to: string) => void;
+}) {
+  const [grid, setGrid] = useState<ZenConfig['grid']>(zenConfig.grid);
+  const [difficulty, setDifficulty] = useState<Difficulty>(zenConfig.difficulty);
+  const [timerOn, setTimerOn] = useState(zenConfig.timerSeconds > 0);
+  const [timerSeconds, setTimerSeconds] = useState(zenConfig.timerSeconds > 0 ? zenConfig.timerSeconds : 60);
+  const [moveOn, setMoveOn] = useState(zenConfig.moveLimit > 0);
+  const [moveLimit, setMoveLimit] = useState(zenConfig.moveLimit > 0 ? zenConfig.moveLimit : 40);
+
+  const accent = cfg.accent;
+  const sectionLabel: CSSProperties = { fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.6)', letterSpacing: 1, margin: '14px 0 6px' };
+
+  const start = () => {
+    const t = timerOn ? timerSeconds : 0;
+    const m = moveOn ? moveLimit : 0;
+    setZenConfig({ grid, difficulty, timerSeconds: t, moveLimit: m });
+    navigate(`/game?mode=zen&grid=${grid}&difficulty=${difficulty}&timer=${t}&moves=${m}`);
   };
 
   return (
-    <div style={{ width: '100%', height: '100vh', background: skin.bgDeep, display: 'flex', flexDirection: 'column', fontFamily: skin.fontBody }}>
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px' }}>
-        <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', color: skin.white, fontSize: 18, cursor: 'pointer' }}>‹</button>
-        <span style={{ fontFamily: skin.fontDisplay, fontSize: 16, color: GOLD, letterSpacing: 2 }}>SELECT PACK</span>
-      </div>
+    <div style={{ margin: '12px 20px', background: 'rgba(255,255,255,0.04)', border: `1px solid ${cfg.border}`, borderRadius: 16, padding: 16 }}>
+      <div style={{ fontSize: 15, fontWeight: 700, color: '#FFFFFF', marginBottom: 4 }}>Configure Your Session</div>
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {cards.map((c) => {
-          const borderColour = c.complete
-            ? 'rgba(255,215,0,0.5)'
-            : c.active
-              ? 'rgba(127,119,221,0.5)'
-              : 'rgba(127,119,221,0.2)';
-          const isShaking = shakeId === c.id;
-          const isNew = newlyUnlocked === c.id;
-          return (
-            <button
-              key={c.id}
-              className={isShaking || isNew ? 'fl-shake' : undefined}
-              onClick={() => onTapPack(c.id, c.unlocked)}
-              style={{
-                textAlign: 'left',
-                background: c.complete ? 'rgba(255,215,0,0.06)' : 'rgba(255,255,255,0.04)',
-                border: `1px solid ${borderColour}`,
-                borderRadius: 12,
-                padding: 16,
-                cursor: 'pointer',
-                opacity: c.unlocked ? 1 : 0.42,
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontFamily: skin.fontDisplay, fontSize: 14, color: c.complete ? GOLD : skin.white }}>
-                  PACK {c.id} · {c.grid}×{c.grid} Grid
-                </span>
-                {!c.unlocked && <span style={{ fontSize: 16 }}>🔒</span>}
-              </div>
+      <div style={sectionLabel}>GRID SIZE</div>
+      <Segmented options={[6, 7, 8, 9] as ZenConfig['grid'][]} value={grid} onChange={setGrid} accent={accent} labelOf={(v) => `${v}×${v}`} />
 
-              {c.complete && (
-                <div style={{ fontSize: 12, color: GOLD, marginTop: 6 }}>★★★ {c.solved}/{c.size} complete</div>
-              )}
-              {c.active && (
-                <>
-                  <div style={{ fontSize: 12, color: skin.muted, marginTop: 6 }}>
-                    {c.solved}/{c.size} solved · Level {c.solved + 1} next
-                  </div>
-                  <div style={{ height: 4, background: skin.bgBorder, borderRadius: 2, marginTop: 8, overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${(c.solved / c.size) * 100}%`, background: skin.purple, borderRadius: 2 }} />
-                  </div>
-                </>
-              )}
-              {!c.unlocked && (
-                <div style={{ fontSize: 11, color: skin.muted, marginTop: 6 }}>
-                  {c.id === 2 && 'Solve 25 Pack 1 levels to unlock'}
-                  {c.id === 3 && 'Complete Pack 1 to unlock'}
-                  {c.id === 4 && 'Complete Pack 2 to unlock'}
-                </div>
-              )}
-              {c.unlocked && !c.complete && !c.active && (
-                <div style={{ fontSize: 11, color: skin.muted, marginTop: 6 }}>
-                  {c.size > 0 ? 'Ready — tap to play' : 'Coming soon'}
-                </div>
-              )}
-            </button>
-          );
-        })}
+      <div style={sectionLabel}>DIFFICULTY</div>
+      <Segmented
+        options={['easy', 'medium', 'hard', 'hardest'] as Difficulty[]}
+        value={difficulty} onChange={setDifficulty} accent={accent} labelOf={cap}
+      />
 
-        {/* IAP placeholder cards (Sprint 4) */}
-        <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
-          {[
-            { icon: '💡', label: 'Hint Pack', price: '$0.99' },
-            { icon: '🚫', label: 'Remove Ads', price: '$2.99' },
-          ].map((iap) => (
-            <button
-              key={iap.label}
-              onClick={() => navigate('/')}
-              style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(127,119,221,0.2)', borderRadius: 10, padding: 12, cursor: 'pointer', color: skin.white, fontSize: 11 }}
-            >
-              <div style={{ fontSize: 18 }}>{iap.icon}</div>
-              <div style={{ marginTop: 4 }}>{iap.label}</div>
-              <div style={{ color: GOLD, marginTop: 2 }}>{iap.price}</div>
-            </button>
-          ))}
+      <div style={sectionLabel}>TIMER</div>
+      <Segmented options={['Off', 'On']} value={timerOn ? 'On' : 'Off'} onChange={(v) => setTimerOn(v === 'On')} accent={accent} />
+      {timerOn && (
+        <div style={{ marginTop: 6 }}>
+          <Segmented options={[60, 90, 120]} value={timerSeconds} onChange={setTimerSeconds} accent={accent} labelOf={(v) => `${v}s`} />
         </div>
-      </div>
+      )}
 
-      <BottomNav />
+      <div style={sectionLabel}>MOVE LIMIT</div>
+      <Segmented options={['Off', 'On']} value={moveOn ? 'On' : 'Off'} onChange={(v) => setMoveOn(v === 'On')} accent={accent} />
+      {moveOn && (
+        <div style={{ marginTop: 6 }}>
+          <Segmented options={[30, 40, 50]} value={moveLimit} onChange={setMoveLimit} accent={accent} labelOf={(v) => `${v} moves`} />
+        </div>
+      )}
+
+      <button
+        onPointerDown={start}
+        style={{
+          width: '100%', marginTop: 18, background: cfg.ctaBg, color: skin.bgDeep, border: 'none',
+          borderRadius: 10, padding: 13, fontSize: 14, fontWeight: 700, letterSpacing: 1, cursor: 'pointer',
+        }}
+      >
+        ▶  START ZEN SESSION
+      </button>
     </div>
   );
 }
