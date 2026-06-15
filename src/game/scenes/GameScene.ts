@@ -209,14 +209,14 @@ export class GameScene extends Phaser.Scene {
   private drawDots(): void {
     const g = this.add.graphics();
     const dotRadius = (this.cellSize * skin.grid.dotSizeRatio) / 2;
-    const glowRadius = dotRadius + 4;
+    const glowRadius = dotRadius + 2;
 
     for (const dot of this.levelConfig!.dots) {
       const hex = toHex(skin.pathColors[dot.colour]);
       for (const [r, c] of [[dot.r1, dot.c1], [dot.r2, dot.c2]] as const) {
         const cx = this.cellCentreX(c);
         const cy = this.cellCentreY(r);
-        g.fillStyle(hex, 0.35);
+        g.fillStyle(hex, 0.18);
         g.fillCircle(cx, cy, glowRadius);
         g.fillStyle(hex, 1);
         g.fillCircle(cx, cy, dotRadius);
