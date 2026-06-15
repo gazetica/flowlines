@@ -174,25 +174,28 @@ export function HomeScreen() {
   return (
     <div
       style={{
-        position: 'relative',
-        minHeight: '100dvh',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100dvh',
+        overflowX: 'hidden',
         background: 'linear-gradient(160deg, #1A0A3C 0%, #2D1060 100%)',
-        display: 'flex',
-        flexDirection: 'column',
         fontFamily: skin.fontBody,
       }}
     >
       <FloatingPathCanvas />
       <style>{`@keyframes flHomePulse { 0%,100% { opacity: 1 } 50% { opacity: 0.6 } }`}</style>
 
-      {/* Scrollable content */}
+      {/* Scrollable content — inner scroll container over the fixed background */}
       <div
         style={{
           position: 'relative',
           zIndex: 1,
-          flex: 1,
+          height: '100%',
           overflowY: 'auto',
-          paddingBottom: 16,
+          overflowX: 'hidden',
+          paddingBottom: 72,
         }}
       >
         {/* Section 1 — Top Bar */}
@@ -413,8 +416,8 @@ export function HomeScreen() {
         </div>
       </div>
 
-      {/* Section 6 — Bottom navigation (shared, Home tab active by route) */}
-      <div style={{ position: 'relative', zIndex: 1 }}>
+      {/* Section 6 — Bottom navigation (pinned over the fixed background) */}
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 2 }}>
         <BottomNav />
       </div>
     </div>
