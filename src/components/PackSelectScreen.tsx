@@ -101,7 +101,15 @@ function Segmented<T extends string | number>({
 export default function PackSelectScreen() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const mode = ((searchParams.get('mode') ?? 'campaign') as Mode);
+  const rawMode = searchParams.get('mode');
+  // No ?mode param == bottom-nav entry: show a Campaign/Classic tab switcher and
+  // let the player toggle. Direct entry (?mode=…) hides the switcher.
+  const isBottomNavEntry = !rawMode;
+  const [activeTab, setActiveTab] = useState<'campaign' | 'classic'>(
+    (rawMode as 'campaign' | 'classic') ?? 'campaign',
+  );
+  // Zen only arrives via ?mode=zen (HomeScreen EXPLORE); otherwise use the tab.
+  const mode: Mode = rawMode === 'zen' ? 'zen' : activeTab;
   const cfg = MODE_CFG[mode] ?? MODE_CFG.campaign;
 
   const campaignProgress = useFlowSettingsStore((s) => s.campaignProgress);
@@ -153,6 +161,46 @@ export default function PackSelectScreen() {
 
       <div style={{ position: 'relative', zIndex: 1 }}>
         {headerRow}
+
+        {isBottomNavEntry && (
+          <div
+            style={{
+              margin: '8px 20px 0',
+              display: 'flex',
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(127,119,221,0.2)',
+              borderRadius: 10,
+              overflow: 'hidden',
+            }}
+          >
+            {([
+              { key: 'campaign', label: '🎯 CAMPAIGN', bg: 'rgba(230,126,34,0.25)', color: '#E67E22' },
+              { key: 'classic', label: '♟ CLASSIC', bg: 'rgba(127,119,221,0.25)', color: '#9B8FFF' },
+            ] as const).map((t) => {
+              const active = activeTab === t.key;
+              return (
+                <button
+                  key={t.key}
+                  onPointerDown={() => setActiveTab(t.key)}
+                  style={{
+                    flex: 1,
+                    padding: '11px 8px',
+                    textAlign: 'center',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: 13,
+                    fontWeight: active ? 700 : 400,
+                    background: active ? t.bg : 'transparent',
+                    color: active ? t.color : 'rgba(255,255,255,0.35)',
+                  }}
+                >
+                  {t.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {heroBanner}
 
         {mode === 'zen' ? (

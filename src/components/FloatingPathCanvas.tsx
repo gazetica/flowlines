@@ -26,7 +26,7 @@ interface FloatingPathCanvasProps {
   style?: CSSProperties; // passed through to the canvas element
   segmentCount?: number;       // default 15 — number of segments to maintain
   speedMultiplier?: number;    // default 1.0 — use 0.5 for Zen mode (calmer)
-  opacity?: number;            // default 0.22 — global opacity cap
+  opacity?: number;            // default 0.13 — global opacity cap (subtle texture)
 }
 
 interface Segment {
@@ -125,7 +125,7 @@ export function FloatingPathCanvas({
   style,
   segmentCount = 15,
   speedMultiplier = 1.0,
-  opacity = 0.22,
+  opacity = 0.13,
 }: FloatingPathCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const segmentsRef = useRef<Segment[]>([]);
