@@ -173,6 +173,8 @@ export function HomeScreen() {
 
   return (
     <div
+      onTouchMove={(e) => e.stopPropagation()}
+      onPointerMove={(e) => e.stopPropagation()}
       style={{
         position: 'fixed',
         top: 0,
@@ -180,6 +182,7 @@ export function HomeScreen() {
         width: '100vw',
         height: '100dvh',
         overflowX: 'hidden',
+        touchAction: 'pan-y',
         background: 'linear-gradient(160deg, #1A0A3C 0%, #2D1060 100%)',
         fontFamily: skin.fontBody,
       }}
@@ -195,6 +198,7 @@ export function HomeScreen() {
           height: '100%',
           overflowY: 'auto',
           overflowX: 'hidden',
+          touchAction: 'pan-y',
           paddingBottom: 72,
         }}
       >
