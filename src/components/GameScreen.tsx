@@ -88,6 +88,7 @@ export function GameScreen() {
   const classicProgress = useFlowSettingsStore((s) => s.classicProgress);
   const alias = useFlowSettingsStore((s) => s.alias);
   const country = useFlowSettingsStore((s) => s.country);
+  const onGestureComplete = useFlowGameStore((s) => s.onGestureComplete);
 
   const [showTutorialHint, setShowTutorialHint] = useState(false);
   const [showAbandonDialog, setShowAbandonDialog] = useState(false);
@@ -234,6 +235,15 @@ export function GameScreen() {
     }, 1000);
     return () => clearInterval(interval);
   }, [isCampaign, isClassic, status]);
+
+  // ─── FL-UX-D-008c: Classic gesture counter — GameScene fires fl:gestureComplete
+  // on each completed drag gesture; decrement the Classic move budget here.
+  useEffect(() => {
+    if (!isClassic) return;
+    const handleGesture = () => { onGestureComplete(); };
+    window.addEventListener('fl:gestureComplete', handleGesture);
+    return () => window.removeEventListener('fl:gestureComplete', handleGesture);
+  }, [isClassic, onGestureComplete]);
 
   // ─── FL-UX-D-008: Campaign timeout → fail.
   useEffect(() => {

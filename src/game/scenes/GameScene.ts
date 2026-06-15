@@ -144,17 +144,14 @@ export class GameScene extends Phaser.Scene {
     this.gridOffsetY = (h - gridHeight) / 2 + 20; // nudge down to leave HUD room
   }
 
-  /** Two soft radial gradients — purple top, gold bottom — over the background. */
+  /**
+   * Ambient glow — FL-UX-D-008c SCOPED UNLOCK: disabled. This previously drew two
+   * large soft radial circles (purple top at h*0.18, gold bottom at h*0.82) which
+   * read as "ghost circles" overlaying the grid. Body no-op'd to remove them; the
+   * method is retained + still called so nothing else in renderBoard() changes.
+   */
   private drawAmbientGlow(): void {
-    const w = this.cameras.main.width;
-    const h = this.cameras.main.height;
-    const g = this.add.graphics();
-
-    g.fillStyle(toHex(skin.purple), 0.09);
-    g.fillCircle(w / 2, h * 0.18, w * 0.4);
-
-    g.fillStyle(toHex(skin.gold), 0.03);
-    g.fillCircle(w / 2, h * 0.82, w * 0.3);
+    /* disabled — see FL-UX-D-008c */
   }
 
   /** Faint 16×16 purple dot pattern behind the grid. */
@@ -406,6 +403,9 @@ export class GameScene extends Phaser.Scene {
     this.activePath = [];
     // FL-UX-A (additive emit, no logic change): drag ended — React stops the loop.
     window.dispatchEvent(new CustomEvent('fl:path-release'));
+    // FL-UX-D-008c (additive emit, no logic change): a real drag gesture completed
+    // (guarded by isDrawing above). React's Classic mode decrements movesRemaining.
+    window.dispatchEvent(new CustomEvent('fl:gestureComplete'));
   }
 
   // ─── Path helpers ────────────────────────────────────────────────────────────
