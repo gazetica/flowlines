@@ -54,6 +54,22 @@ export function App() {
     if (useSettingsStore.getState().musicEnabled) musicService.play();
   }, []);
 
+  // FL-UX-D-006e: guard the Android 13 predictive-back edge gesture so it can't
+  // pop /home (or /) off the stack into a blank WebView. Push a sentinel state on
+  // mount, then re-push on every popstate while on home/splash so there's always
+  // something to absorb the back gesture. Non-home screens keep normal back.
+  useEffect(() => {
+    const handlePopState = () => {
+      if (window.location.pathname === '/home' || window.location.pathname === '/') {
+        window.history.pushState(null, '', window.location.href);
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    // Push a state on mount so there's always something to pop to.
+    window.history.pushState(null, '', window.location.href);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   return (
     <BrowserRouter>
       <PageTransition>

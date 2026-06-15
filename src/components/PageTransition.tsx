@@ -3,8 +3,10 @@
 //
 // Re-triggers an enter animation on the already-rendered route content (no
 // remount → no blank flash). /result fades up from below; /game is excluded
-// (heavy Phaser canvas must appear instantly); everything else slides in from
-// the right. The container itself is animated, so the live content rides in.
+// (heavy Phaser canvas must appear instantly); everything else fades in (no
+// horizontal slide — FL-UX-D-006e removed slideInRight, which left a lingering
+// translateX transform that broke fixed layout + collided with the Android 13
+// predictive-back edge gesture). The container itself is animated.
 
 import type { ReactNode } from 'react';
 import { useEffect, useRef } from 'react';
@@ -23,7 +25,7 @@ export function PageTransition({ children }: { children: ReactNode }) {
     void el.offsetHeight; // force reflow so the animation restarts
     el.style.animation = isResult
       ? 'fadeUpIn 280ms ease-out forwards'
-      : 'slideInRight 200ms ease-out forwards';
+      : 'flPageFadeIn 180ms ease-out forwards';
   }, [location.pathname, isGame, isResult]);
 
   return (

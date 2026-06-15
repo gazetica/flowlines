@@ -121,9 +121,20 @@ html, body, #root {
 .btn-outline:hover { border-color: rgba(30,139,195,0.7); }
 
 /* —— FL-UX-A: screen transitions (animation driven inline by PageTransition) —— */
+/* FL-UX-D-006e: slideInRight removed — its lingering translateX(0) (animation-
+   fill-mode:forwards) made PageTransition the containing block for fixed children
+   and collided with the Android 13 predictive-back edge gesture, blanking pages
+   on horizontal swipe. Replaced app-wide by flPageFadeIn (opacity only, no
+   transform). Kept commented for history; not referenced anywhere.
 @keyframes slideInRight {
   from { transform: translateX(100%); opacity: 0; }
   to   { transform: translateX(0);    opacity: 1; }
+}
+*/
+
+@keyframes flPageFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 @keyframes fadeUpIn {
