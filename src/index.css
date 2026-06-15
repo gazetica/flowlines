@@ -74,6 +74,17 @@ html, body, #root {
   50%       { opacity: 0.6; }
 }
 
+/* —— FL-UX-D-008: HUD timer/moves danger pulse (scale) —— */
+@keyframes flTimerPulse {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.05); }
+}
+
+/* —— FL-UX-D-008: clip any stray non-canvas overlay inside the Phaser mount
+   (ghost-circle guard). The game canvas itself is untouched. —— */
+#phaser-container { overflow: hidden; }
+#phaser-container > *:not(canvas) { display: none !important; }
+
 /* —— Gold glow text —— */
 .text-gold-glow {
   color: var(--gold);

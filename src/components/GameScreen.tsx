@@ -1,16 +1,22 @@
 // GameScreen.tsx
-// Flow Lines | Gazetica Studio | Sprint 1 Day 4 / Sprint 2 Day 11
+// Flow Lines | Gazetica Studio | Sprint 1 Day 4 / Sprint 2 Day 11 / UX Sprint D (FL-UX-D-008)
 //
-// Mounts the Phaser GameScene + HUD coverage bar. On win → triggerWin() then
-// navigate to /result. Android back mid-game → abandon confirmation dialog.
+// Mounts the Phaser GameScene + a mode-aware React HUD (Campaign / Classic / Zen).
+// The Phaser mounting logic is UNCHANGED — only the surrounding HUD, rescue pills,
+// action row and overlays were rebuilt. GameScene.ts is PERMANENTLY LOCKED.
+//   Campaign: countdown timer (large), coverage, moves, record row.
+//   Classic:  moves-remaining (large), coverage, time elapsed, record row.
+//   Zen:      moves taken + coverage only.
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { CSSProperties } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { App } from '@capacitor/app';
 import Phaser from 'phaser';
 import { GameScene, type LevelConfig } from '../game/scenes/GameScene';
 import { getLevel, type LevelData } from '../game/engine/LevelManager';
 import type { DotPair } from '../game/engine/GridEngine';
+import type { GameMode } from '../game/engine/ScoreEngine';
 import { skin } from '../styles/skin';
 import { useFlowGameStore } from '../store/flowGameStore';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
@@ -23,7 +29,13 @@ import { startGameMusic, stopGameMusic, pauseGameMusic, resumeGameMusic } from '
 import { hapticLockIn, hapticWin, hapticUndo } from '../services/hapticService';
 import BuyHintModal from './BuyHintModal';
 
+// CLAUDE.md §9 (locked monetisation rule): max 3 hints per level.
 const MAX_HINTS = 3;
+
+const ZEN_TEAL = '#1ABC9C';
+const PURPLE = '#9B8FFF';
+const ORANGE = '#E67E22';
+const DANGER = '#E74C3C';
 
 // Dev-harness fallback level (used at /game with no params). Real levels come
 // from the URL (?pack=N&level=N) via LevelManager. optimalMoves = grid².
@@ -42,17 +54,35 @@ const TEST_LEVEL: LevelData = {
   ],
 };
 
+function formatTime(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
 export function GameScreen() {
   const phaserRef = useRef<HTMLDivElement>(null);
   const gameRef = useRef<Phaser.Game | null>(null);
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+
+  // Store-driven dynamic values
   const coverage = useFlowGameStore((s) => s.coverage);
   const moveCount = useFlowGameStore((s) => s.moveCount);
   const hintsUsed = useFlowGameStore((s) => s.hintsUsed);
+  const status = useFlowGameStore((s) => s.status);
+  const timeElapsed = useFlowGameStore((s) => s.timeElapsed);
+  const timeLimitSeconds = useFlowGameStore((s) => s.timeLimitSeconds);
+  const movesRemaining = useFlowGameStore((s) => s.movesRemaining);
+
   const gemBalance = useFlowSettingsStore((s) => s.gemBalance);
   const firstLaunchComplete = useFlowSettingsStore((s) => s.firstLaunchComplete);
+  const campaignProgress = useFlowSettingsStore((s) => s.campaignProgress);
+  const classicProgress = useFlowSettingsStore((s) => s.classicProgress);
+
   const [showTutorialHint, setShowTutorialHint] = useState(false);
   const [showAbandonDialog, setShowAbandonDialog] = useState(false);
   const [showBuyHintModal, setShowBuyHintModal] = useState(false);
@@ -67,12 +97,31 @@ export function GameScreen() {
     setTimeout(() => setToast(null), 1900);
   };
 
-  // Resolve the level from URL params; fall back to TEST_LEVEL when absent/invalid.
+  // Resolve the level + mode from URL params.
   const packId = parseInt(searchParams.get('pack') ?? '1', 10);
   const levelIndex = parseInt(searchParams.get('level') ?? '1', 10);
-  const isDaily = searchParams.get('mode') === 'daily';
-  const levelData: LevelData = getLevel(packId, levelIndex) ?? TEST_LEVEL;
+  const rawMode = searchParams.get('mode') ?? 'campaign';
+  const mode = rawMode as GameMode;
+  const isDaily = rawMode === 'daily'; // legacy daily flag (win nav) — unchanged
+  const levelData: LevelData = useMemo(() => getLevel(packId, levelIndex) ?? TEST_LEVEL, [packId, levelIndex]);
 
+  // Mode flags derived from the URL (stable, no first-frame flicker).
+  const isCampaign = mode === 'campaign' || mode === 'daily_campaign';
+  const isClassic = mode === 'classic' || mode === 'daily_classic';
+  const isZen = mode === 'zen';
+
+  // Zen reads grid/difficulty from URL (PackSelect zen config); others from JSON.
+  const zenGrid = parseInt(searchParams.get('grid') ?? String(levelData.grid), 10);
+  const difficulty = (isZen ? searchParams.get('difficulty') : levelData.difficulty) ?? 'easy';
+
+  const timeRemaining = Math.max(0, timeLimitSeconds - timeElapsed);
+  const timerDanger = timeRemaining <= 20 && timeRemaining > 0;
+  const movesDanger = movesRemaining <= 3;
+
+  const bestTime = campaignProgress[packId]?.bestTimes?.[levelData.id];
+  const bestMoves = classicProgress[packId]?.bestMoves?.[levelData.id];
+
+  // ─── Phaser mount (UNCHANGED from prior implementation) ──────────────────────
   useEffect(() => {
     if (!phaserRef.current || gameRef.current) return;
 
@@ -80,9 +129,6 @@ export function GameScreen() {
       type: Phaser.AUTO,
       backgroundColor: skin.bgDeep,
       transparent: false,
-      // RESIZE mode sizes the canvas (and camera) to the parent container, so
-      // GameScene's layout reads the real available height below the HUD rather
-      // than the full viewport. Fixes the oversized ambient-glow / pushed grid.
       scale: {
         mode: Phaser.Scale.RESIZE,
         parent: phaserRef.current,
@@ -102,7 +148,7 @@ export function GameScreen() {
       store.setLevelId(levelData.id);
       scene?.loadLevel(config);
       store.setStatus('playing');
-      void loadHintAd(); // preload the hint rewarded ad so it's ready on tap
+      void loadHintAd();
       trackLevelStart({
         level_id: levelData.id,
         pack_id: levelData.pack,
@@ -111,11 +157,6 @@ export function GameScreen() {
       });
     });
 
-    // RESIZE mode sets cameras.main width/height only after its first (async)
-    // resize event, which can land AFTER GameScene.create()/loadLevel() runs its
-    // layout — leaving the grid computed against stale dims (rendered low). Once
-    // the dims have settled, refresh the scale and re-run the public loadLevel so
-    // computeLayout re-centres the grid with correct camera dimensions.
     const resizeTimer = setTimeout(() => {
       const g = gameRef.current;
       if (!g) return;
@@ -124,15 +165,12 @@ export function GameScreen() {
       scene?.loadLevel(config);
     }, 150);
 
-    // Win → compute score/stars with the real optimalMoves. Daily mode returns
-    // to /daily (records streak + reward); otherwise go to the result screen.
     const handleWin = () => {
       useFlowGameStore.getState().triggerWin(levelData.optimalMoves);
       navigate(isDaily ? '/daily?completed=true' : '/result');
     };
     window.addEventListener('fl:win', handleWin);
 
-    // Android hardware back mid-game → abandon confirmation (else default back).
     const backHandler = App.addListener('backButton', () => {
       if (useFlowGameStore.getState().status === 'playing') {
         setShowAbandonDialog(true);
@@ -151,30 +189,58 @@ export function GameScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Audio + haptics: gameplay music on mount (fades out on unmount) and SFX/
-  // haptics driven by the GameScene window events (fl:path-extend/release/
-  // colour-locked/undo/win). Each play self-gates on its Settings toggle.
+  // ─── FL-UX-D-008: initLevel on mount — tell the store the active mode + limits.
+  useEffect(() => {
+    if (!levelData) return;
+    useFlowGameStore.getState().initLevel({
+      levelId: levelData.id,
+      mode,
+      timeLimit: isCampaign ? (levelData.timeLimit ?? 90) : 0,
+      classicMoveLimit: isClassic ? (levelData.classicMoveLimit ?? 15) : 0,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [levelData.id, mode]);
+
+  // ─── FL-UX-D-008: timer tick (Campaign counts down via timeRemaining; Classic
+  // counts up for the time bonus). Zen has no tick. Uses store.getState() so the
+  // interval need not be recreated every second.
+  useEffect(() => {
+    if (!(isCampaign || isClassic)) return;
+    if (status !== 'playing') return;
+    const interval = setInterval(() => {
+      const s = useFlowGameStore.getState();
+      s.setTimeElapsed(s.timeElapsed + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isCampaign, isClassic, status]);
+
+  // ─── FL-UX-D-008: Campaign timeout → fail.
+  useEffect(() => {
+    if (!isCampaign) return;
+    // Guard on timeLimitSeconds>0 so we never fail before initLevel has set the
+    // real ceiling (a stale status:'playing' + uninitialised limit would be 0).
+    if (timeLimitSeconds > 0 && timeRemaining === 0 && status === 'playing') {
+      useFlowGameStore.setState({ status: 'failed' });
+    }
+  }, [timeRemaining, status, isCampaign, timeLimitSeconds]);
+
+  // Audio + haptics (UNCHANGED).
   useEffect(() => {
     startGameMusic();
-
     const onPathExtend = () => playPathDraw();
     const onPathRelease = () => stopPathDraw();
     const onColourLocked = () => { playLockIn(); void hapticLockIn(); };
     const onUndoFx = () => { playUndo(); void hapticUndo(); };
     const onWinFx = () => { playWinFl(); void hapticWin(); };
-
     window.addEventListener('fl:path-extend', onPathExtend);
     window.addEventListener('fl:path-release', onPathRelease);
     window.addEventListener('fl:colour-locked', onColourLocked);
     window.addEventListener('fl:undo', onUndoFx);
     window.addEventListener('fl:win', onWinFx);
-
-    // Pause/resume the gameplay loop with app background/foreground.
     const lifecycle = App.addListener('appStateChange', ({ isActive }) => {
       if (isActive) resumeGameMusic();
       else pauseGameMusic();
     });
-
     return () => {
       stopPathDraw();
       stopGameMusic();
@@ -187,9 +253,7 @@ export function GameScreen() {
     };
   }, []);
 
-  // B.2: Level 1 contextual tutorial overlay — only for the very first level
-  // (p1_001) and only for players who haven't finished onboarding. Shown 1s
-  // after mount (let the board render), auto-dismissed when a drag begins.
+  // Level 1 contextual tutorial overlay (UNCHANGED).
   useEffect(() => {
     if (levelData.id === 'p1_001' && !firstLaunchComplete) {
       const t = setTimeout(() => setShowTutorialHint(true), 1000);
@@ -210,9 +274,8 @@ export function GameScreen() {
     navigate(-1);
   };
 
-  // HINT button → watch a rewarded ad, then GameScene pulses the optimal next
-  // cell. Max 3 hints/level; the store's hintsUsed feeds ScoreEngine's penalty
-  // via triggerWin (no signature change needed — it reads state.hintsUsed).
+  // HINT — real rewarded-ad flow (CLAUDE.md §9: rewarded ads = Hint button ONLY).
+  // Kept fully wired (the brief's console stub would regress working monetisation).
   const onHint = async () => {
     if (hintsExhausted) {
       flashToast('No more hints this level');
@@ -228,14 +291,12 @@ export function GameScreen() {
         { grid: levelData.grid, dots: levelData.dots as DotPair[] },
         (row, col) => {
           scene.showHint(row, col);
-          playHint(); // soft ping on hint reveal
-          useFlowGameStore.getState().useHint(); // 0 gems awarded (FL rule)
+          playHint();
+          useFlowGameStore.getState().useHint();
         },
       );
       if (outcome === 'rewarded') trackAdImpression({ ad_type: 'rewarded' });
       if (outcome === 'unavailable') {
-        // No ad fill. If the player also has 0 gems, offer the IAP/retry sheet;
-        // otherwise a simple toast (they can try again shortly).
         if (gemBalance === 0) setShowBuyHintModal(true);
         else flashToast('Hint ad unavailable — try again');
       }
@@ -244,162 +305,256 @@ export function GameScreen() {
     }
   };
 
+  // RESET — reload the level in GameScene (only public reset path available) and
+  // re-init the store mode/limits.
+  const handleReset = () => {
+    const scene = gameRef.current?.scene.getScene('GameScene') as GameScene | undefined;
+    if (!scene) return;
+    scene.loadLevel({ grid: levelData.grid, dots: levelData.dots as LevelConfig['dots'] });
+    useFlowGameStore.getState().initLevel({
+      levelId: levelData.id,
+      mode,
+      timeLimit: isCampaign ? (levelData.timeLimit ?? 90) : 0,
+      classicMoveLimit: isClassic ? (levelData.classicMoveLimit ?? 15) : 0,
+    });
+  };
+
+  // UNDO — GameScene exposes no undo method (only loadLevel/showHint) and is
+  // LOCKED, so a functional button-driven undo isn't possible yet. Stubbed +
+  // flagged; the in-game drag-back retraction still works as the real undo.
+  const handleUndo = () => {
+    console.log('Undo requested — needs a GameScene undo hook (GameScene locked).');
+    flashToast('Drag back over a path to undo');
+  };
+
+  // Rescue / hint stubs (new; ads wired in a later brief).
+  const handleTimeExtension = () => console.log('Time extension requested — rewarded ad to be wired in ad brief');
+  const handleMoveExtension = () => console.log('Move extension requested — rewarded ad to be wired in ad brief');
+
+  const showRescuePills = (isCampaign || isClassic) && status === 'playing';
+  const showTimePill = isCampaign && timeRemaining <= 30;
+  const showMovePill = isClassic && movesRemaining <= 5;
+
+  const coverageGradient = isCampaign
+    ? 'linear-gradient(90deg, #E67E22, #FFD700)'
+    : isClassic
+      ? 'linear-gradient(90deg, #7F77DD, #9B59B6)'
+      : 'linear-gradient(90deg, #1ABC9C, #2ECC71)';
+
+  const statLabel: CSSProperties = { fontSize: 9, color: 'rgba(255,255,255,0.4)', letterSpacing: 1 };
+
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100dvh', overflow: 'hidden', background: skin.bgDeep, display: 'flex', flexDirection: 'column' }}>
-      {/* HUD — moves, coverage %, and live purple→gold coverage bar */}
-      <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', background: 'rgba(0,0,0,0.4)' }}>
-        <div
-          style={{
-            position: 'relative',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '8px 16px 4px',
-            fontFamily: skin.fontDisplay,
-            color: skin.white,
-            fontSize: 12,
-          }}
-        >
-          {/* Level ID — top-centre, so players always know where they are. */}
-          <span
-            style={{
-              position: 'absolute',
-              left: '50%',
-              top: 6,
-              transform: 'translateX(-50%)',
-              fontFamily: skin.fontDisplay,
-              fontSize: 8,
-              color: skin.muted,
-              letterSpacing: 1,
-            }}
-          >
-            P{levelData.pack} · L{String(levelIndex).padStart(3, '0')}
-          </span>
-          <span>Moves: <span style={{ color: skin.gold }}>{moveCount}</span></span>
-          <span>Coverage: {coverage}%</span>
-          {/* HINT — remaining count (not used). Gold/active until exhausted. */}
-          <button
-            onClick={() => void onHint()}
-            disabled={hintBusy}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4,
-              padding: '2px 10px',
-              borderRadius: 12,
-              fontFamily: skin.fontDisplay,
-              fontSize: 12,
-              cursor: hintBusy ? 'default' : 'pointer',
-              background: 'none',
-              color: hintsExhausted ? skin.muted : skin.gold,
-              border: hintsExhausted ? '1px solid transparent' : `1px solid ${skin.gold}`,
-              opacity: hintsExhausted ? 0.5 : 1,
-            }}
-          >
-            💡 {hintsRemaining}
-          </button>
+    <div style={{ position: 'relative', width: '100%', height: '100dvh', overflow: 'hidden', background: '#110527', display: 'flex', flexDirection: 'column' }}>
+      {/* ── HUD ────────────────────────────────────────────────────────────── */}
+      <div style={{ flexShrink: 0, background: 'rgba(13,6,32,0.92)', borderBottom: '1px solid rgba(127,119,221,0.25)' }}>
+        <div style={{ padding: '8px 14px 6px' }}>
+          {/* Breadcrumb row */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <button
+                onPointerDown={() => navigate(-1)}
+                style={{ background: 'none', border: 'none', color: skin.gold, fontSize: 24, cursor: 'pointer', lineHeight: 1, padding: 0 }}
+              >
+                ‹
+              </button>
+              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', letterSpacing: 0.5 }}>
+                {isZen
+                  ? `Zen · ${zenGrid}×${zenGrid} · ${cap(String(difficulty))}`
+                  : `Pack ${levelData.pack} · L${String(levelIndex).padStart(2, '0')} · ${cap(String(difficulty))}`}
+              </span>
+            </div>
+            {isZen ? (
+              <span style={{ background: 'rgba(26,188,156,0.15)', border: '1px solid rgba(26,188,156,0.35)', borderRadius: 8, padding: '3px 8px', fontSize: 10, fontWeight: 700, color: ZEN_TEAL }}>
+                ZEN
+              </span>
+            ) : (
+              <span style={{ background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.3)', borderRadius: 12, padding: '4px 10px', fontSize: 12, color: skin.gold }}>
+                💡 {gemBalance}
+              </span>
+            )}
+          </div>
+
+          {/* Stat row */}
+          {isCampaign && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+              <div>
+                <div style={statLabel}>TIMER</div>
+                <div style={{ fontFamily: 'monospace', fontSize: 26, fontWeight: 700, color: timerDanger ? DANGER : skin.gold, animation: timerDanger ? 'flTimerPulse 0.5s infinite' : undefined }}>
+                  {formatTime(timeRemaining)}
+                </div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={statLabel}>COVERAGE</div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: '#FFFFFF' }}>{coverage}%</div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={statLabel}>MOVES</div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: 'rgba(255,255,255,0.8)' }}>{moveCount}</div>
+              </div>
+            </div>
+          )}
+
+          {isClassic && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+              <div>
+                <div style={statLabel}>MOVES LEFT</div>
+                <div style={{ fontFamily: 'monospace', fontSize: 26, fontWeight: 700, color: movesDanger ? DANGER : PURPLE, animation: movesDanger ? 'flTimerPulse 0.5s infinite' : undefined }}>
+                  {movesRemaining}
+                </div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={statLabel}>COVERAGE</div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: '#FFFFFF' }}>{coverage}%</div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={statLabel}>TIME</div>
+                <div style={{ fontSize: 18, color: 'rgba(255,255,255,0.5)' }}>{formatTime(timeElapsed)}</div>
+              </div>
+            </div>
+          )}
+
+          {isZen && (
+            <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: 4 }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={statLabel}>MOVES</div>
+                <div style={{ fontSize: 24, fontWeight: 700, color: '#FFFFFF' }}>{moveCount}</div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={statLabel}>COVERAGE</div>
+                <div style={{ fontSize: 24, fontWeight: 700, color: '#FFFFFF' }}>{coverage}%</div>
+              </div>
+            </div>
+          )}
+
+          {/* Record row (Campaign / Classic only) */}
+          {isCampaign && (
+            <div style={{ fontSize: 10, color: bestTime !== undefined && timeElapsed < bestTime ? '#2ECC71' : 'rgba(255,255,255,0.25)', textAlign: 'center', marginBottom: 4 }}>
+              vs Record: {bestTime !== undefined ? formatTime(bestTime) : '—:——'}
+            </div>
+          )}
+          {isClassic && (
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', textAlign: 'center', marginBottom: 4 }}>
+              vs Record: {bestMoves !== undefined ? `${bestMoves}` : '—'} moves
+            </div>
+          )}
         </div>
-        <div style={{ height: 4, margin: '0 16px 6px', background: skin.bgBorder, borderRadius: 2, overflow: 'hidden' }}>
-          <div
-            style={{
-              height: '100%',
-              width: `${coverage}%`,
-              background: 'linear-gradient(90deg, #7F77DD, #EF9F27)',
-              borderRadius: 2,
-              transition: 'width 0.1s ease-out',
-            }}
-          />
+
+        {/* Coverage bar — full width, mode gradient */}
+        <div style={{ height: 5, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+          <div style={{ height: '100%', width: `${coverage}%`, background: coverageGradient, transition: 'width 300ms ease' }} />
         </div>
       </div>
 
-      {/* Phaser mount point — fills the space below the HUD. minHeight:0 lets the
-          flex child shrink instead of overflowing; position:relative anchors the canvas. */}
-      <div ref={phaserRef} style={{ flex: 1, minHeight: 0, position: 'relative' }} />
+      {/* ── Phaser mount ───────────────────────────────────────────────────── */}
+      <div id="phaser-container" ref={phaserRef} style={{ flex: 1, minHeight: 0, position: 'relative', overflow: 'hidden' }} />
+
+      {/* ── Rescue pills (Campaign / Classic, while playing) ───────────────── */}
+      {showRescuePills && (
+        <div style={{ display: 'flex', gap: 8, padding: '6px 14px', background: 'rgba(13,6,32,0.7)' }}>
+          {!hintsExhausted && (
+            <button
+              onPointerDown={() => void onHint()}
+              style={{ flex: 1, background: 'rgba(255,215,0,0.08)', border: '1px dashed rgba(255,215,0,0.35)', borderRadius: 10, padding: '8px 10px', textAlign: 'center', cursor: 'pointer' }}
+            >
+              <div style={{ fontSize: 11, fontWeight: 700, color: skin.gold }}>💡 GET HINT</div>
+              <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)' }}>Watch ad · reveal next cell</div>
+            </button>
+          )}
+          {showTimePill && (
+            <button
+              onPointerDown={handleTimeExtension}
+              style={{ flex: 1, background: 'rgba(230,126,34,0.08)', border: '1px dashed rgba(230,126,34,0.4)', borderRadius: 10, padding: '8px 10px', textAlign: 'center', cursor: 'pointer' }}
+            >
+              <div style={{ fontSize: 11, fontWeight: 700, color: ORANGE }}>⏱ +30 SECONDS</div>
+              <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)' }}>Watch ad to extend</div>
+            </button>
+          )}
+          {showMovePill && (
+            <button
+              onPointerDown={handleMoveExtension}
+              style={{ flex: 1, background: 'rgba(127,119,221,0.08)', border: '1px dashed rgba(127,119,221,0.4)', borderRadius: 10, padding: '8px 10px', textAlign: 'center', cursor: 'pointer' }}
+            >
+              <div style={{ fontSize: 11, fontWeight: 700, color: PURPLE }}>➕ +5 MOVES</div>
+              <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)' }}>Watch ad to extend</div>
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* ── Action row ─────────────────────────────────────────────────────── */}
+      <div style={{ display: 'flex', gap: 8, padding: '8px 14px 12px', background: 'rgba(13,6,32,0.92)', borderTop: '1px solid rgba(127,119,221,0.12)' }}>
+        <button
+          onPointerDown={handleUndo}
+          style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(127,119,221,0.2)', borderRadius: 10, padding: '12px 8px', textAlign: 'center', color: 'rgba(255,255,255,0.65)', cursor: 'pointer' }}
+        >
+          <span style={{ fontSize: 18 }}>↩</span> <span style={{ fontSize: 11, fontWeight: 700 }}>UNDO</span>
+        </button>
+        <button
+          onPointerDown={() => void onHint()}
+          disabled={hintBusy}
+          style={{ flex: 1, background: 'rgba(255,215,0,0.10)', border: '1px solid rgba(255,215,0,0.35)', borderRadius: 10, padding: '12px 8px', textAlign: 'center', color: skin.gold, cursor: hintBusy ? 'default' : 'pointer', opacity: hintsExhausted ? 0.5 : 1 }}
+        >
+          <span style={{ fontSize: 18 }}>💡</span> <span style={{ fontSize: 11, fontWeight: 700 }}>HINT</span>
+        </button>
+        <button
+          onPointerDown={handleReset}
+          style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(127,119,221,0.2)', borderRadius: 10, padding: '12px 8px', textAlign: 'center', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}
+        >
+          <span style={{ fontSize: 18 }}>⟳</span> <span style={{ fontSize: 11, fontWeight: 700 }}>RESET</span>
+        </button>
+      </div>
+
+      {/* ── Failed overlay (stub — full result UX is FL-UX-D-009) ───────────── */}
+      {status === 'failed' && (
+        <div style={{ position: 'absolute', inset: 0, zIndex: 50, background: 'rgba(13,6,32,0.92)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+          <div style={{ fontSize: 32 }}>⏱</div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: DANGER }}>
+            {isCampaign ? "TIME'S UP" : 'OUT OF MOVES'}
+          </div>
+          <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)' }}>
+            {isCampaign ? 'The timer ran out' : 'No moves remaining'}
+          </div>
+          <div
+            onPointerDown={() => navigate(-1)}
+            style={{ background: skin.gold, color: '#0D0620', borderRadius: 10, padding: '14px 32px', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}
+          >
+            ‹ BACK
+          </div>
+        </div>
+      )}
 
       {/* B.2: Level 1 contextual tutorial overlay (first-time players only) */}
       {showTutorialHint && (
         <div
           onClick={() => setShowTutorialHint(false)}
-          style={{
-            position: 'absolute',
-            inset: 0,
-            zIndex: 10,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'rgba(0,0,0,0.45)',
-          }}
+          style={{ position: 'absolute', inset: 0, zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.45)' }}
         >
           <div style={{ fontSize: 40, animation: 'bounceDown 1s ease-in-out infinite', marginBottom: 12 }}>👇</div>
-          <div
-            style={{
-              background: 'rgba(127,119,221,0.9)',
-              borderRadius: 12,
-              padding: '10px 20px',
-              fontSize: 15,
-              color: 'white',
-              fontFamily: skin.fontBody,
-              textAlign: 'center',
-            }}
-          >
+          <div style={{ background: 'rgba(127,119,221,0.9)', borderRadius: 12, padding: '10px 20px', fontSize: 15, color: 'white', fontFamily: skin.fontBody, textAlign: 'center' }}>
             Tap a dot and drag to its match
           </div>
           <div style={{ marginTop: 8, fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>Tap anywhere to dismiss</div>
         </div>
       )}
 
-      {/* Buy-hint sheet — shown when a hint ad has no fill and gems are 0 */}
+      {/* Buy-hint sheet */}
       {showBuyHintModal && (
-        <BuyHintModal
-          onClose={() => setShowBuyHintModal(false)}
-          onWatchAd={() => void onHint()}
-        />
+        <BuyHintModal onClose={() => setShowBuyHintModal(false)} onWatchAd={() => void onHint()} />
       )}
 
-      {/* Hint toast (hint exhausted / ad unavailable) */}
+      {/* Hint toast */}
       {toast && (
         <div style={{ position: 'fixed', bottom: '12%', left: 0, right: 0, textAlign: 'center', zIndex: 1100, pointerEvents: 'none' }}>
-          <span
-            style={{
-              fontFamily: skin.fontBody,
-              fontSize: 13,
-              color: skin.white,
-              background: 'rgba(13,6,32,0.92)',
-              border: '1px solid rgba(127,119,221,0.4)',
-              borderRadius: 8,
-              padding: '8px 14px',
-            }}
-          >
+          <span style={{ fontFamily: skin.fontBody, fontSize: 13, color: skin.white, background: 'rgba(13,6,32,0.92)', border: '1px solid rgba(127,119,221,0.4)', borderRadius: 8, padding: '8px 14px' }}>
             {toast}
           </span>
         </div>
       )}
 
-      {/* Abandon confirmation dialog (Sprint 3 restyles all modals) */}
+      {/* Abandon confirmation dialog */}
       {showAbandonDialog && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.6)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-          }}
-        >
-          <div
-            style={{
-              background: skin.bgCard,
-              border: '1px solid rgba(127,119,221,0.25)',
-              borderRadius: 16,
-              padding: 24,
-              width: 280,
-              textAlign: 'center',
-              fontFamily: skin.fontBody,
-            }}
-          >
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: skin.bgCard, border: '1px solid rgba(127,119,221,0.25)', borderRadius: 16, padding: 24, width: 280, textAlign: 'center', fontFamily: skin.fontBody }}>
             <div style={{ color: skin.white, fontSize: 16, marginBottom: 20, fontFamily: skin.fontDisplay }}>
               Abandon this level?
             </div>
