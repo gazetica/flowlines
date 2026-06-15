@@ -52,6 +52,10 @@ export class GameScene extends Phaser.Scene {
   // Static board layers.
   private gridGraphics?: Phaser.GameObjects.Graphics;
   private dotGraphics?: Phaser.GameObjects.Graphics;
+  // FL-UX-D-008f: dot-endpoint layer — destroyed+redrawn each renderBoard() like
+  // the other static layers, so repeated loadLevel() calls don't stack duplicate
+  // (offset) dot sets (the "figure-8 double dot" bug).
+  private dotEndpointGraphics?: Phaser.GameObjects.Graphics;
 
   // Per-colour path layers (line + cell fill), kept separate so each can be
   // cleared and redrawn independently without accumulating draw calls.
@@ -207,7 +211,9 @@ export class GameScene extends Phaser.Scene {
   }
 
   private drawDots(): void {
+    this.dotEndpointGraphics?.destroy();
     const g = this.add.graphics();
+    this.dotEndpointGraphics = g;
     const dotRadius = (this.cellSize * skin.grid.dotSizeRatio) / 2;
     const glowRadius = dotRadius + 2;
 
