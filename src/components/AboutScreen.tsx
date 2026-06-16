@@ -12,6 +12,7 @@ import { Browser } from '@capacitor/browser';
 import { App } from '@capacitor/app';
 import { skin } from '../styles/skin';
 import { GazeticaPromoCard } from './GazeticaPromoCard';
+import { BottomNav } from './BottomNav';
 
 const GOLD = '#FFD700';
 
@@ -118,6 +119,8 @@ export function AboutScreen() {
           <LinkRow label="Ad Preferences (GDPR)" onClick={() => { /* TODO Sprint 4: UMP re-consent */ }} />
         </div>
       </div>
+
+      <BottomNav />
     </div>
   );
 }

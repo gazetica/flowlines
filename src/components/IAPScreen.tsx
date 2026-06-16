@@ -17,6 +17,7 @@ import {
   FL_PRODUCTS,
 } from '../services/billing';
 import { trackIapPurchase } from '../services/analytics';
+import { BottomNav } from './BottomNav';
 
 const GOLD = '#FFD700';
 
@@ -210,6 +211,8 @@ export function IAPScreen() {
           </span>
         </div>
       )}
+
+      <BottomNav />
     </div>
   );
 }

@@ -11,6 +11,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { skin } from '../styles/skin';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
 import { FloatingPathCanvas } from './FloatingPathCanvas';
+import { BottomNav } from './BottomNav';
 
 const GOLD = '#FFD700';
 const GRIDS: Record<number, number> = { 1: 6, 2: 7, 3: 8, 4: 9 };
@@ -58,12 +59,12 @@ export default function LevelSelectScreen() {
     <div
       style={{
         position: 'relative',
-        minHeight: '100dvh',
+        height: '100dvh',
         width: '100%',
         background: 'linear-gradient(160deg, #1A0A3C 0%, #2D1060 100%)',
         overflowX: 'hidden',
-        touchAction: 'pan-y',
-        paddingBottom: 24,
+        display: 'flex',
+        flexDirection: 'column',
         fontFamily: skin.fontBody,
       }}
     >
@@ -73,7 +74,7 @@ export default function LevelSelectScreen() {
         50%     { box-shadow: 0 0 0 4px rgba(230,126,34,0.2); }
       }`}</style>
 
-      <div style={{ position: 'relative', zIndex: 1 }}>
+      <div style={{ position: 'relative', zIndex: 1, flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', touchAction: 'pan-y' }}>
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -174,6 +175,10 @@ export default function LevelSelectScreen() {
             })}
           </div>
         </div>
+      </div>
+
+      <div style={{ position: 'relative', zIndex: 2 }}>
+        <BottomNav />
       </div>
     </div>
   );

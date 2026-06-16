@@ -127,6 +127,7 @@ const sin = (over: Partial<ScoreInput> = {}): ScoreInput => ({
   cellMoveCount: 36,
   hintsUsed: 0,
   difficulty: 'easy',
+  colourCount: 5,
   ...over,
 });
 
@@ -151,9 +152,6 @@ describe('ScoreEngine.calc — Campaign', () => {
   it('50% coverage → coverageScore 125', () => {
     expect(ScoreEngine.calc(sin({ coveragePct: 50 })).breakdown.coverageScore).toBe(125);
   });
-  it('cellMoveCount = 2x optimal → bonusScore 0', () => {
-    expect(ScoreEngine.calc(sin({ cellMoveCount: 72 })).breakdown.bonusScore).toBe(0);
-  });
   it('timeElapsed 30 of 90 → efficiency 200, total 900, 2 stars', () => {
     const r = ScoreEngine.calc(sin({ timeElapsed: 30 }));
     expect(r.breakdown.efficiencyScore).toBe(200);
@@ -166,7 +164,7 @@ describe('ScoreEngine.calc — Campaign', () => {
     expect(r.passed).toBe(false);
   });
   it('total never below 0 (extreme penalty, timed out)', () => {
-    const r = ScoreEngine.calc(sin({ dotsConnected: false, coveragePct: 0, hintsUsed: 3, cellMoveCount: 999, timeElapsed: 90 }));
+    const r = ScoreEngine.calc(sin({ dotsConnected: false, coveragePct: 0, hintsUsed: 3, movesUsed: 10, timeElapsed: 90 }));
     expect(r.total).toBe(0);
   });
   it('total never exceeds 1000 (clamp)', () => {
@@ -193,15 +191,6 @@ describe('ScoreEngine.calc — Classic', () => {
     expect(r.breakdown.efficiencyScore).toBe(0);
     expect(r.passed).toBe(true);
   });
-  it('solved in 210s → timeBonus 50', () => {
-    expect(ScoreEngine.calc(cls({ timeElapsed: 210 })).breakdown.bonusScore).toBe(50);
-  });
-  it('solved in 90s (under 120) → timeBonus 150', () => {
-    expect(ScoreEngine.calc(cls({ timeElapsed: 90 })).breakdown.bonusScore).toBe(150);
-  });
-  it('solved in 150s (under 180) → timeBonus 100', () => {
-    expect(ScoreEngine.calc(cls({ timeElapsed: 150 })).breakdown.bonusScore).toBe(100);
-  });
   it('3 hints → hintPenalty -120', () => {
     expect(ScoreEngine.calc(cls({ hintsUsed: 3 })).breakdown.hintPenalty).toBe(-120);
   });
@@ -212,6 +201,20 @@ describe('ScoreEngine.calc — Classic', () => {
     const r = ScoreEngine.calc(cls({ movesUsed: 4, classicMoveLimit: 10 }));
     expect(r.breakdown.efficiencyScore).toBe(180);
     expect(r.stars).toBe(2);
+  });
+});
+
+describe('ScoreEngine.calc — gesture bonus (FL-UX-D-009b)', () => {
+  const bonus = (over: Partial<ScoreInput>) => ScoreEngine.calc(sin(over)).breakdown.bonusScore;
+  it('5 colours, 5 gestures → 200 (perfect)', () => { expect(bonus({ colourCount: 5, movesUsed: 5 })).toBe(200); });
+  it('5 colours, 7 gestures → 120', () => { expect(bonus({ colourCount: 5, movesUsed: 7 })).toBe(120); });
+  it('5 colours, 10 gestures → 0 (double)', () => { expect(bonus({ colourCount: 5, movesUsed: 10 })).toBe(0); });
+  it('5 colours, 11 gestures → 0', () => { expect(bonus({ colourCount: 5, movesUsed: 11 })).toBe(0); });
+  it('6 colours, 6 gestures → 200', () => { expect(bonus({ colourCount: 6, movesUsed: 6 })).toBe(200); });
+  it('6 colours, 9 gestures → 100 (halfway)', () => { expect(bonus({ colourCount: 6, movesUsed: 9 })).toBe(100); });
+  it('6 colours, 12 gestures → 0', () => { expect(bonus({ colourCount: 6, movesUsed: 12 })).toBe(0); });
+  it('Classic uses the same gesture bonus', () => {
+    expect(ScoreEngine.calc(sin({ mode: 'classic', colourCount: 5, movesUsed: 7, classicMoveLimit: 20 })).breakdown.bonusScore).toBe(120);
   });
 });
 

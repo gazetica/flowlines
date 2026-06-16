@@ -1,13 +1,13 @@
 // ResultScreen.tsx
-// Flow Lines | Gazetica Studio | UX Sprint D | Task FL-UX-D-009 (VD-06)
+// Flow Lines | Gazetica Studio | UX Sprint D | Task FL-UX-D-009 / 009b (VD-06)
 //
 // Mode-aware result screen with PASS and FAIL states. Reads the just-finished
-// level's state from flowGameStore (set by triggerWin / fail), recomputes the
-// per-mode score via ScoreEngine.calc, persists it via recordLevelComplete, and
-// preserves the critical first-win side-effects (interstitial, Supabase score,
-// UMP consent, daily-reminder permission) carried over from the prior screen.
+// level's state from flowGameStore, recomputes the per-mode score via
+// ScoreEngine.calc, persists it via recordLevelComplete, and preserves the
+// first-win side-effects (interstitial, Supabase score, UMP consent, daily
+// reminder). 009b: single consolidated RESULT card, LEVEL FAILED state, BottomNav.
 
-import type { CSSProperties } from 'react';
+import type { ReactNode, CSSProperties } from 'react';
 import { useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { skin } from '../styles/skin';
@@ -22,10 +22,11 @@ import { requestAndResolve } from '../services/consentService';
 import { requestNotificationPermission, scheduleDailyReminder } from '../services/notificationService';
 import { FloatingPathCanvas } from './FloatingPathCanvas';
 import { GazeticaPromoCard } from './GazeticaPromoCard';
+import { BottomNav } from './BottomNav';
 
 const GOLD = '#FFD700';
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-const mmss = (s: number): string => `${Math.floor(s / 60)}:${String(Math.max(0, s) % 60).padStart(2, '0')}`;
+const mmss = (s: number): string => `${Math.floor(Math.max(0, s) / 60)}:${String(Math.max(0, s) % 60).padStart(2, '0')}`;
 
 export function ResultScreen() {
   const navigate = useNavigate();
@@ -39,7 +40,6 @@ export function ResultScreen() {
   const isClassic = mode === 'classic' || mode === 'daily_classic';
   const isDaily = mode === 'daily_campaign' || mode === 'daily_classic';
 
-  // Finished-level state (still in the store; cleared by the next initLevel).
   const hintsUsed = useFlowGameStore((s) => s.hintsUsed);
   const clueUsed = useFlowGameStore((s) => s.clueUsed);
   const timeElapsed = useFlowGameStore((s) => s.timeElapsed);
@@ -61,7 +61,6 @@ export function ResultScreen() {
   const totalTiles = gridSize * gridSize;
   const filledTiles = Math.round((coverage / 100) * totalTiles);
 
-  // Per-mode score (the 4-component FL-UX-D-004 formula).
   const result = useMemo(() => {
     const input: ScoreInput = {
       mode,
@@ -76,6 +75,7 @@ export function ResultScreen() {
       hintsUsed,
       clueUsed,
       difficulty,
+      colourCount: levelData?.colours ?? 5,
     };
     return ScoreEngine.calc(input);
   }, [mode, isFail, coverage, timeElapsed, timeLimitSeconds, gestureCount, classicMoveLimitTotal, levelData, moveCount, hintsUsed, clueUsed, difficulty]);
@@ -94,35 +94,25 @@ export function ResultScreen() {
   useEffect(() => {
     if (ranRef.current) return;
     ranRef.current = true;
-    if (isFail) return; // fails: no record / score submit / ad / first-win flows
+    if (isFail) return;
 
-    // Zen has no pack progression — skip recording for it.
     if (mode !== 'zen') {
       recordLevelComplete({
         mode: mode === 'daily_campaign' ? 'campaign' : mode === 'daily_classic' ? 'classic' : mode,
-        packId,
-        levelId,
-        levelIndex: levelIdx,
-        stars,
-        score: result.total,
-        timeElapsed,
-        gestureCount,
+        packId, levelId, levelIndex: levelIdx, stars, score: result.total, timeElapsed, gestureCount,
       });
     }
 
-    // Interstitial — CLAUDE.md §9: ResultScreen only, never Zen. Self-gates inside.
     const isZen = mode === 'zen';
     const removeAds = useFlowSettingsStore.getState().removeAdsPurchased ?? false;
     const adTimer = setTimeout(() => { void onLevelComplete(isZen, removeAds); }, 1500);
 
-    // Supabase score + analytics for real pack levels (TEST_LEVEL has empty id).
     const m = /^p(\d+)_(\d+)/.exec(levelId);
     if (m) {
       void submitCampaignScore(levelId, Number(m[1]), result.total, moveCount);
       trackLevelComplete({ level_id: levelId, pack_id: Number(m[1]), moves: moveCount, stars, score: result.total });
     }
 
-    // First-win flows (deferred consent + daily reminder), persisted → fire once.
     const settings = useFlowSettingsStore.getState();
     if (!settings.consentRequested) {
       settings.markConsentRequested();
@@ -140,12 +130,6 @@ export function ResultScreen() {
 
   const breadcrumb = `Pack ${packId} · Level ${String(levelIdx).padStart(2, '0')} · ${cap(String(difficulty))}`;
 
-  const screen: CSSProperties = {
-    position: 'relative', minHeight: '100dvh', width: '100%',
-    background: 'linear-gradient(160deg, #1A0A3C 0%, #2D1060 100%)',
-    overflowX: 'hidden', overflowY: 'auto', touchAction: 'pan-y',
-    paddingBottom: 24, fontFamily: skin.fontBody,
-  };
   const card: CSSProperties = {
     margin: '0 20px 12px', background: 'rgba(255,255,255,0.04)',
     border: '1px solid rgba(127,119,221,0.2)', borderRadius: 14, padding: '14px 16px',
@@ -164,14 +148,16 @@ export function ResultScreen() {
       navigate(`/game?pack=${packId}&level=${levelIdx}&mode=${mode}`);
     };
     return (
-      <div style={screen}>
-        <FloatingPathCanvas />
-        <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 64 }}>
+      <Frame>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 56 }}>
           <div style={{ fontSize: 40 }}>{isClassic ? '♟' : '⏱'}</div>
-          <div style={{ fontSize: 24, fontWeight: 700, color: '#E74C3C', letterSpacing: 2, marginTop: 12 }}>
-            {isClassic ? 'OUT OF MOVES' : "TIME'S UP"}
+          <div style={{ fontSize: 28, fontWeight: 700, color: '#E74C3C', letterSpacing: 2, textAlign: 'center', marginTop: 12, marginBottom: 6 }}>
+            LEVEL FAILED
           </div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginTop: 4, marginBottom: 24 }}>{breadcrumb}</div>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', textAlign: 'center', marginBottom: 4 }}>
+            {isClassic ? 'No moves remaining' : 'Time ran out'}
+          </div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', textAlign: 'center', marginBottom: 20 }}>{breadcrumb}</div>
 
           <div style={{ ...card, alignSelf: 'stretch' }}>
             <div style={cardHeader}>HOW FAR YOU GOT</div>
@@ -195,8 +181,11 @@ export function ResultScreen() {
               ‹ Back to Levels
             </button>
           </div>
+
+          <div style={{ height: 16 }} />
+          <div style={{ alignSelf: 'stretch', margin: '0 20px 24px' }}><GazeticaPromoCard /></div>
         </div>
-      </div>
+      </Frame>
     );
   }
 
@@ -209,98 +198,88 @@ export function ResultScreen() {
   const starSpan = (n: number) => {
     const earned = n <= stars;
     return (
-      <span
-        key={n}
-        style={{
-          fontSize: earned ? 36 : 28,
-          color: earned ? GOLD : '#4a4a6a',
-          display: 'inline-block',
-          animation: `flStarBounce 500ms ease-out ${(n - 1) * 150}ms both`,
-        }}
-      >
+      <span key={n} style={{ fontSize: earned ? 36 : 28, color: earned ? GOLD : '#4a4a6a', display: 'inline-block', animation: `flStarBounce 500ms ease-out ${(n - 1) * 150}ms both` }}>
         {earned ? '★' : '☆'}
       </span>
     );
   };
 
   return (
-    <div style={screen}>
-      <FloatingPathCanvas />
-      <div style={{ position: 'relative', zIndex: 1 }}>
-        {/* Header */}
-        <div style={{ fontSize: 24, fontWeight: 700, color: GOLD, letterSpacing: 2, textAlign: 'center', marginTop: 24, marginBottom: 4 }}>
-          LEVEL COMPLETE!
-        </div>
-        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', textAlign: 'center', marginBottom: 16 }}>{breadcrumb}</div>
+    <Frame>
+      <div style={{ fontSize: 24, fontWeight: 700, color: GOLD, letterSpacing: 2, textAlign: 'center', marginTop: 24, marginBottom: 4 }}>
+        LEVEL COMPLETE!
+      </div>
+      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', textAlign: 'center', marginBottom: 16 }}>{breadcrumb}</div>
 
-        {/* Stars */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 8 }}>
-          {[1, 2, 3].map(starSpan)}
-        </div>
-        {perfectClear && (
-          <div style={{ fontSize: 13, color: GOLD, textAlign: 'center', marginBottom: 16 }}>✨ PERFECT CLEAR!</div>
-        )}
-        {!perfectClear && <div style={{ marginBottom: 16 }} />}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 8 }}>{[1, 2, 3].map(starSpan)}</div>
+      {perfectClear
+        ? <div style={{ fontSize: 13, color: GOLD, textAlign: 'center', marginBottom: 16 }}>✨ PERFECT CLEAR!</div>
+        : <div style={{ marginBottom: 16 }} />}
 
-        {/* Score breakdown */}
-        <div style={{ ...card, animation: 'flFadeSlideUp 300ms ease-out 200ms both' }}>
-          <div style={cardHeader}>SCORE BREAKDOWN</div>
-          <Row label="Dots connected" value={`${b.dotsScore} / 250`} />
-          <Row label="Board filled" value={`${b.coverageScore} / 250`} />
-          <Row label={isClassic ? 'Move efficiency' : 'Time efficiency'} value={`${b.efficiencyScore} / 300`} />
-          <Row label={isClassic ? 'Time bonus' : 'Move bonus'} value={`${b.bonusScore} / 200`} />
-          {hintsUsed > 0 && <Row label={`Hints used (×${hintsUsed})`} value={`${b.hintPenalty}`} />}
-          {clueUsed && <Row label="Auto-complete used" value={`${cluePenalty}`} />}
-          <div style={{ borderTop: '1px solid rgba(127,119,221,0.2)', margin: '6px 0' }} />
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: 15, fontWeight: 700, color: '#FFFFFF' }}>TOTAL</span>
-            <span style={{ fontSize: 18, fontWeight: 700, color: GOLD }}>{result.total} / 1000</span>
-          </div>
+      {/* Single consolidated RESULT card (score rows + stats) */}
+      <div style={{ ...card, animation: 'flFadeSlideUp 300ms ease-out 200ms both' }}>
+        <div style={cardHeader}>RESULT</div>
+        <Row label="Dots connected" value={`${b.dotsScore}`} />
+        <Row label="Board filled" value={`${b.coverageScore}`} />
+        <Row label={isClassic ? 'Move efficiency' : 'Time efficiency'} value={`${b.efficiencyScore}`} />
+        <Row label="Gesture bonus" value={`${b.bonusScore}`} />
+        {hintsUsed > 0 && <Row label={`Hints used (×${hintsUsed})`} value={`${b.hintPenalty}`} />}
+        {clueUsed && <Row label="Auto-complete used" value={`${cluePenalty}`} />}
+        <div style={{ borderTop: '1px solid rgba(127,119,221,0.2)', margin: '6px 0' }} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+          <span style={{ fontSize: 15, fontWeight: 700, color: '#FFFFFF' }}>TOTAL</span>
+          <span>
+            <span style={{ fontSize: 18, fontWeight: 700, color: GOLD }}>{result.total}</span>
+            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)' }}> /1000</span>
+          </span>
         </div>
 
-        {/* Your stats */}
-        <div style={{ ...card, animation: 'flFadeSlideUp 300ms ease-out 320ms both' }}>
-          <div style={cardHeader}>YOUR STATS</div>
+        {/* Stats below divider */}
+        <div style={{ borderTop: '1px solid rgba(127,119,221,0.15)', marginTop: 10, paddingTop: 10 }}>
           {isCampaign && (
             <>
-              <Row label="Time taken" value={mmss(timeElapsed)} />
-              <Row label="Timer limit" value={mmss(timeLimitSeconds)} />
-              <Row label="Cell moves" value={`${moveCount}`} />
-              <Row label="Best time" value={bestTime != null ? mmss(bestTime) : 'First clear! 🎉'} last />
+              <StatRow a={['Time taken', mmss(timeElapsed)]} b={['Timer limit', mmss(timeLimitSeconds)]} />
+              <StatRow a={['Gestures', `${gestureCount}`]} b={['Best time', bestTime != null ? mmss(bestTime) : 'First! 🎉']} last />
             </>
           )}
           {isClassic && (
             <>
-              <Row label="Moves used" value={`${gestureCount} of ${classicMoveLimitTotal}`} />
-              <Row label="Time taken" value={mmss(timeElapsed)} />
-              <Row label="Best moves" value={bestMoves != null ? `${bestMoves}` : 'First clear! 🎉'} last />
+              <StatRow a={['Gestures', `${gestureCount}`]} b={['Budget', `${classicMoveLimitTotal}`]} />
+              <StatRow a={['Time taken', mmss(timeElapsed)]} b={['Best moves', bestMoves != null ? `${bestMoves}` : 'First! 🎉']} last />
             </>
           )}
           {!isCampaign && !isClassic && (
-            <>
-              <Row label="Moves taken" value={`${moveCount}`} />
-              <Row label="Time" value={mmss(timeElapsed)} last />
-            </>
+            <StatRow a={['Moves', `${moveCount}`]} b={['Time', mmss(timeElapsed)]} last />
           )}
         </div>
-
-        {/* CTAs */}
-        <button
-          onPointerDown={() => hasNextLevel ? navigate(`/game?pack=${packId}&level=${nextLevelIdx}&mode=${mode}`) : navigate(`/packs?mode=${mode}`)}
-          style={{ width: 'calc(100% - 40px)', margin: '0 20px 10px', background: GOLD, color: '#0D0620', border: 'none', borderRadius: 12, padding: 16, fontSize: 16, fontWeight: 700, cursor: 'pointer' }}
-        >
-          {hasNextLevel ? `▶  NEXT LEVEL (Level ${String(nextLevelIdx).padStart(2, '0')})` : '▶  PACK COMPLETE!'}
-        </button>
-        <div style={{ margin: '0 20px 16px', display: 'flex', gap: 10 }}>
-          <button onPointerDown={() => navigate(`/game?pack=${packId}&level=${levelIdx}&mode=${mode}&replay=true`)} style={ghostBtn}>↩  Replay</button>
-          <button onPointerDown={() => navigate(`/levels/${packId}?mode=${mode}`)} style={ghostBtn}>☰  Levels</button>
-        </div>
-
-        {/* Cross-promo (CLAUDE.md §9: ResultScreen bottom slot = GazeticaPromoCard only) */}
-        <div style={{ margin: '0 20px 24px' }}>
-          <GazeticaPromoCard />
-        </div>
       </div>
+
+      {/* CTAs */}
+      <button
+        onPointerDown={() => hasNextLevel ? navigate(`/game?pack=${packId}&level=${nextLevelIdx}&mode=${mode}`) : navigate(`/packs?mode=${mode}`)}
+        style={{ width: 'calc(100% - 40px)', margin: '0 20px 10px', background: GOLD, color: '#0D0620', border: 'none', borderRadius: 12, padding: 16, fontSize: 16, fontWeight: 700, cursor: 'pointer' }}
+      >
+        {hasNextLevel ? `▶  NEXT LEVEL (Level ${String(nextLevelIdx).padStart(2, '0')})` : '▶  PACK COMPLETE!'}
+      </button>
+      <div style={{ margin: '0 20px 16px', display: 'flex', gap: 10 }}>
+        <button onPointerDown={() => navigate(`/game?pack=${packId}&level=${levelIdx}&mode=${mode}&replay=true`)} style={ghostBtn}>↩  Replay</button>
+        <button onPointerDown={() => navigate(`/levels/${packId}?mode=${mode}`)} style={ghostBtn}>☰  Levels</button>
+      </div>
+
+      <div style={{ margin: '0 20px 24px' }}><GazeticaPromoCard /></div>
+    </Frame>
+  );
+}
+
+// ─── Frame: gradient bg + FloatingPathCanvas + scroll area + pinned BottomNav ──
+function Frame({ children }: { children: ReactNode }) {
+  return (
+    <div style={{ position: 'relative', height: '100dvh', width: '100%', background: 'linear-gradient(160deg, #1A0A3C 0%, #2D1060 100%)', overflowX: 'hidden', display: 'flex', flexDirection: 'column', fontFamily: skin.fontBody }}>
+      <FloatingPathCanvas />
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', position: 'relative', zIndex: 1, touchAction: 'pan-y', paddingBottom: 16 }}>
+        {children}
+      </div>
+      <div style={{ position: 'relative', zIndex: 2 }}><BottomNav /></div>
     </div>
   );
 }
@@ -310,6 +289,24 @@ function Row({ label, value, last }: { label: string; value: string; last?: bool
     <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', fontSize: 13, borderBottom: last ? 'none' : '1px solid rgba(127,119,221,0.08)' }}>
       <span style={{ color: 'rgba(255,255,255,0.55)' }}>{label}</span>
       <span style={{ color: '#FFFFFF', fontWeight: 600 }}>{value}</span>
+    </div>
+  );
+}
+
+function StatCell({ label, value, end }: { label: string; value: string; end?: boolean }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: end ? 'flex-end' : 'flex-start' }}>
+      <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', letterSpacing: 0.5 }}>{label}</span>
+      <span style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.8)' }}>{value}</span>
+    </div>
+  );
+}
+
+function StatRow({ a, b, last }: { a: [string, string]; b: [string, string]; last?: boolean }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: last ? 0 : 6 }}>
+      <StatCell label={a[0]} value={a[1]} />
+      <StatCell label={b[0]} value={b[1]} end />
     </div>
   );
 }

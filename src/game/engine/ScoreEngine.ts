@@ -95,6 +95,7 @@ export interface ScoreInput {
   hintsUsed: number;
   difficulty: Difficulty;
   clueUsed?: boolean;     // FL-UX-D-008L: GET A CLUE auto-complete used → −100
+  colourCount: number;    // FL-UX-D-009b: dot-pair count = minimum possible gestures
 }
 
 export interface ScoreResult {
@@ -112,11 +113,18 @@ export interface ScoreResult {
 
 const clamp = (n: number, lo: number, hi: number): number => Math.max(lo, Math.min(hi, n));
 
-/** Move-efficiency bonus (Campaign/Zen): 200 at/under optimal, decaying to 0. */
-function moveEfficiencyBonus(cellMoveCount: number, optimalMoves: number): number {
-  if (optimalMoves <= 0 || cellMoveCount <= optimalMoves) return 200;
-  const overshoot = (cellMoveCount - optimalMoves) / optimalMoves;
-  return Math.max(0, Math.round(200 * (1 - overshoot)));
+/**
+ * FL-UX-D-009b gesture bonus (Campaign + Classic): 200 for a perfect run (one
+ * gesture per colour pair), 0 at double that many gestures, linear in between.
+ */
+function calcGestureBonus(gestureCount: number, colourCount: number): number {
+  const minMoves = colourCount;       // perfect = one draw per colour
+  const maxMoves = colourCount * 2;   // double = zero bonus
+  if (gestureCount <= minMoves) return 200;
+  if (gestureCount >= maxMoves) return 0;
+  const over = gestureCount - minMoves;
+  const range = minMoves;
+  return Math.round(200 * (1 - over / range));
 }
 
 function starsFor(result: ScoreResult, input: ScoreInput): 0 | 1 | 2 | 3 {
@@ -149,16 +157,13 @@ function calc(input: ScoreInput): ScoreResult {
     const movesRemaining = input.classicMoveLimit - input.movesUsed;
     if (input.movesUsed > input.classicMoveLimit) efficiencyScore = 0;
     else efficiencyScore = clamp(Math.round((movesRemaining / input.classicMoveLimit) * 300), 0, 300);
-    // Time bonus.
-    if (input.timeElapsed < 60) bonusScore = 200;
-    else if (input.timeElapsed < 120) bonusScore = 150;
-    else if (input.timeElapsed < 180) bonusScore = 100;
-    else bonusScore = 50;
+    // FL-UX-D-009b: gesture bonus replaces the old time bonus.
+    bonusScore = calcGestureBonus(input.movesUsed, input.colourCount);
     passed = input.dotsConnected && input.coveragePct === 100 && input.movesUsed <= input.classicMoveLimit;
-    maxTotal = 1100; // time bonus can lift the ceiling
+    maxTotal = 1100;
   } else if (isZen) {
     efficiencyScore = 0; // no timer in Zen
-    bonusScore = moveEfficiencyBonus(input.cellMoveCount, input.optimalMoves);
+    bonusScore = 0;      // FL-UX-D-009b: no gesture bonus in freeform Zen
     passed = true; // Zen never fails
     maxTotal = 800;
   } else {
@@ -166,7 +171,8 @@ function calc(input: ScoreInput): ScoreResult {
     const timeRemaining = input.timeLimit - input.timeElapsed;
     if (timeRemaining <= 0) efficiencyScore = 0;
     else efficiencyScore = clamp(Math.round((timeRemaining / input.timeLimit) * 300), 0, 300);
-    bonusScore = moveEfficiencyBonus(input.cellMoveCount, input.optimalMoves);
+    // FL-UX-D-009b: gesture bonus replaces the old cell-efficiency bonus.
+    bonusScore = calcGestureBonus(input.movesUsed, input.colourCount);
     passed = input.dotsConnected && input.coveragePct === 100 && input.timeElapsed < input.timeLimit;
     maxTotal = 1000;
   }
