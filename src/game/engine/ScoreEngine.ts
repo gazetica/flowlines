@@ -94,6 +94,7 @@ export interface ScoreInput {
   cellMoveCount: number;  // total cells traversed (gameStore.moveCount)
   hintsUsed: number;
   difficulty: Difficulty;
+  clueUsed?: boolean;     // FL-UX-D-008L: GET A CLUE auto-complete used → −100
 }
 
 export interface ScoreResult {
@@ -137,6 +138,7 @@ function calc(input: ScoreInput): ScoreResult {
   const dotsScore = input.dotsConnected ? 250 : 0;
   const coverageScore = Math.round((input.coveragePct / 100) * 250);
   const hintPenalty = input.hintsUsed > 0 ? input.hintsUsed * -40 : 0; // avoid -0
+  const cluePenalty = input.clueUsed ? -100 : 0; // FL-UX-D-008L
 
   let efficiencyScore = 0;
   let bonusScore = 0;
@@ -170,7 +172,7 @@ function calc(input: ScoreInput): ScoreResult {
   }
 
   const breakdown = { dotsScore, coverageScore, efficiencyScore, bonusScore, hintPenalty };
-  const total = clamp(Math.round(dotsScore + coverageScore + efficiencyScore + bonusScore + hintPenalty), 0, maxTotal);
+  const total = clamp(Math.round(dotsScore + coverageScore + efficiencyScore + bonusScore + hintPenalty + cluePenalty), 0, maxTotal);
 
   const result: ScoreResult = { total, breakdown, stars: 0, passed };
   result.stars = starsFor(result, input);

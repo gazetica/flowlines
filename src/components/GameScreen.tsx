@@ -22,16 +22,12 @@ import { useFlowGameStore } from '../store/flowGameStore';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
 import { flagOf } from '../data/countries';
 import { showHintAd, loadHintAd } from '../services/rewardedAdService';
-import { trackLevelStart, trackLevelAbandon, trackHintRequested, trackAdImpression } from '../services/analytics';
+import { trackLevelStart, trackLevelAbandon, trackAdImpression } from '../services/analytics';
 import {
   playPathDraw, stopPathDraw, playLockIn, playUndo, playWinFl, playHint,
 } from '../services/soundService';
 import { startGameMusic, stopGameMusic, pauseGameMusic, resumeGameMusic } from '../services/musicService';
 import { hapticLockIn, hapticWin, hapticUndo } from '../services/hapticService';
-import BuyHintModal from './BuyHintModal';
-
-// CLAUDE.md §9 (locked monetisation rule): max 3 hints per level.
-const MAX_HINTS = 3;
 
 const ZEN_TEAL = '#1ABC9C';
 const PURPLE = '#9B8FFF';
@@ -86,6 +82,7 @@ export function GameScreen() {
   const phaserRef = useRef<HTMLDivElement>(null);
   const gameRef = useRef<Phaser.Game | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null); // FL-UX-D-008j tick sound
+  const adInFlightRef = useRef(false); // FL-UX-D-008L: freeze the timer during a rewarded ad
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -93,29 +90,34 @@ export function GameScreen() {
   // Store-driven dynamic values
   const coverage = useFlowGameStore((s) => s.coverage);
   const moveCount = useFlowGameStore((s) => s.moveCount);
-  const hintsUsed = useFlowGameStore((s) => s.hintsUsed);
   const status = useFlowGameStore((s) => s.status);
   const timeElapsed = useFlowGameStore((s) => s.timeElapsed);
   const timeLimitSeconds = useFlowGameStore((s) => s.timeLimitSeconds);
   const movesRemaining = useFlowGameStore((s) => s.movesRemaining);
+  const classicMoveLimitTotal = useFlowGameStore((s) => s.classicMoveLimitTotal);
+  const onGestureComplete = useFlowGameStore((s) => s.onGestureComplete);
+  const gestureCount = useFlowGameStore((s) => s.gestureCount);
+  // FL-UX-D-008L assist flags + actions
+  const clueUsed = useFlowGameStore((s) => s.clueUsed);
+  const extensionUsed = useFlowGameStore((s) => s.extensionUsed);
+  const watchAdUsed = useFlowGameStore((s) => s.watchAdUsed);
+  const markClueUsed = useFlowGameStore((s) => s.markClueUsed);
+  const markWatchAdUsed = useFlowGameStore((s) => s.markWatchAdUsed);
+  const applyTimeExtension = useFlowGameStore((s) => s.applyTimeExtension);
+  const applyMoveExtension = useFlowGameStore((s) => s.applyMoveExtension);
 
   const gemBalance = useFlowSettingsStore((s) => s.gemBalance);
+  const addGems = useFlowSettingsStore((s) => s.addGems);
   const firstLaunchComplete = useFlowSettingsStore((s) => s.firstLaunchComplete);
   const campaignProgress = useFlowSettingsStore((s) => s.campaignProgress);
   const classicProgress = useFlowSettingsStore((s) => s.classicProgress);
   const alias = useFlowSettingsStore((s) => s.alias);
   const country = useFlowSettingsStore((s) => s.country);
-  const onGestureComplete = useFlowGameStore((s) => s.onGestureComplete);
-  const gestureCount = useFlowGameStore((s) => s.gestureCount);
 
   const [showTutorialHint, setShowTutorialHint] = useState(false);
   const [showAbandonDialog, setShowAbandonDialog] = useState(false);
-  const [showBuyHintModal, setShowBuyHintModal] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
-  const [hintBusy, setHintBusy] = useState(false);
-
-  const hintsRemaining = MAX_HINTS - hintsUsed;
-  const hintsExhausted = hintsRemaining <= 0;
+  const [adBusy, setAdBusy] = useState(false); // a rewarded ad is in flight
 
   const flashToast = (msg: string) => {
     setToast(msg);
@@ -245,6 +247,7 @@ export function GameScreen() {
     if (!(isCampaign || isClassic)) return;
     if (status !== 'playing') return;
     const interval = setInterval(() => {
+      if (adInFlightRef.current) return; // FL-UX-D-008L: paused while a rewarded ad is up
       const s = useFlowGameStore.getState();
       s.setTimeElapsed(s.timeElapsed + 1);
     }, 1000);
@@ -333,47 +336,79 @@ export function GameScreen() {
     navigate(-1);
   };
 
-  // HINT — real rewarded-ad flow (CLAUDE.md §9: rewarded ads = Hint button ONLY).
-  // Kept fully wired (the brief's console stub would regress working monetisation).
-  const onHint = async () => {
-    if (hintsExhausted) {
-      flashToast('No more hints this level');
-      return;
-    }
-    if (hintBusy) return;
-    const scene = gameRef.current?.scene.getScene('GameScene') as GameScene | undefined;
-    if (!scene) return;
-    setHintBusy(true);
-    trackHintRequested({ level_id: levelData.id, hints_used_this_level: hintsUsed });
+  // FL-UX-D-008L: §9 monetisation model updated per brief (approved override).
+  // Watch one rewarded ad via the existing FL rewarded flow (showHintAd); we ignore
+  // the computed hint cell and act on the outcome. isTesting=true → instant reward
+  // in debug. Returns true only when the player actually earned the reward.
+  const watchRewarded = async (): Promise<boolean> => {
+    if (adBusy) return false;
+    setAdBusy(true);
+    adInFlightRef.current = true; // freeze the Campaign/Classic timer for the watch
     try {
-      const outcome = await showHintAd(
-        { grid: levelData.grid, dots: levelData.dots as DotPair[] },
-        (row, col) => {
-          scene.showHint(row, col);
-          playHint();
-          useFlowGameStore.getState().useHint();
-        },
-      );
-      if (outcome === 'rewarded') trackAdImpression({ ad_type: 'rewarded' });
-      if (outcome === 'unavailable') {
-        if (gemBalance === 0) setShowBuyHintModal(true);
-        else flashToast('Hint ad unavailable — try again');
+      const outcome = await showHintAd({ grid: levelData.grid, dots: levelData.dots as DotPair[] }, () => {});
+      if (outcome === 'rewarded') {
+        trackAdImpression({ ad_type: 'rewarded' });
+        return true;
       }
+      if (outcome === 'unavailable') flashToast('Ad unavailable — try again');
+      return false;
     } finally {
-      setHintBusy(false);
+      adInFlightRef.current = false;
+      setAdBusy(false);
     }
   };
 
-  // Rescue / extension stubs (new; rewarded ads wired in a later brief).
-  // Note: the UNDO and RESET buttons were removed in FL-UX-D-008b (Numtap pattern
-  // has no dedicated undo/reset — drag-back over a path is the undo mechanic).
-  const handleTimeExtension = () => console.log('Time extension requested — rewarded ad to be wired in ad brief');
-  const handleMoveExtension = () => console.log('Move extension requested — rewarded ad to be wired in ad brief');
+  // WATCH AD → +3 gems, once per level.
+  const handleWatchAd = async () => {
+    if (watchAdUsed) return;
+    if (await watchRewarded()) { void addGems(3); markWatchAdUsed(); }
+  };
 
-  const showRescuePills = (isCampaign || isClassic) && status === 'playing';
-  const showTimePill = isCampaign && timeRemaining <= 30;
-  const showMovePill = isClassic && movesRemaining <= 5;
-  const hasRightPill = showTimePill || showMovePill;
+  // GET A CLUE → auto-complete the most-constrained colour, once per level.
+  const handleClue = async () => {
+    if (clueUsed) return;
+    if (await watchRewarded()) {
+      markClueUsed();
+      window.dispatchEvent(new CustomEvent('fl:autoCompleteClue'));
+    }
+  };
+
+  // TIME / MOVE EXTENSION → +30s (Campaign) / +5 moves (Classic), once per level.
+  const handleExtension = async () => {
+    if (extensionUsed) return;
+    if (await watchRewarded()) {
+      if (isCampaign) applyTimeExtension();
+      else if (isClassic) applyMoveExtension();
+    }
+  };
+
+  // USE HINT → spend 1 gem, ghost-draw the solution path for ~3s. Unlimited
+  // (gem-limited) per the §9 override. Still bumps hintsUsed for the score penalty.
+  const handleHint = () => {
+    if (gemBalance <= 0) return;
+    void addGems(-1);
+    playHint();
+    window.dispatchEvent(new CustomEvent('fl:showHintGhost'));
+    useFlowGameStore.setState((s) => ({ hintsUsed: s.hintsUsed + 1 }));
+  };
+
+  // ─── Visibility (FL-UX-D-008L) — clue at 1/3 resource used, extension at 2/3 ──
+  const clueThresholdMet = isCampaign
+    ? (timeLimitSeconds > 0 && timeElapsed >= timeLimitSeconds * 0.333)
+    : isClassic
+      ? (classicMoveLimitTotal > 0 && gestureCount >= classicMoveLimitTotal * 0.333)
+      : false;
+  const showClue = clueThresholdMet && !clueUsed && status === 'playing';
+
+  const extensionThresholdMet = isCampaign
+    ? (timeLimitSeconds > 0 && timeElapsed >= timeLimitSeconds * 0.666)
+    : isClassic
+      ? (classicMoveLimitTotal > 0 && gestureCount >= classicMoveLimitTotal * 0.666)
+      : false;
+  const showExtension = extensionThresholdMet && !extensionUsed && status === 'playing';
+
+  const watchAdAvailable = !watchAdUsed;
+  const hintAvailable = gemBalance > 0;
 
   const coverageGradient = isCampaign
     ? 'linear-gradient(90deg, #E67E22, #FFD700)'
@@ -394,15 +429,22 @@ export function GameScreen() {
             <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', letterSpacing: 0.5 }}>
               {isZen
                 ? `Zen · ${zenGrid}×${zenGrid} · ${cap(String(difficulty))}`
-                : `Pack ${levelData.pack} · L${String(levelIndex).padStart(2, '0')} · ${cap(String(difficulty))}`}
+                : `Pack ${levelData.pack} · Level ${String(levelIndex).padStart(2, '0')} · ${cap(String(difficulty))}`}
             </span>
             {isZen ? (
               <span style={{ background: 'rgba(26,188,156,0.15)', border: '1px solid rgba(26,188,156,0.35)', borderRadius: 8, padding: '3px 8px', fontSize: 10, fontWeight: 700, color: ZEN_TEAL }}>
                 ZEN
               </span>
             ) : (
-              <span style={{ background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.3)', borderRadius: 12, padding: '4px 10px', fontSize: 12, color: skin.gold }}>
-                💡 {gemBalance}
+              // FL-UX-D-008k: Flow Lines branding pill (replaces the gem/hint pill —
+              // hints live in the USE HINT card below).
+              <span style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.3)', borderRadius: 12, padding: '4px 10px' }}>
+                <svg width="14" height="14" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M10 32 Q32 6 54 32" stroke="#E24B4A" strokeWidth="5" fill="none" strokeLinecap="round" />
+                  <path d="M10 32 Q32 58 54 32" stroke="#378ADD" strokeWidth="5" fill="none" strokeLinecap="round" />
+                  <circle cx="32" cy="32" r="8" fill="#7F77DD" />
+                </svg>
+                <span style={{ fontFamily: skin.fontDisplay, fontSize: 11, fontWeight: 700, color: skin.gold, letterSpacing: 1 }}>FLOW LINES</span>
               </span>
             )}
           </div>
@@ -413,8 +455,8 @@ export function GameScreen() {
               <div style={{ textAlign: 'left', minWidth: 60 }}>
                 <div style={statLabel}>{isCampaign ? 'TIMER' : 'MOVES LEFT'}</div>
                 <div style={{
-                  ...statValue, fontSize: 26,
-                  color: isCampaign ? (timerDanger ? DANGER : skin.gold) : (movesDanger ? DANGER : PURPLE),
+                  ...statValue, fontSize: 22,
+                  color: (isCampaign ? timerDanger : movesDanger) ? DANGER : '#FFFFFF',
                   animation: (isCampaign && timerDanger) || (isClassic && movesDanger) ? 'flTimerPulse 0.5s ease-in-out infinite' : 'none',
                 }}>
                   {isCampaign ? formatTime(timeRemaining) : movesRemaining}
@@ -426,7 +468,7 @@ export function GameScreen() {
               </div>
               <div style={{ textAlign: 'right', minWidth: 60 }}>
                 <div style={statLabel}>{isCampaign ? 'MOVES' : 'TIME'}</div>
-                <div style={{ ...statValue, fontSize: 20, color: 'rgba(255,255,255,0.75)' }}>
+                <div style={{ ...statValue, fontSize: 22, color: '#FFFFFF' }}>
                   {isCampaign ? moveCount : formatTime(timeElapsed)}
                 </div>
               </div>
@@ -485,30 +527,34 @@ export function GameScreen() {
 
       {/* ── Bottom panel — Numtap 3-layer pattern ──────────────────────────── */}
 
-      {/* Layer 1 — rescue pills (Campaign / Classic, while playing) */}
-      {showRescuePills && (
+      {/* Layer 1 — rescue pills: GET A CLUE (@33%) + TIME/MOVE EXTENSION (@66%) */}
+      {(showClue || showExtension) && (
         <div style={{ display: 'flex', gap: 8, padding: '8px 12px 4px' }}>
-          <button
-            onPointerDown={() => void onHint()}
-            disabled={hintBusy}
-            style={{ flex: hasRightPill ? 1 : undefined, width: hasRightPill ? undefined : '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, background: 'rgba(26,188,156,0.08)', border: '1.5px dashed rgba(26,188,156,0.5)', borderRadius: 20, padding: '8px 12px', cursor: hintBusy ? 'default' : 'pointer' }}
-          >
-            <div style={{ fontSize: 11, fontWeight: 700, color: ZEN_TEAL }}>💡 GET A CLUE</div>
-            <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)' }}>Watch ad · reveal next cell</div>
-          </button>
-          {showTimePill && (
+          {showClue && (
             <button
-              onPointerDown={handleTimeExtension}
-              style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, background: 'rgba(230,126,34,0.08)', border: '1.5px dashed rgba(230,126,34,0.55)', borderRadius: 20, padding: '8px 12px', cursor: 'pointer' }}
+              onPointerDown={() => void handleClue()}
+              disabled={adBusy}
+              style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, background: 'rgba(26,188,156,0.08)', border: '1.5px dashed rgba(26,188,156,0.5)', borderRadius: 20, padding: '8px 12px', cursor: adBusy ? 'default' : 'pointer' }}
+            >
+              <div style={{ fontSize: 11, fontWeight: 700, color: ZEN_TEAL }}>💡 GET A CLUE</div>
+              <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)' }}>Watch ad · auto-complete 1 path</div>
+            </button>
+          )}
+          {showExtension && isCampaign && (
+            <button
+              onPointerDown={() => void handleExtension()}
+              disabled={adBusy}
+              style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, background: 'rgba(230,126,34,0.08)', border: '1.5px dashed rgba(230,126,34,0.55)', borderRadius: 20, padding: '8px 12px', cursor: adBusy ? 'default' : 'pointer' }}
             >
               <div style={{ fontSize: 11, fontWeight: 700, color: ORANGE }}>⏱ LOW ON TIME</div>
               <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)' }}>Watch ad — Add +30s</div>
             </button>
           )}
-          {showMovePill && (
+          {showExtension && isClassic && (
             <button
-              onPointerDown={handleMoveExtension}
-              style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, background: 'rgba(127,119,221,0.08)', border: '1.5px dashed rgba(127,119,221,0.55)', borderRadius: 20, padding: '8px 12px', cursor: 'pointer' }}
+              onPointerDown={() => void handleExtension()}
+              disabled={adBusy}
+              style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, background: 'rgba(127,119,221,0.08)', border: '1.5px dashed rgba(127,119,221,0.55)', borderRadius: 20, padding: '8px 12px', cursor: adBusy ? 'default' : 'pointer' }}
             >
               <div style={{ fontSize: 11, fontWeight: 700, color: PURPLE }}>➕ LOW ON MOVES</div>
               <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)' }}>Watch ad — Add +5 moves</div>
@@ -528,47 +574,50 @@ export function GameScreen() {
           <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.35)' }}>Play without interruptions</span>
         </button>
         <button
-          onPointerDown={() => console.log('Watch ad for gems — to be wired in ad brief')}
-          style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, background: 'rgba(52,152,219,0.08)', border: '1px solid rgba(52,152,219,0.3)', borderRadius: 12, padding: '10px 6px', cursor: 'pointer' }}
+          onPointerDown={watchAdAvailable ? () => void handleWatchAd() : undefined}
+          disabled={!watchAdAvailable || adBusy}
+          style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, background: watchAdAvailable ? 'rgba(52,152,219,0.08)' : 'rgba(255,255,255,0.03)', border: `1px solid ${watchAdAvailable ? 'rgba(52,152,219,0.3)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 12, padding: '10px 6px', opacity: watchAdAvailable ? 1 : 0.4, pointerEvents: watchAdAvailable ? 'auto' : 'none', cursor: watchAdAvailable ? 'pointer' : 'default' }}
         >
           <span style={{ fontSize: 20 }}>📺</span>
-          <span style={{ fontSize: 9, fontWeight: 700, color: '#3498DB', letterSpacing: 0.5 }}>WATCH AD</span>
-          <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.35)' }}>+3 gems free</span>
+          <span style={{ fontSize: 9, fontWeight: 700, color: watchAdAvailable ? '#3498DB' : 'rgba(255,255,255,0.3)', letterSpacing: 0.5 }}>WATCH AD</span>
+          <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.35)' }}>{watchAdAvailable ? '+3 gems free' : 'Watched'}</span>
         </button>
         <button
-          onPointerDown={() => void onHint()}
-          disabled={hintBusy || hintsExhausted}
-          style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.3)', borderRadius: 12, padding: '10px 6px', cursor: hintBusy ? 'default' : 'pointer', opacity: hintsExhausted ? 0.4 : 1, pointerEvents: hintsExhausted ? 'none' : 'auto' }}
+          onPointerDown={hintAvailable ? handleHint : undefined}
+          disabled={!hintAvailable}
+          style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, background: hintAvailable ? 'rgba(255,215,0,0.08)' : 'rgba(255,255,255,0.03)', border: `1px solid ${hintAvailable ? 'rgba(255,215,0,0.3)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 12, padding: '10px 6px', opacity: hintAvailable ? 1 : 0.4, pointerEvents: hintAvailable ? 'auto' : 'none', cursor: hintAvailable ? 'pointer' : 'default' }}
         >
           <span style={{ fontSize: 20 }}>💡</span>
-          <span style={{ fontSize: 9, fontWeight: 700, color: skin.gold, letterSpacing: 0.5 }}>USE HINT</span>
-          <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.35)' }}>💡 ×{hintsRemaining} left</span>
+          <span style={{ fontSize: 9, fontWeight: 700, color: hintAvailable ? skin.gold : 'rgba(255,255,255,0.3)', letterSpacing: 0.5 }}>USE HINT</span>
+          <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.35)' }}>💎 ×{gemBalance} left</span>
         </button>
       </div>
 
-      {/* Layer 3 — YOU vs LEADER, two equal cards, Row2 aligned to name (FL-UX-D-008j) */}
+      {/* Layer 3 — YOU vs LEADER, 2 rows × 2 equal columns each (FL-UX-D-008k) */}
       {(isCampaign || isClassic) && (
         <div style={{ display: 'flex', gap: 8, padding: '4px 10px 8px' }}>
-          {/* YOU card */}
+          {/* YOU card — left col = identity (name / YOU), right col = stats (Score / Time) */}
           <div style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(127,119,221,0.2)', borderRadius: 10, padding: '8px 10px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 6 }}>
-              <span style={{ fontSize: 8, fontWeight: 700, color: 'rgba(127,119,221,0.7)', letterSpacing: 1.5, minWidth: 28 }}>YOU</span>
-              <span style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.85)' }}>{leaderFlag} {alias || 'Player'}</span>
+            {/* Row 1: A = flag+name, B = Score */}
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 6 }}>
+              <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.85)' }}>{leaderFlag} {alias || 'Player'}</span>
+              <span style={{ flex: 1, fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>Score <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>—</span></span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingLeft: 33 }}>
-              <div><span style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)' }}>Score </span><span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>—</span></div>
-              <div><span style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)' }}>{isCampaign ? 'Time ' : 'Moves '}</span><span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>{isCampaign ? formatTime(timeElapsed) : gestureCount}</span></div>
+            {/* Row 2: A = YOU label, B = Time/Moves */}
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <span style={{ flex: 1, fontSize: 8, fontWeight: 700, color: 'rgba(127,119,221,0.7)', letterSpacing: 1.5 }}>YOU</span>
+              <span style={{ flex: 1, fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>{isCampaign ? 'Time' : 'Moves'} <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>{isCampaign ? formatTime(timeElapsed) : gestureCount}</span></span>
             </div>
           </div>
           {/* LEADER card */}
           <div style={{ flex: 1, background: 'rgba(255,215,0,0.03)', border: '1px solid rgba(255,215,0,0.18)', borderRadius: 10, padding: '8px 10px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 6 }}>
-              <span style={{ fontSize: 8, fontWeight: 700, color: 'rgba(255,215,0,0.6)', letterSpacing: 1.5, minWidth: 40 }}>LEADER</span>
-              <span style={{ fontSize: 12, fontWeight: 600, color: skin.gold }}>{leaderFlag} {leaderAlias}</span>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 6 }}>
+              <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: skin.gold }}>{leaderFlag} {leaderAlias}</span>
+              <span style={{ flex: 1, fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>Score <span style={{ fontSize: 11, fontWeight: 700, color: skin.gold }}>{leaderScore !== null ? leaderScore : '—'}</span></span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingLeft: 45 }}>
-              <div><span style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)' }}>Score </span><span style={{ fontSize: 11, fontWeight: 700, color: skin.gold }}>{leaderScore !== null ? leaderScore : '—'}</span></div>
-              <div><span style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)' }}>{isCampaign ? 'Time ' : 'Moves '}</span><span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,215,0,0.7)' }}>{isCampaign ? (leaderTime !== null ? formatTime(leaderTime) : '—') : (leaderMoves !== null ? leaderMoves : '—')}</span></div>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <span style={{ flex: 1, fontSize: 8, fontWeight: 700, color: 'rgba(255,215,0,0.6)', letterSpacing: 1.5 }}>LEADER</span>
+              <span style={{ flex: 1, fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>{isCampaign ? 'Time' : 'Moves'} <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,215,0,0.7)' }}>{isCampaign ? (leaderTime !== null ? formatTime(leaderTime) : '—') : (leaderMoves !== null ? leaderMoves : '—')}</span></span>
             </div>
           </div>
         </div>
@@ -605,11 +654,6 @@ export function GameScreen() {
           </div>
           <div style={{ marginTop: 8, fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>Tap anywhere to dismiss</div>
         </div>
-      )}
-
-      {/* Buy-hint sheet */}
-      {showBuyHintModal && (
-        <BuyHintModal onClose={() => setShowBuyHintModal(false)} onWatchAd={() => void onHint()} />
       )}
 
       {/* Hint toast */}

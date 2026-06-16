@@ -24,6 +24,7 @@ import {
 } from '../engine/GridEngine';
 import { canExtendPath, isPathComplete } from '../engine/PathValidator';
 import { calculateCoverage, isWinCondition } from '../engine/CoverageCalc';
+import { solve, type Solution, type SolverDotPair } from '../engine/PathSolver';
 import { skin } from '../../styles/skin';
 import { useFlowGameStore } from '../../store/flowGameStore';
 
@@ -86,6 +87,15 @@ export class GameScene extends Phaser.Scene {
   private hintTweens: Phaser.Tweens.Tween[] = [];
   private hintCell: { row: number; col: number } | null = null;
 
+  // FL-UX-D-008L: cached full solution (lazy — solved on first ghost/clue use),
+  // ghost overlay (hint), clue auto-complete overlay. Bound window handlers kept
+  // as fields so they can be removed on scene shutdown (game is rebuilt per mount).
+  private solution: Solution | null = null;
+  private ghostGraphics?: Phaser.GameObjects.Graphics;
+  private clueOverlay?: Phaser.GameObjects.Graphics;
+  private readonly boundHintGhost = (): void => this.handleHintGhost();
+  private readonly boundAutoClue = (): void => this.handleAutoCompleteClue();
+
   constructor() {
     super({ key: 'GameScene' });
   }
@@ -98,6 +108,7 @@ export class GameScene extends Phaser.Scene {
     this.levelConfig = config;
     this.N = config.grid;
     this.grid = initGrid(config.grid, config.dots);
+    this.solution = null; // FL-UX-D-008L: recompute lazily for the new level
     this.resetInputState();
     if (this.cameras?.main) {
       this.renderBoard();
@@ -106,9 +117,19 @@ export class GameScene extends Phaser.Scene {
 
   create(): void {
     this.registerInput();
+    // FL-UX-D-008L: assist events from React (HINT ghost path / GET A CLUE).
+    window.addEventListener('fl:showHintGhost', this.boundHintGhost);
+    window.addEventListener('fl:autoCompleteClue', this.boundAutoClue);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.removeAssistListeners, this);
+    this.events.once(Phaser.Scenes.Events.DESTROY, this.removeAssistListeners, this);
     if (this.levelConfig) {
       this.renderBoard();
     }
+  }
+
+  private removeAssistListeners(): void {
+    window.removeEventListener('fl:showHintGhost', this.boundHintGhost);
+    window.removeEventListener('fl:autoCompleteClue', this.boundAutoClue);
   }
 
   private resetInputState(): void {
@@ -119,6 +140,8 @@ export class GameScene extends Phaser.Scene {
     this.lockedColours.clear(); // FL-UX-D-008h
     this.dotLetters.forEach((t) => t.destroy()); // FL-UX-D-008i
     this.dotLetters = [];
+    this.ghostGraphics?.destroy(); this.ghostGraphics = undefined; // FL-UX-D-008L
+    this.clueOverlay?.destroy(); this.clueOverlay = undefined;
     for (const g of this.pathGraphics.values()) g.destroy();
     for (const g of this.cellFillGraphics.values()) g.destroy();
     this.pathGraphics.clear();
@@ -258,19 +281,19 @@ export class GameScene extends Phaser.Scene {
       for (const [r, c] of [[dot.r1, dot.c1], [dot.r2, dot.c2]] as const) {
         const cx = this.cellCentreX(c);
         const cy = this.cellCentreY(r);
-        // FL-UX-D-008j sharp dot: solid fill → glass highlight → crisp white ring
-        // (no shadow drop — that softened the edge).
+        // FL-UX-D-008k sharp dot: solid fill → crisp white ring. The glass-highlight
+        // dot was removed — it read as a stray mark next to the colour letter.
         g.fillStyle(hex, 1);
         g.fillCircle(cx, cy, dotRadius);
-        g.fillStyle(0xffffff, 0.22);
-        g.fillCircle(cx - dotRadius * 0.28, cy - dotRadius * 0.28, dotRadius * 0.22);
-        g.lineStyle(1.5, 0xffffff, 0.35);
+        g.lineStyle(1.5, 0xffffff, 0.45);
         g.strokeCircle(cx, cy, dotRadius - 0.5);
-        // Colour letter, centred, above all graphics layers.
+        // Colour letter — rendered at device pixel ratio so the glyph is crisp
+        // instead of upscaled/blurry on the high-DPI panel.
         const text = this.add
           .text(cx, cy, letter, { fontSize: `${fontSize}px`, fontFamily: 'monospace', fontStyle: 'normal', color: '#FFFFFF' })
+          .setResolution(Math.max(2, window.devicePixelRatio || 1))
           .setOrigin(0.5, 0.5)
-          .setAlpha(0.85)
+          .setAlpha(0.9)
           .setDepth(10);
         this.dotLetters.push(text);
       }
@@ -749,5 +772,116 @@ export class GameScene extends Phaser.Scene {
     this.hintGraphics?.destroy();
     this.hintGraphics = undefined;
     this.hintCell = null;
+  }
+
+  // ─── FL-UX-D-008L: assist helpers (solution-backed hint ghost + clue) ─────────
+
+  /** Lazily solve the level once (cached); null if unsolvable in the timeout. */
+  private ensureSolution(): void {
+    if (this.solution || !this.levelConfig) return;
+    this.solution = solve(this.N, this.levelConfig.dots as SolverDotPair[], 2500);
+  }
+
+  private getSolutionPath(colour: Colour): { r: number; c: number }[] | null {
+    this.ensureSolution();
+    return this.solution?.get(colour) ?? null;
+  }
+
+  /** Colour most worth assisting. Prefers an unlocked (unconnected) colour with
+   * the least progress. If ALL colours are connected but tiles remain (coverage
+   * < 100%), falls back to the colour whose solution path is longest vs its
+   * current path — the one most worth REROUTING to cover the leftover cells. */
+  private getMostConstrainedColour(): Colour | null {
+    const dots = this.levelConfig?.dots ?? [];
+    let pick: Colour | null = null;
+    let fewest = Infinity;
+    for (const d of dots) {
+      if (this.lockedColours.has(d.colour)) continue;
+      const len = this.allPaths.get(d.colour)?.length ?? 0;
+      if (len < fewest) { fewest = len; pick = d.colour; }
+    }
+    if (pick) return pick;
+
+    // All connected but board not full → pick the highest reroute-gain colour.
+    let bestColour: Colour | null = null;
+    let maxGain = 0;
+    for (const d of dots) {
+      const solutionLen = (this.getSolutionPath(d.colour) ?? []).length;
+      const currentLen = this.allPaths.get(d.colour)?.length ?? 0;
+      const gain = solutionLen - currentLen;
+      if (gain > maxGain) { maxGain = gain; bestColour = d.colour; }
+    }
+    return maxGain > 0 ? bestColour : null;
+  }
+
+  /** fl:showHintGhost — draw the full solution path for the active/most-constrained
+   * colour as a thin semi-transparent overlay, then fade out after 3s. */
+  private handleHintGhost(): void {
+    // Use the active colour only if it's still unconnected; otherwise (locked or
+    // none) fall back to the most-worth-assisting colour, which handles the
+    // all-connected-but-incomplete case (reroute hint).
+    const target = (this.activeColour && !this.lockedColours.has(this.activeColour))
+      ? this.activeColour
+      : this.getMostConstrainedColour();
+    if (!target) return;
+    const path = this.getSolutionPath(target);
+    if (!path || path.length < 2) return;
+
+    this.ghostGraphics?.destroy();
+    const g = this.add.graphics();
+    this.ghostGraphics = g;
+    g.setDepth(5);
+    g.lineStyle(Math.max(2, this.cellSize * 0.20), toHex(skin.pathColors[target]), 0.45);
+    g.beginPath();
+    g.moveTo(this.cellCentreX(path[0].c), this.cellCentreY(path[0].r));
+    for (let i = 1; i < path.length; i++) {
+      g.lineTo(this.cellCentreX(path[i].c), this.cellCentreY(path[i].r));
+    }
+    g.strokePath();
+
+    this.time.delayedCall(3000, () => {
+      const gg = this.ghostGraphics;
+      if (!gg) return;
+      this.tweens.add({
+        targets: gg,
+        alpha: 0,
+        duration: 500,
+        onComplete: () => { gg.destroy(); if (this.ghostGraphics === gg) this.ghostGraphics = undefined; },
+      });
+    });
+  }
+
+  /** fl:autoCompleteClue — commit the full solution path for the most-constrained
+   * colour (so coverage + win detection run), with a white-dot overlay to mark it. */
+  private handleAutoCompleteClue(): void {
+    const target = this.getMostConstrainedColour();
+    if (!target) return;
+    const path = this.getSolutionPath(target);
+    if (!path || path.length < 2) return;
+
+    // A connected colour can be REROUTED to fill leftover cells — unlock it first
+    // so clearColourPath can wipe the old (shorter) path, then commit the solution.
+    this.lockedColours.delete(target);
+    this.clearColourPath(target);
+    for (const { r, c } of path) {
+      this.grid = occupyCell(this.grid, r, c, target);
+    }
+    const cells = path.map(({ r, c }) => this.grid[r][c]);
+    this.allPaths.set(target, cells);
+    useFlowGameStore.getState().setPath(target, cells);
+    this.renderPath(target, cells);
+    this.dispatchCoverage();
+    this.lockedColours.add(target);
+
+    this.clueOverlay?.destroy();
+    const ov = this.add.graphics();
+    this.clueOverlay = ov;
+    ov.setDepth(6);
+    ov.fillStyle(0xffffff, 0.5);
+    for (const { r, c } of path) {
+      ov.fillCircle(this.cellCentreX(c), this.cellCentreY(r), this.cellSize * 0.06);
+    }
+
+    this.checkWin();
   }
 }

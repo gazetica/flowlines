@@ -46,6 +46,11 @@ export interface FlowGameState {
   gestureCount: number;          // one complete colour path per drag gesture
   retryCount: number;            // Daily retries (0–2), preserved across initLevel
 
+  // FL-UX-D-008L per-level assist flags (reset in initLevel)
+  clueUsed: boolean;             // GET A CLUE used this level
+  extensionUsed: boolean;        // TIME/MOVE extension used this level
+  watchAdUsed: boolean;          // WATCH AD (+3 gems) used this level
+
   // Status / result
   status: GameStatus;
   score: number;
@@ -72,6 +77,12 @@ export interface FlowGameState {
   onGestureComplete: () => void;
   incrementRetry: () => void;
   resetRetry: () => void;
+
+  // FL-UX-D-008L assist actions
+  markClueUsed: () => void;
+  markWatchAdUsed: () => void;
+  applyTimeExtension: () => void;   // Campaign: +30s (subtract from elapsed)
+  applyMoveExtension: () => void;   // Classic: +5 to budget & remaining
 }
 
 export const useFlowGameStore = create<FlowGameState>((set, get) => ({
@@ -90,6 +101,9 @@ export const useFlowGameStore = create<FlowGameState>((set, get) => ({
   movesRemaining: 0,
   gestureCount: 0,
   retryCount: 0,
+  clueUsed: false,
+  extensionUsed: false,
+  watchAdUsed: false,
   status: 'idle',
   score: 0,
   stars: 0,
@@ -176,6 +190,9 @@ export const useFlowGameStore = create<FlowGameState>((set, get) => ({
       coverage: 0,
       scoreBreakdown: null,
       retryCount: get().retryCount,
+      clueUsed: false,
+      extensionUsed: false,
+      watchAdUsed: false,
     }),
 
   // Called on pointerup when a colour path changed since pointerdown. Decrements
@@ -191,4 +208,20 @@ export const useFlowGameStore = create<FlowGameState>((set, get) => ({
 
   incrementRetry: () => set((state) => ({ retryCount: Math.min(2, state.retryCount + 1) })),
   resetRetry: () => set({ retryCount: 0 }),
+
+  // ─── FL-UX-D-008L assist actions ───────────────────────────────────────────
+  markClueUsed: () => set({ clueUsed: true }),
+  markWatchAdUsed: () => set({ watchAdUsed: true }),
+
+  // Time extension — subtract 30s from elapsed (adds 30s to the countdown).
+  applyTimeExtension: () =>
+    set((state) => ({ timeElapsed: Math.max(0, state.timeElapsed - 30), extensionUsed: true })),
+
+  // Move extension — +5 to the Classic budget and remaining.
+  applyMoveExtension: () =>
+    set((state) => ({
+      classicMoveLimitTotal: state.classicMoveLimitTotal + 5,
+      movesRemaining: state.movesRemaining + 5,
+      extensionUsed: true,
+    })),
 }));
