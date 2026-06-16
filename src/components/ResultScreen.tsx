@@ -198,7 +198,7 @@ export function ResultScreen() {
   const starSpan = (n: number) => {
     const earned = n <= stars;
     return (
-      <span key={n} style={{ fontSize: earned ? 36 : 28, color: earned ? GOLD : '#4a4a6a', display: 'inline-block', animation: `flStarBounce 500ms ease-out ${(n - 1) * 150}ms both` }}>
+      <span key={n} style={{ fontSize: 36, color: earned ? GOLD : 'rgba(255,255,255,0.6)', opacity: earned ? 1 : 0.35, display: 'inline-block', animation: `flStarBounce 500ms ease-out ${(n - 1) * 150}ms both` }}>
         {earned ? '★' : '☆'}
       </span>
     );
