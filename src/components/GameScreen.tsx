@@ -15,6 +15,7 @@ import { App } from '@capacitor/app';
 import Phaser from 'phaser';
 import { GameScene, type LevelConfig } from '../game/scenes/GameScene';
 import { getLevel, type LevelData } from '../game/engine/LevelManager';
+import { buildDailyLevelConfig, type DailyMode } from '../utils/dailyPuzzleGenerator';
 import type { DotPair } from '../game/engine/GridEngine';
 import type { GameMode } from '../game/engine/ScoreEngine';
 import { skin } from '../styles/skin';
@@ -130,7 +131,13 @@ export function GameScreen() {
   const rawMode = searchParams.get('mode') ?? 'campaign';
   const mode = rawMode as GameMode;
   const isDaily = rawMode === 'daily'; // legacy daily flag (win nav) — unchanged
-  const levelData: LevelData = useMemo(() => getLevel(packId, levelIndex) ?? TEST_LEVEL, [packId, levelIndex]);
+  // FL-UX-D-010: daily challenges are generated at runtime (not from any pack).
+  const isDailyMode = rawMode === 'daily_campaign' || rawMode === 'daily_classic';
+  const retryParam = searchParams.get('retry') === 'true';
+  const levelData: LevelData = useMemo(
+    () => (isDailyMode ? buildDailyLevelConfig(rawMode as DailyMode) : getLevel(packId, levelIndex) ?? TEST_LEVEL),
+    [isDailyMode, rawMode, packId, levelIndex],
+  );
 
   // Mode flags derived from the URL (stable, no first-frame flicker).
   const isCampaign = mode === 'campaign' || mode === 'daily_campaign';
@@ -206,7 +213,8 @@ export function GameScreen() {
 
     const handleWin = () => {
       useFlowGameStore.getState().triggerWin(levelData.optimalMoves);
-      navigate(isDaily ? '/daily?completed=true' : `/result?pack=${packId}&level=${levelIndex}&mode=${rawMode}`);
+      const retryQ = retryParam ? '&retry=true' : '';
+      navigate(isDaily ? '/daily?completed=true' : `/result?pack=${packId}&level=${levelIndex}&mode=${rawMode}${retryQ}`);
     };
     window.addEventListener('fl:win', handleWin);
 
@@ -254,14 +262,16 @@ export function GameScreen() {
     return () => clearInterval(interval);
   }, [isCampaign, isClassic, status]);
 
-  // ─── FL-UX-D-008c: Classic gesture counter — GameScene fires fl:gestureComplete
-  // on each completed drag gesture; decrement the Classic move budget here.
+  // ─── FL-UX-D-008c / 010c: gesture counter — GameScene fires fl:gestureComplete
+  // on each completed drag gesture. Registered for ALL modes: gestureCount feeds
+  // the ScoreEngine gesture bonus (Campaign included); onGestureComplete only
+  // decrements the move budget in Classic (Bug 3 — was Classic-only → Campaign
+  // bonus was always 0).
   useEffect(() => {
-    if (!isClassic) return;
     const handleGesture = () => { onGestureComplete(); };
     window.addEventListener('fl:gestureComplete', handleGesture);
     return () => window.removeEventListener('fl:gestureComplete', handleGesture);
-  }, [isClassic, onGestureComplete]);
+  }, [onGestureComplete]);
 
   // ─── FL-UX-D-008j: Campaign timer tick (Web Audio, fires each second). Skips
   // silently until the AudioContext is created on first pointer interaction.
@@ -289,9 +299,10 @@ export function GameScreen() {
   // FL-UX-D-009: on fail (timeout / out of moves), go to the ResultScreen fail state.
   useEffect(() => {
     if (status === 'failed') {
-      navigate(`/result?pack=${packId}&level=${levelIndex}&mode=${rawMode}&fail=true`);
+      const retryQ = retryParam ? '&retry=true' : '';
+      navigate(`/result?pack=${packId}&level=${levelIndex}&mode=${rawMode}&fail=true${retryQ}`);
     }
-  }, [status, navigate, packId, levelIndex, rawMode]);
+  }, [status, navigate, packId, levelIndex, rawMode, retryParam]);
 
   // Audio + haptics (UNCHANGED).
   useEffect(() => {
@@ -436,7 +447,9 @@ export function GameScreen() {
             <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', letterSpacing: 0.5 }}>
               {isZen
                 ? `Zen · ${zenGrid}×${zenGrid} · ${cap(String(difficulty))}`
-                : `Pack ${levelData.pack} · Level ${String(levelIndex).padStart(2, '0')} · ${cap(String(difficulty))}`}
+                : isDailyMode
+                  ? `Daily Challenge · ${isCampaign ? 'Campaign' : 'Classic'}`
+                  : `Pack ${levelData.pack} · Level ${String(levelIndex).padStart(2, '0')} · ${cap(String(difficulty))}`}
             </span>
             {isZen ? (
               <span style={{ background: 'rgba(26,188,156,0.15)', border: '1px solid rgba(26,188,156,0.35)', borderRadius: 8, padding: '3px 8px', fontSize: 10, fontWeight: 700, color: ZEN_TEAL }}>
@@ -534,9 +547,19 @@ export function GameScreen() {
 
       {/* ── Bottom panel — Numtap 3-layer pattern ──────────────────────────── */}
 
-      {/* Layer 1 — rescue pills: GET A CLUE (@33%) + TIME/MOVE EXTENSION (@66%) */}
-      {(showClue || showExtension) && (
+      {/* Layer 1 — rescue pills: GET A CLUE (@33%) + TIME/MOVE EXTENSION (@66%).
+          FL-UX-D-010b: the row is ALWAYS rendered (a hidden placeholder reserves its
+          height when no pill is active) so toggling the pills mid-game never resizes
+          the flex:1 Phaser board — which otherwise left the grid drawn off-centre,
+          since GameScene only re-centres on loadLevel, not on canvas resize. */}
+      {(isCampaign || isClassic) && (
         <div style={{ display: 'flex', gap: 8, padding: '8px 12px 4px' }}>
+          {!showClue && !showExtension && (
+            <div aria-hidden style={{ flex: 1, visibility: 'hidden', display: 'flex', flexDirection: 'column', gap: 2, padding: '8px 12px', border: '1.5px solid transparent', boxSizing: 'border-box' }}>
+              <div style={{ fontSize: 11 }}>&nbsp;</div>
+              <div style={{ fontSize: 9 }}>&nbsp;</div>
+            </div>
+          )}
           {showClue && (
             <button
               onPointerDown={() => void handleClue()}

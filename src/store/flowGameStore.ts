@@ -195,14 +195,16 @@ export const useFlowGameStore = create<FlowGameState>((set, get) => ({
       watchAdUsed: false,
     }),
 
-  // Called on pointerup when a colour path changed since pointerdown. Decrements
-  // the Classic move budget; exhausting it (Classic only) fails the level.
+  // Called on pointerup when a colour path changed since pointerdown. gestureCount
+  // increments in ALL modes (it feeds the ScoreEngine gesture bonus — FL-UX-D-010c
+  // Bug 3). Only Classic touches the move budget; exhausting it fails the level.
   onGestureComplete: () =>
     set((state) => {
       const gestureCount = state.gestureCount + 1;
-      const movesRemaining = Math.max(0, state.classicMoveLimitTotal - gestureCount);
       const isClassic = state.gameMode === 'classic' || state.gameMode === 'daily_classic';
-      const failed = isClassic && movesRemaining === 0 && state.status === 'playing';
+      if (!isClassic) return { gestureCount };
+      const movesRemaining = Math.max(0, state.classicMoveLimitTotal - gestureCount);
+      const failed = movesRemaining === 0 && state.status === 'playing';
       return { gestureCount, movesRemaining, status: failed ? 'failed' : state.status };
     }),
 

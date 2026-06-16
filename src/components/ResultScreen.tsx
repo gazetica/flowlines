@@ -14,9 +14,11 @@ import { skin } from '../styles/skin';
 import { useFlowGameStore } from '../store/flowGameStore';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
 import { getLevel } from '../game/engine/LevelManager';
+import { buildDailyLevelConfig, type DailyMode } from '../utils/dailyPuzzleGenerator';
 import { ScoreEngine, type ScoreInput, type GameMode } from '../game/engine/ScoreEngine';
 import { onLevelComplete } from '../services/interstitialAdService';
 import { submitCampaignScore } from '../services/flCampaignScores';
+import { submitDailyScore } from '../services/flDailyScores';
 import { trackLevelComplete } from '../services/analytics';
 import { requestAndResolve } from '../services/consentService';
 import { requestNotificationPermission, scheduleDailyReminder } from '../services/notificationService';
@@ -35,6 +37,7 @@ export function ResultScreen() {
   const levelIdx = parseInt(searchParams.get('level') ?? '1', 10);
   const mode = (searchParams.get('mode') ?? 'campaign') as GameMode;
   const isFail = searchParams.get('fail') === 'true';
+  const isRetry = searchParams.get('retry') === 'true';
 
   const isCampaign = mode === 'campaign' || mode === 'daily_campaign';
   const isClassic = mode === 'classic' || mode === 'daily_classic';
@@ -48,14 +51,19 @@ export function ResultScreen() {
   const classicMoveLimitTotal = useFlowGameStore((s) => s.classicMoveLimitTotal);
   const coverage = useFlowGameStore((s) => s.coverage);
   const moveCount = useFlowGameStore((s) => s.moveCount);
-  const retryCount = useFlowGameStore((s) => s.retryCount);
-  const incrementRetry = useFlowGameStore((s) => s.incrementRetry);
 
   const campaignProgress = useFlowSettingsStore((s) => s.campaignProgress);
   const classicProgress = useFlowSettingsStore((s) => s.classicProgress);
   const recordLevelComplete = useFlowSettingsStore((s) => s.recordLevelComplete);
+  const recordDailyComplete = useFlowSettingsStore((s) => s.recordDailyComplete);
+  const dailyProgress = useFlowSettingsStore((s) => s.dailyProgress);
+  const incrementDailyRetry = useFlowSettingsStore((s) => s.incrementDailyRetry);
 
-  const levelData = useMemo(() => getLevel(packId, levelIdx), [packId, levelIdx]);
+  // FL-UX-D-010: daily levels are runtime-generated (not from any pack).
+  const levelData = useMemo(
+    () => (isDaily ? buildDailyLevelConfig(mode as DailyMode) : getLevel(packId, levelIdx)),
+    [isDaily, mode, packId, levelIdx],
+  );
   const difficulty = levelData?.difficulty ?? 'easy';
   const gridSize = levelData?.grid ?? 6;
   const totalTiles = gridSize * gridSize;
@@ -96,10 +104,16 @@ export function ResultScreen() {
     ranRef.current = true;
     if (isFail) return;
 
-    if (mode !== 'zen') {
+    if (isDaily) {
+      // Daily completions do NOT touch pack progression — record the daily flag
+      // and submit to the daily leaderboard. Retry score is capped at 80% (§8).
+      const challenge = mode === 'daily_campaign' ? 'campaign' : 'classic';
+      recordDailyComplete(challenge);
+      const submitScore = isRetry ? Math.round(result.total * 0.8) : result.total;
+      void submitDailyScore(submitScore, gestureCount);
+    } else if (mode !== 'zen') {
       recordLevelComplete({
-        mode: mode === 'daily_campaign' ? 'campaign' : mode === 'daily_classic' ? 'classic' : mode,
-        packId, levelId, levelIndex: levelIdx, stars, score: result.total, timeElapsed, gestureCount,
+        mode, packId, levelId, levelIndex: levelIdx, stars, score: result.total, timeElapsed, gestureCount,
       });
     }
 
@@ -128,7 +142,9 @@ export function ResultScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const breadcrumb = `Pack ${packId} · Level ${String(levelIdx).padStart(2, '0')} · ${cap(String(difficulty))}`;
+  const breadcrumb = isDaily
+    ? `Daily Challenge · ${isCampaign ? 'Campaign' : 'Classic'}`
+    : `Pack ${packId} · Level ${String(levelIdx).padStart(2, '0')} · ${cap(String(difficulty))}`;
 
   const card: CSSProperties = {
     margin: '0 20px 12px', background: 'rgba(255,255,255,0.04)',
@@ -142,10 +158,15 @@ export function ResultScreen() {
 
   // ─── FAIL STATE ───────────────────────────────────────────────────────────
   if (isFail || stars === 0) {
-    const retriesLeft = !isDaily || retryCount < 2;
+    const dailyAttempts = mode === 'daily_campaign' ? dailyProgress.campaignRetryCount : dailyProgress.classicRetryCount;
+    const retriesLeft = !isDaily || dailyAttempts < 3; // first attempt + up to 2 retries
     const tryAgain = () => {
-      if (isDaily) incrementRetry();
-      navigate(`/game?pack=${packId}&level=${levelIdx}&mode=${mode}`);
+      if (isDaily) {
+        incrementDailyRetry(mode === 'daily_campaign' ? 'campaign' : 'classic');
+        navigate(`/game?mode=${mode}&retry=true`);
+      } else {
+        navigate(`/game?pack=${packId}&level=${levelIdx}&mode=${mode}`);
+      }
     };
     return (
       <Frame>
@@ -177,8 +198,8 @@ export function ResultScreen() {
             ) : (
               <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: 13, marginBottom: 10 }}>No more retries today</div>
             )}
-            <button onPointerDown={() => navigate(`/levels/${packId}?mode=${mode}`)} style={{ ...ghostBtn, width: '100%' }}>
-              ‹ Back to Levels
+            <button onPointerDown={() => navigate(isDaily ? '/daily' : `/levels/${packId}?mode=${mode}`)} style={{ ...ghostBtn, width: '100%' }}>
+              {isDaily ? '‹ Back to Daily' : '‹ Back to Levels'}
             </button>
           </div>
 
@@ -228,10 +249,7 @@ export function ResultScreen() {
         <div style={{ borderTop: '1px solid rgba(127,119,221,0.2)', margin: '6px 0' }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
           <span style={{ fontSize: 15, fontWeight: 700, color: '#FFFFFF' }}>TOTAL</span>
-          <span>
-            <span style={{ fontSize: 18, fontWeight: 700, color: GOLD }}>{result.total}</span>
-            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)' }}> /1000</span>
-          </span>
+          <span style={{ fontSize: 18, fontWeight: 700, color: GOLD }}>{result.total}</span>
         </div>
 
         {/* Stats below divider */}
@@ -255,16 +273,27 @@ export function ResultScreen() {
       </div>
 
       {/* CTAs */}
-      <button
-        onPointerDown={() => hasNextLevel ? navigate(`/game?pack=${packId}&level=${nextLevelIdx}&mode=${mode}`) : navigate(`/packs?mode=${mode}`)}
-        style={{ width: 'calc(100% - 40px)', margin: '0 20px 10px', background: GOLD, color: '#0D0620', border: 'none', borderRadius: 12, padding: 16, fontSize: 16, fontWeight: 700, cursor: 'pointer' }}
-      >
-        {hasNextLevel ? `▶  NEXT LEVEL (Level ${String(nextLevelIdx).padStart(2, '0')})` : '▶  PACK COMPLETE!'}
-      </button>
-      <div style={{ margin: '0 20px 16px', display: 'flex', gap: 10 }}>
-        <button onPointerDown={() => navigate(`/game?pack=${packId}&level=${levelIdx}&mode=${mode}&replay=true`)} style={ghostBtn}>↩  Replay</button>
-        <button onPointerDown={() => navigate(`/levels/${packId}?mode=${mode}`)} style={ghostBtn}>☰  Levels</button>
-      </div>
+      {isDaily ? (
+        <button
+          onPointerDown={() => navigate('/daily')}
+          style={{ width: 'calc(100% - 40px)', margin: '0 20px 16px', background: GOLD, color: '#0D0620', border: 'none', borderRadius: 12, padding: 16, fontSize: 16, fontWeight: 700, cursor: 'pointer' }}
+        >
+          ✓  BACK TO DAILY
+        </button>
+      ) : (
+        <>
+          <button
+            onPointerDown={() => hasNextLevel ? navigate(`/game?pack=${packId}&level=${nextLevelIdx}&mode=${mode}`) : navigate(`/packs?mode=${mode}`)}
+            style={{ width: 'calc(100% - 40px)', margin: '0 20px 10px', background: GOLD, color: '#0D0620', border: 'none', borderRadius: 12, padding: 16, fontSize: 16, fontWeight: 700, cursor: 'pointer' }}
+          >
+            {hasNextLevel ? `▶  NEXT LEVEL (Level ${String(nextLevelIdx).padStart(2, '0')})` : '▶  PACK COMPLETE!'}
+          </button>
+          <div style={{ margin: '0 20px 16px', display: 'flex', gap: 10 }}>
+            <button onPointerDown={() => navigate(`/game?pack=${packId}&level=${levelIdx}&mode=${mode}&replay=true`)} style={ghostBtn}>↩  Replay</button>
+            <button onPointerDown={() => navigate(`/levels/${packId}?mode=${mode}`)} style={ghostBtn}>☰  Levels</button>
+          </div>
+        </>
+      )}
 
       <div style={{ margin: '0 20px 24px' }}><GazeticaPromoCard /></div>
     </Frame>

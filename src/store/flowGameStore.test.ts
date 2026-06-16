@@ -56,6 +56,38 @@ describe('flowGameStore mode layer (FL-UX-D-004)', () => {
     expect(game().status).toBe('playing');
   });
 
+  // FL-UX-D-010c Bug 3: gestureCount must increment in ALL modes (it feeds the
+  // ScoreEngine gesture bonus); only Classic touches the move budget.
+  it('Campaign: gestureCount increments, movesRemaining unchanged', () => {
+    game().initLevel({ levelId: 'p1_001', mode: 'campaign', timeLimit: 90, classicMoveLimit: 0 });
+    useFlowGameStore.setState({ movesRemaining: 10 });
+    game().onGestureComplete();
+    expect(game().gestureCount).toBe(1);
+    expect(game().movesRemaining).toBe(10);
+  });
+
+  it('Classic: gestureCount increments, movesRemaining decrements', () => {
+    game().initLevel({ levelId: 'p1_001', mode: 'classic', timeLimit: 0, classicMoveLimit: 10 });
+    game().onGestureComplete();
+    expect(game().gestureCount).toBe(1);
+    expect(game().movesRemaining).toBe(9);
+  });
+
+  it('daily_campaign: gestureCount increments, movesRemaining unchanged', () => {
+    game().initLevel({ levelId: 'daily', mode: 'daily_campaign', timeLimit: 120, classicMoveLimit: 0 });
+    useFlowGameStore.setState({ movesRemaining: 7 });
+    game().onGestureComplete();
+    expect(game().gestureCount).toBe(1);
+    expect(game().movesRemaining).toBe(7);
+  });
+
+  it('daily_classic: gestureCount increments, movesRemaining decrements', () => {
+    game().initLevel({ levelId: 'daily', mode: 'daily_classic', timeLimit: 0, classicMoveLimit: 12 });
+    game().onGestureComplete();
+    expect(game().gestureCount).toBe(1);
+    expect(game().movesRemaining).toBe(11);
+  });
+
   it('setTimeElapsed updates timeElapsed', () => {
     game().setTimeElapsed(42);
     expect(game().timeElapsed).toBe(42);

@@ -24,8 +24,6 @@ const CAMPAIGN_ACCENT = '#E67E22';
 const CLASSIC_ACCENT = '#9B8FFF';
 const ZEN_ACCENT = '#1ABC9C';
 
-const DAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-
 type ModeProgress = Record<number, PackModeProgress>;
 
 interface CurrentPack {
@@ -170,6 +168,18 @@ export function HomeScreen() {
   else { dailyStatus = 'All done today! ✓'; dailyStatusColour = '#2ECC71'; }
 
   const remainingForBonus = 7 - streakCount;
+
+  // FL-UX-D-010c Bug 1: rolling 7-day streak row (today = LAST circle), matching
+  // DailyScreen's logic so the today circle fills the moment both dailies are done.
+  // (Previously filled the FIRST streakCount circles and pulsed i===streakCount as
+  // an *upcoming* "today" — so a completed day showed as not-yet-played.)
+  const todayDate = new Date();
+  const streakDayLetters = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(todayDate);
+    d.setDate(todayDate.getDate() - (6 - i));
+    return ['S', 'M', 'T', 'W', 'T', 'F', 'S'][d.getDay()];
+  });
+  const filledFrom = 7 - Math.min(7, streakCount); // indices >= this are filled
 
   return (
     <div
@@ -354,8 +364,8 @@ export function HomeScreen() {
 
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 6 }}>
             {Array.from({ length: 7 }, (_, i) => {
-              const completed = i < streakCount;
-              const isToday = i === streakCount && streakCount < 7;
+              const completed = i >= filledFrom;     // today = last circle (i === 6)
+              const isToday = i === 6 && !completed;  // today, not yet done → pulse
               const base: CSSProperties = {
                 flex: 1,
                 aspectRatio: '1 / 1',
@@ -385,7 +395,7 @@ export function HomeScreen() {
                       animation: 'flHomePulse 2s infinite',
                     }}
                   >
-                    {DAY_LETTERS[i]}
+                    {streakDayLetters[i]}
                   </div>
                 );
               }
@@ -399,7 +409,7 @@ export function HomeScreen() {
                     color: 'rgba(255,255,255,0.2)',
                   }}
                 >
-                  {DAY_LETTERS[i]}
+                  {streakDayLetters[i]}
                 </div>
               );
             })}

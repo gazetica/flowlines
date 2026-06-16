@@ -29,7 +29,7 @@ function reset() {
   useFlowSettingsStore.setState({
     campaignProgress: dmp(),
     classicProgress: dmp(),
-    dailyProgress: { lastDailyDate: '', campaignChallengeComplete: false, classicChallengeComplete: false, campaignRetryCount: 0, classicRetryCount: 0, streakCount: 0, lastStreakDate: '' },
+    dailyProgress: { lastDailyDate: '', campaignChallengeComplete: false, classicChallengeComplete: false, campaignRetryCount: 0, classicRetryCount: 0, streakCount: 0, lastStreakDate: '', gemRewardClaimed: false },
     gemBalance: 0,
   });
 }
@@ -81,21 +81,54 @@ describe('recordDailyComplete', () => {
     expect(set().dailyProgress.campaignChallengeComplete).toBe(true);
   });
 
-  it('both complete → streak +1 and +3 gems', async () => {
+  // FL-UX-D-010: the gem reward is no longer auto-awarded here — it is claimed
+  // manually via claimDailyGemReward(). recordDailyComplete only bumps the streak.
+  it('both complete → streak +1, no auto gem award', async () => {
     set().recordDailyComplete('campaign');
     set().recordDailyComplete('classic');
     expect(set().dailyProgress.streakCount).toBe(1);
     await tick();
+    expect(set().gemBalance).toBe(0);
+  });
+});
+
+describe('claimDailyGemReward (FL-UX-D-010)', () => {
+  it('adds 3 gems when both challenges complete and unclaimed', async () => {
+    set().recordDailyComplete('campaign');
+    set().recordDailyComplete('classic');
+    set().claimDailyGemReward();
+    await tick();
+    expect(set().gemBalance).toBe(3);
+    expect(set().dailyProgress.gemRewardClaimed).toBe(true);
+  });
+
+  it('does nothing if already claimed', async () => {
+    set().recordDailyComplete('campaign');
+    set().recordDailyComplete('classic');
+    set().claimDailyGemReward();
+    set().claimDailyGemReward();
+    await tick();
     expect(set().gemBalance).toBe(3);
   });
 
-  it('7-day streak awards +7 (10 gems total that day)', async () => {
-    useFlowSettingsStore.setState((s) => ({ dailyProgress: { ...s.dailyProgress, streakCount: 6 } }));
+  it('does nothing if only one challenge complete', async () => {
     set().recordDailyComplete('campaign');
-    set().recordDailyComplete('classic');
-    expect(set().dailyProgress.streakCount).toBe(7);
+    set().claimDailyGemReward();
     await tick();
-    expect(set().gemBalance).toBe(10);
+    expect(set().gemBalance).toBe(0);
+    expect(set().dailyProgress.gemRewardClaimed).toBe(false);
+  });
+});
+
+describe('incrementDailyRetry (FL-UX-D-010)', () => {
+  it('increments per challenge and caps at 3', () => {
+    set().incrementDailyRetry('campaign');
+    expect(set().dailyProgress.campaignRetryCount).toBe(1);
+    set().incrementDailyRetry('campaign');
+    set().incrementDailyRetry('campaign');
+    set().incrementDailyRetry('campaign');
+    expect(set().dailyProgress.campaignRetryCount).toBe(3);
+    expect(set().dailyProgress.classicRetryCount).toBe(0);
   });
 });
 
@@ -112,5 +145,11 @@ describe('resetDailyIfNewDay', () => {
     useFlowSettingsStore.setState((s) => ({ dailyProgress: { ...s.dailyProgress, streakCount: 5, lastStreakDate: '2000-01-01', lastDailyDate: '2000-01-01' } }));
     set().resetDailyIfNewDay();
     expect(set().dailyProgress.streakCount).toBe(0);
+  });
+
+  it('resets gemRewardClaimed to false on a new day', () => {
+    useFlowSettingsStore.setState((s) => ({ dailyProgress: { ...s.dailyProgress, lastDailyDate: '2000-01-01', gemRewardClaimed: true } }));
+    set().resetDailyIfNewDay();
+    expect(set().dailyProgress.gemRewardClaimed).toBe(false);
   });
 });

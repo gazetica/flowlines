@@ -64,10 +64,11 @@ export interface DailyProgress {
   lastDailyDate: string;
   campaignChallengeComplete: boolean;
   classicChallengeComplete: boolean;
-  campaignRetryCount: number;
-  classicRetryCount: number;
+  campaignRetryCount: number; // attempts made on C1 today (0..3); C2 unlocks at >=1
+  classicRetryCount: number;  // attempts made on C2 today (0..3)
   streakCount: number;
   lastStreakDate: string;
+  gemRewardClaimed: boolean;   // FL-UX-D-010: both-challenge gem reward claimed today
 }
 
 type ModeProgress = Record<number, PackModeProgress>;
@@ -80,7 +81,7 @@ function defaultModeProgress(): ModeProgress {
   return { 1: defaultPackModeProgress(), 2: defaultPackModeProgress(), 3: defaultPackModeProgress(), 4: defaultPackModeProgress() };
 }
 function defaultDailyProgress(): DailyProgress {
-  return { lastDailyDate: '', campaignChallengeComplete: false, classicChallengeComplete: false, campaignRetryCount: 0, classicRetryCount: 0, streakCount: 0, lastStreakDate: '' };
+  return { lastDailyDate: '', campaignChallengeComplete: false, classicChallengeComplete: false, campaignRetryCount: 0, classicRetryCount: 0, streakCount: 0, lastStreakDate: '', gemRewardClaimed: false };
 }
 const utcDay = (ms = Date.now()): string => new Date(ms).toISOString().slice(0, 10);
 
@@ -151,6 +152,8 @@ interface FlowSettingsState {
   }) => void;
   isPackUnlocked: (packId: number, mode: 'campaign' | 'classic') => boolean;
   recordDailyComplete: (challenge: 'campaign' | 'classic') => void;
+  incrementDailyRetry: (challenge: 'campaign' | 'classic') => void;
+  claimDailyGemReward: () => void;
   resetDailyIfNewDay: () => void;
   setZenConfig: (config: Partial<ZenConfig>) => void;
 
@@ -339,25 +342,44 @@ export const useFlowSettingsStore = create<FlowSettingsState>((set, get) => ({
   },
 
   // Mark a Daily challenge complete. When BOTH (campaign + classic) are done for
-  // the day, bump the streak + award 3 gems (and +7 on every 7th day). Guarded by
-  // lastStreakDate so the award fires once per day.
+  // the day, bump the streak (once per day, guarded by lastStreakDate). FL-UX-D-010:
+  // the 3-gem reward is NO LONGER auto-awarded here — the player claims it manually
+  // via claimDailyGemReward() on the DailyScreen.
   recordDailyComplete: (challenge) => {
     const dp: DailyProgress = { ...get().dailyProgress };
     if (challenge === 'campaign') dp.campaignChallengeComplete = true;
     else dp.classicChallengeComplete = true;
 
     const today = utcDay();
-    let gemAward = 0;
     if (dp.campaignChallengeComplete && dp.classicChallengeComplete && dp.lastStreakDate !== today) {
       dp.streakCount += 1;
       dp.lastStreakDate = today;
-      gemAward = 3;
-      if (dp.streakCount % 7 === 0) gemAward += 7;
     }
 
     set({ dailyProgress: dp });
     void Preferences.set({ key: KEYS.DAILY_PROG, value: JSON.stringify(dp) });
-    if (gemAward > 0) void get().addGems(gemAward);
+  },
+
+  // FL-UX-D-010: count an attempt on a daily challenge (incremented each launch,
+  // pass or fail). C2 unlocks once campaignRetryCount >= 1. Capped at 3 attempts.
+  incrementDailyRetry: (challenge) => {
+    const dp: DailyProgress = { ...get().dailyProgress };
+    if (challenge === 'campaign') dp.campaignRetryCount = Math.min(3, dp.campaignRetryCount + 1);
+    else dp.classicRetryCount = Math.min(3, dp.classicRetryCount + 1);
+    set({ dailyProgress: dp });
+    void Preferences.set({ key: KEYS.DAILY_PROG, value: JSON.stringify(dp) });
+  },
+
+  // FL-UX-D-010: manual claim of the both-challenges-complete gem reward. Adds 3
+  // gems exactly once per day; a no-op unless both challenges are done and unclaimed.
+  claimDailyGemReward: () => {
+    const dp = get().dailyProgress;
+    if (dp.campaignChallengeComplete && dp.classicChallengeComplete && !dp.gemRewardClaimed) {
+      const next: DailyProgress = { ...dp, gemRewardClaimed: true };
+      set({ dailyProgress: next });
+      void Preferences.set({ key: KEYS.DAILY_PROG, value: JSON.stringify(next) });
+      void get().addGems(3);
+    }
   },
 
   // FL-UX-D-007: merge + persist the last-used Zen session config.
@@ -380,6 +402,7 @@ export const useFlowSettingsStore = create<FlowSettingsState>((set, get) => ({
       dp.classicChallengeComplete = false;
       dp.campaignRetryCount = 0;
       dp.classicRetryCount = 0;
+      dp.gemRewardClaimed = false; // FL-UX-D-010: reward re-claimable each new day
       changed = true;
     }
     if (dp.lastStreakDate && dp.lastStreakDate !== today && dp.lastStreakDate !== yesterday && dp.streakCount !== 0) {
