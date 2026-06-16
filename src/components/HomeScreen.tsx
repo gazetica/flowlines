@@ -179,7 +179,7 @@ export function HomeScreen() {
         width: '100%',
         overflowX: 'hidden',
         touchAction: 'pan-y',
-        background: 'linear-gradient(160deg, #1A0A3C 0%, #2D1060 100%)',
+        background: '#0D0620',
         fontFamily: skin.fontBody,
       }}
     >

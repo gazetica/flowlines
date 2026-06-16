@@ -293,7 +293,7 @@ export function HowToPlayScreen() {
     <div
       style={{
         position: 'relative', width: '100%', height: '100dvh', overflow: 'hidden',
-        background: 'linear-gradient(160deg, #1A0A3C 0%, #2D1060 100%)',
+        background: '#0D0620',
         display: 'flex', flexDirection: 'column', fontFamily: skin.fontBody,
       }}
     >

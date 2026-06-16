@@ -274,7 +274,7 @@ export function ResultScreen() {
 // ─── Frame: gradient bg + FloatingPathCanvas + scroll area + pinned BottomNav ──
 function Frame({ children }: { children: ReactNode }) {
   return (
-    <div style={{ position: 'relative', height: '100dvh', width: '100%', background: 'linear-gradient(160deg, #1A0A3C 0%, #2D1060 100%)', overflowX: 'hidden', display: 'flex', flexDirection: 'column', fontFamily: skin.fontBody }}>
+    <div style={{ position: 'relative', height: '100dvh', width: '100%', background: '#0D0620', overflowX: 'hidden', display: 'flex', flexDirection: 'column', fontFamily: skin.fontBody }}>
       <FloatingPathCanvas />
       <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', position: 'relative', zIndex: 1, touchAction: 'pan-y', paddingBottom: 16 }}>
         {children}

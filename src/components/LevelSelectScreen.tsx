@@ -61,7 +61,7 @@ export default function LevelSelectScreen() {
         position: 'relative',
         height: '100dvh',
         width: '100%',
-        background: 'linear-gradient(160deg, #1A0A3C 0%, #2D1060 100%)',
+        background: '#0D0620',
         overflowX: 'hidden',
         display: 'flex',
         flexDirection: 'column',

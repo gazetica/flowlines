@@ -146,7 +146,7 @@ export default function PackSelectScreen() {
         position: 'relative',
         minHeight: '100dvh',
         width: '100%',
-        background: 'linear-gradient(160deg, #1A0A3C 0%, #2D1060 100%)',
+        background: '#0D0620',
         overflowX: 'hidden',
         touchAction: 'pan-y',
         paddingBottom: 72,
