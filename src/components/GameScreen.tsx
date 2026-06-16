@@ -206,7 +206,7 @@ export function GameScreen() {
 
     const handleWin = () => {
       useFlowGameStore.getState().triggerWin(levelData.optimalMoves);
-      navigate(isDaily ? '/daily?completed=true' : '/result');
+      navigate(isDaily ? '/daily?completed=true' : `/result?pack=${packId}&level=${levelIndex}&mode=${rawMode}`);
     };
     window.addEventListener('fl:win', handleWin);
 
@@ -285,6 +285,13 @@ export function GameScreen() {
       useFlowGameStore.setState({ status: 'failed' });
     }
   }, [timeRemaining, status, isCampaign, timeLimitSeconds]);
+
+  // FL-UX-D-009: on fail (timeout / out of moves), go to the ResultScreen fail state.
+  useEffect(() => {
+    if (status === 'failed') {
+      navigate(`/result?pack=${packId}&level=${levelIndex}&mode=${rawMode}&fail=true`);
+    }
+  }, [status, navigate, packId, levelIndex, rawMode]);
 
   // Audio + haptics (UNCHANGED).
   useEffect(() => {
@@ -623,24 +630,7 @@ export function GameScreen() {
         </div>
       )}
 
-      {/* ── Failed overlay (stub — full result UX is FL-UX-D-009) ───────────── */}
-      {status === 'failed' && (
-        <div style={{ position: 'absolute', inset: 0, zIndex: 50, background: 'rgba(13,6,32,0.92)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
-          <div style={{ fontSize: 32 }}>⏱</div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: DANGER }}>
-            {isCampaign ? "TIME'S UP" : 'OUT OF MOVES'}
-          </div>
-          <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)' }}>
-            {isCampaign ? 'The timer ran out' : 'No moves remaining'}
-          </div>
-          <div
-            onPointerDown={() => navigate(-1)}
-            style={{ background: skin.gold, color: '#0D0620', borderRadius: 10, padding: '14px 32px', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}
-          >
-            ‹ BACK
-          </div>
-        </div>
-      )}
+      {/* Failed state now navigates to the ResultScreen fail layout (FL-UX-D-009). */}
 
       {/* B.2: Level 1 contextual tutorial overlay (first-time players only) */}
       {showTutorialHint && (

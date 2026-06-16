@@ -1,369 +1,315 @@
 // ResultScreen.tsx
-// Flow Lines | Gazetica Studio | Sprint 2 Day 11 | Task FL-S2-011
+// Flow Lines | Gazetica Studio | UX Sprint D | Task FL-UX-D-009 (VD-06)
 //
-// Post-game result screen (VDD VD-06 scaffold — data complete, animations land
-// in Sprint 3). Shown when gameStore.status === 'complete'. Reads everything
-// from the store after triggerWin() has run. No @ts-nocheck, no Numtap alias.
+// Mode-aware result screen with PASS and FAIL states. Reads the just-finished
+// level's state from flowGameStore (set by triggerWin / fail), recomputes the
+// per-mode score via ScoreEngine.calc, persists it via recordLevelComplete, and
+// preserves the critical first-win side-effects (interstitial, Supabase score,
+// UMP consent, daily-reminder permission) carried over from the prior screen.
 
 import type { CSSProperties } from 'react';
-import { useEffect } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { skin } from '../styles/skin';
 import { useFlowGameStore } from '../store/flowGameStore';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
-import { getNextLevel } from '../game/engine/LevelManager';
+import { getLevel } from '../game/engine/LevelManager';
+import { ScoreEngine, type ScoreInput, type GameMode } from '../game/engine/ScoreEngine';
 import { onLevelComplete } from '../services/interstitialAdService';
 import { submitCampaignScore } from '../services/flCampaignScores';
 import { trackLevelComplete } from '../services/analytics';
 import { requestAndResolve } from '../services/consentService';
 import { requestNotificationPermission, scheduleDailyReminder } from '../services/notificationService';
-import { flagOf } from './CountrySelector';
+import { FloatingPathCanvas } from './FloatingPathCanvas';
 import { GazeticaPromoCard } from './GazeticaPromoCard';
 
-/** 1-based level index from a level id, e.g. "p1_005" → 5. */
-function levelIndexFromId(id: string): number {
-  return parseInt(id.split('_')[1] ?? '1', 10);
-}
-
-const GOLD = '#EF9F27';
-const MUTED = '#6b6898';
-const STAR_EMPTY = '#4a4a6a';
-
-// Stars bounce in (VDD: 120ms each, ease-out, 130ms stagger). 3-star earns a
-// gold glow pulse on the container 380ms after mount (last star lands at 260+120).
-const RESULT_KEYFRAMES = `
-@keyframes flStarBounce {
-  0%   { transform: scale(0); opacity: 0; }
-  60%  { transform: scale(1.3); opacity: 1; }
-  100% { transform: scale(1.0); opacity: 1; }
-}
-@keyframes flStarGlow {
-  0%   { box-shadow: 0 0 20px rgba(255,215,0,0.6); }
-  100% { box-shadow: 0 0 0 rgba(255,215,0,0); }
-}
-`;
+const GOLD = '#FFD700';
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+const mmss = (s: number): string => `${Math.floor(s / 60)}:${String(Math.max(0, s) % 60).padStart(2, '0')}`;
 
 export function ResultScreen() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const levelId = useFlowGameStore((s) => s.levelId);
-  const stars = useFlowGameStore((s) => s.stars);
-  const score = useFlowGameStore((s) => s.score);
-  const moveCount = useFlowGameStore((s) => s.moveCount);
+  const packId = parseInt(searchParams.get('pack') ?? '1', 10);
+  const levelIdx = parseInt(searchParams.get('level') ?? '1', 10);
+  const mode = (searchParams.get('mode') ?? 'campaign') as GameMode;
+  const isFail = searchParams.get('fail') === 'true';
+
+  const isCampaign = mode === 'campaign' || mode === 'daily_campaign';
+  const isClassic = mode === 'classic' || mode === 'daily_classic';
+  const isDaily = mode === 'daily_campaign' || mode === 'daily_classic';
+
+  // Finished-level state (still in the store; cleared by the next initLevel).
+  const hintsUsed = useFlowGameStore((s) => s.hintsUsed);
+  const clueUsed = useFlowGameStore((s) => s.clueUsed);
+  const timeElapsed = useFlowGameStore((s) => s.timeElapsed);
+  const timeLimitSeconds = useFlowGameStore((s) => s.timeLimitSeconds);
+  const gestureCount = useFlowGameStore((s) => s.gestureCount);
+  const classicMoveLimitTotal = useFlowGameStore((s) => s.classicMoveLimitTotal);
   const coverage = useFlowGameStore((s) => s.coverage);
-  const optimalMoves = useFlowGameStore((s) => s.optimalMoves);
-  const breakdown = useFlowGameStore((s) => s.scoreBreakdown);
-  const resetGame = useFlowGameStore((s) => s.resetGame);
+  const moveCount = useFlowGameStore((s) => s.moveCount);
+  const retryCount = useFlowGameStore((s) => s.retryCount);
+  const incrementRetry = useFlowGameStore((s) => s.incrementRetry);
 
-  // Player identity for the leaderboard rank snippet.
-  const playerUid = useFlowSettingsStore((s) => s.playerUid);
-  const alias = useFlowSettingsStore((s) => s.alias);
-  const country = useFlowSettingsStore((s) => s.country);
-  const packProgress = useFlowSettingsStore((s) => s.packProgress);
-  const flag = country ? flagOf(country) : '🌐';
+  const campaignProgress = useFlowSettingsStore((s) => s.campaignProgress);
+  const classicProgress = useFlowSettingsStore((s) => s.classicProgress);
+  const recordLevelComplete = useFlowSettingsStore((s) => s.recordLevelComplete);
 
-  const perfectClear = (breakdown?.perfectClearBonus ?? 0) > 0;
+  const levelData = useMemo(() => getLevel(packId, levelIdx), [packId, levelIdx]);
+  const difficulty = levelData?.difficulty ?? 'easy';
+  const gridSize = levelData?.grid ?? 6;
+  const totalTiles = gridSize * gridSize;
+  const filledTiles = Math.round((coverage / 100) * totalTiles);
 
-  // Interstitial gate (CLAUDE.md §9: ResultScreen only). Fires once on mount —
-  // shows an ad on the 5-completions / 3-minute trigger, never for Remove-Ads
-  // owners, never in Zen mode. Self-gating inside the service.
+  // Per-mode score (the 4-component FL-UX-D-004 formula).
+  const result = useMemo(() => {
+    const input: ScoreInput = {
+      mode,
+      dotsConnected: !isFail,
+      coveragePct: coverage,
+      timeElapsed,
+      timeLimit: timeLimitSeconds,
+      movesUsed: gestureCount,
+      classicMoveLimit: classicMoveLimitTotal,
+      optimalMoves: levelData?.optimalMoves ?? 20,
+      cellMoveCount: moveCount,
+      hintsUsed,
+      clueUsed,
+      difficulty,
+    };
+    return ScoreEngine.calc(input);
+  }, [mode, isFail, coverage, timeElapsed, timeLimitSeconds, gestureCount, classicMoveLimitTotal, levelData, moveCount, hintsUsed, clueUsed, difficulty]);
+
+  const stars = result.stars;
+  const perfectClear = stars >= 3 && hintsUsed === 0 && !clueUsed;
+
+  const modeProgress = isClassic ? classicProgress : campaignProgress;
+  const packProg = modeProgress[packId];
+  const levelId = levelData?.id ?? '';
+  const bestTime = packProg?.bestTimes?.[levelId] ?? null;
+  const bestMoves = packProg?.bestMoves?.[levelId] ?? null;
+
+  // ─── Mount side-effects (record + interstitial + Supabase + consent + notif) ──
+  const ranRef = useRef(false);
   useEffect(() => {
-    const isZen = searchParams.get('mode') === 'zen';
-    const removeAds = useFlowSettingsStore.getState().removeAdsPurchased ?? false;
-    void onLevelComplete(isZen, removeAds);
+    if (ranRef.current) return;
+    ranRef.current = true;
+    if (isFail) return; // fails: no record / score submit / ad / first-win flows
 
-    // Submit the campaign score + log completion for real pack levels only
-    // (TEST_LEVEL has an empty levelId). Daily wins route to /daily, not here.
-    const m = /^p(\d+)_(\d+)/.exec(levelId);
-    if (m) {
-      const pack = Number(m[1]);
-      void submitCampaignScore(levelId, pack, score, moveCount);
-      trackLevelComplete({ level_id: levelId, pack_id: pack, moves: moveCount, stars, score });
+    // Zen has no pack progression — skip recording for it.
+    if (mode !== 'zen') {
+      recordLevelComplete({
+        mode: mode === 'daily_campaign' ? 'campaign' : mode === 'daily_classic' ? 'classic' : mode,
+        packId,
+        levelId,
+        levelIndex: levelIdx,
+        stars,
+        score: result.total,
+        timeElapsed,
+        gestureCount,
+      });
     }
 
-    // FL-UX-B B.1: UMP consent is deferred to the first win. Fire it once (after
-    // a short beat so the result screen renders first); persist so it never
-    // repeats. Non-EU players skip silently inside requestAndResolve().
+    // Interstitial — CLAUDE.md §9: ResultScreen only, never Zen. Self-gates inside.
+    const isZen = mode === 'zen';
+    const removeAds = useFlowSettingsStore.getState().removeAdsPurchased ?? false;
+    const adTimer = setTimeout(() => { void onLevelComplete(isZen, removeAds); }, 1500);
+
+    // Supabase score + analytics for real pack levels (TEST_LEVEL has empty id).
+    const m = /^p(\d+)_(\d+)/.exec(levelId);
+    if (m) {
+      void submitCampaignScore(levelId, Number(m[1]), result.total, moveCount);
+      trackLevelComplete({ level_id: levelId, pack_id: Number(m[1]), moves: moveCount, stars, score: result.total });
+    }
+
+    // First-win flows (deferred consent + daily reminder), persisted → fire once.
     const settings = useFlowSettingsStore.getState();
     if (!settings.consentRequested) {
       settings.markConsentRequested();
       setTimeout(() => { void requestAndResolve(); }, 800);
     }
-
-    // FL-UX-C C.1: request notification permission once (after first win) and
-    // schedule the 20:00 daily reminder if granted. Persisted → never asks twice.
     if (!settings.notificationScheduled) {
       void requestNotificationPermission().then((granted) => {
-        if (granted) {
-          void scheduleDailyReminder();
-          settings.markNotificationScheduled();
-        }
+        if (granted) { void scheduleDailyReminder(); settings.markNotificationScheduled(); }
       });
     }
+
+    return () => clearTimeout(adTimer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Parse "p1_001" → pack 1, level 001 (falls back gracefully for TEST_LEVEL).
-  const match = /^p(\d+)_(\d+)/.exec(levelId);
-  const packNo = match ? match[1] : '–';
-  const levelNo = match ? match[2] : '—';
+  const breadcrumb = `Pack ${packId} · Level ${String(levelIdx).padStart(2, '0')} · ${cap(String(difficulty))}`;
 
-  const currentPack = match ? Number(match[1]) : 1;
-  const currentIndex = match ? Number(match[2]) : 1;
-
-  const goPackSelect = () => {
-    resetGame();
-    navigate('/packs');
+  const screen: CSSProperties = {
+    position: 'relative', minHeight: '100dvh', width: '100%',
+    background: 'linear-gradient(160deg, #1A0A3C 0%, #2D1060 100%)',
+    overflowX: 'hidden', overflowY: 'auto', touchAction: 'pan-y',
+    paddingBottom: 24, fontFamily: skin.fontBody,
   };
-  const replay = () => {
-    resetGame();
-    if (match) navigate(`/game?pack=${currentPack}&level=${currentIndex}`);
-    else navigate('/game');
-  };
-  const nextLevel = () => {
-    resetGame();
-    const next = match ? getNextLevel(levelId) : null;
-    if (next) {
-      navigate(`/game?pack=${next.pack}&level=${levelIndexFromId(next.id)}`);
-    } else {
-      navigate('/packs'); // last level in pack (or no real level loaded)
-    }
-  };
-
   const card: CSSProperties = {
-    background: 'rgba(255,255,255,0.06)',
-    border: '1px solid rgba(127,119,221,0.2)',
-    borderRadius: 16,
-    padding: 16,
-    width: '100%',
-    boxSizing: 'border-box',
+    margin: '0 20px 12px', background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(127,119,221,0.2)', borderRadius: 14, padding: '14px 16px',
   };
-  const row: CSSProperties = {
-    display: 'flex',
-    justifyContent: 'space-between',
-    fontSize: 13,
-    color: skin.white,
-    padding: '4px 0',
+  const cardHeader: CSSProperties = { fontSize: 10, fontWeight: 700, color: 'rgba(127,119,221,0.7)', letterSpacing: 1.5, marginBottom: 10 };
+  const ghostBtn: CSSProperties = {
+    flex: 1, border: '1px solid rgba(255,255,255,0.12)', background: 'none', borderRadius: 10,
+    padding: 13, fontSize: 13, color: 'rgba(255,255,255,0.5)', cursor: 'pointer',
   };
 
-  // Build the visible (non-zero) breakdown rows.
-  const breakdownRows: Array<{ label: string; value: string }> = [];
-  if (breakdown) {
-    if (breakdown.perfectClearBonus > 0)
-      breakdownRows.push({ label: 'Perfect Clear', value: `+${breakdown.perfectClearBonus}` });
-    if (breakdown.moveBonus > 0)
-      breakdownRows.push({ label: 'Move bonus', value: `+${breakdown.moveBonus}` });
-    if (breakdown.movePenalty > 0)
-      breakdownRows.push({ label: 'Move penalty', value: `−${breakdown.movePenalty}` });
-    if (breakdown.hintPenalty > 0)
-      breakdownRows.push({ label: 'Hint penalty', value: `−${breakdown.hintPenalty}` });
-    if (breakdown.timeBonus > 0)
-      breakdownRows.push({ label: 'Time bonus', value: `+${breakdown.timeBonus}` });
+  // ─── FAIL STATE ───────────────────────────────────────────────────────────
+  if (isFail || stars === 0) {
+    const retriesLeft = !isDaily || retryCount < 2;
+    const tryAgain = () => {
+      if (isDaily) incrementRetry();
+      navigate(`/game?pack=${packId}&level=${levelIdx}&mode=${mode}`);
+    };
+    return (
+      <div style={screen}>
+        <FloatingPathCanvas />
+        <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 64 }}>
+          <div style={{ fontSize: 40 }}>{isClassic ? '♟' : '⏱'}</div>
+          <div style={{ fontSize: 24, fontWeight: 700, color: '#E74C3C', letterSpacing: 2, marginTop: 12 }}>
+            {isClassic ? 'OUT OF MOVES' : "TIME'S UP"}
+          </div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginTop: 4, marginBottom: 24 }}>{breadcrumb}</div>
+
+          <div style={{ ...card, alignSelf: 'stretch' }}>
+            <div style={cardHeader}>HOW FAR YOU GOT</div>
+            <Row label="You reached" value={`${coverage}%`} />
+            <Row label="Tiles filled" value={`${filledTiles}/${totalTiles}`} />
+            <Row label={isClassic ? 'Moves used' : 'Cell moves'} value={isClassic ? `${gestureCount}/${classicMoveLimitTotal}` : `${moveCount}`} last />
+          </div>
+
+          <div style={{ alignSelf: 'stretch', margin: '4px 20px 0' }}>
+            {retriesLeft ? (
+              <button
+                onPointerDown={tryAgain}
+                style={{ width: '100%', background: GOLD, color: '#0D0620', border: 'none', borderRadius: 12, padding: 16, fontSize: 16, fontWeight: 700, cursor: 'pointer', marginBottom: 10 }}
+              >
+                ↩  TRY AGAIN
+              </button>
+            ) : (
+              <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: 13, marginBottom: 10 }}>No more retries today</div>
+            )}
+            <button onPointerDown={() => navigate(`/levels/${packId}?mode=${mode}`)} style={{ ...ghostBtn, width: '100%' }}>
+              ‹ Back to Levels
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
-  return (
-    <div
-      style={{
-        width: '100%',
-        minHeight: '100vh',
-        background: skin.bgDeep,
-        display: 'flex',
-        flexDirection: 'column',
-        fontFamily: skin.fontBody,
-      }}
-    >
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', padding: '12px 16px' }}>
-        <button
-          onClick={goPackSelect}
-          style={{ background: 'none', border: 'none', color: skin.white, fontSize: 14, cursor: 'pointer', padding: 4 }}
-        >
-          ‹ Back to Pack
-        </button>
-      </div>
+  // ─── PASS STATE ───────────────────────────────────────────────────────────
+  const b = result.breakdown;
+  const cluePenalty = clueUsed ? -100 : 0;
+  const nextLevelIdx = levelIdx + 1;
+  const hasNextLevel = nextLevelIdx <= 50;
 
-      {/* Body */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '0 20px 24px', maxWidth: 480, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
-        <div style={{ fontFamily: skin.fontDisplay, fontSize: 26, color: GOLD, marginTop: 8 }}>
+  const starSpan = (n: number) => {
+    const earned = n <= stars;
+    return (
+      <span
+        key={n}
+        style={{
+          fontSize: earned ? 36 : 28,
+          color: earned ? GOLD : '#4a4a6a',
+          display: 'inline-block',
+          animation: `flStarBounce 500ms ease-out ${(n - 1) * 150}ms both`,
+        }}
+      >
+        {earned ? '★' : '☆'}
+      </span>
+    );
+  };
+
+  return (
+    <div style={screen}>
+      <FloatingPathCanvas />
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        {/* Header */}
+        <div style={{ fontSize: 24, fontWeight: 700, color: GOLD, letterSpacing: 2, textAlign: 'center', marginTop: 24, marginBottom: 4 }}>
           LEVEL COMPLETE!
         </div>
-        <div style={{ fontSize: 12, color: MUTED, marginTop: -8 }}>
-          Pack {packNo} · Level {levelNo}
-        </div>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', textAlign: 'center', marginBottom: 16 }}>{breadcrumb}</div>
 
-        {/* Stars — earned stars bounce in with a 130ms stagger; 3-star glow pulse */}
-        <style>{RESULT_KEYFRAMES}</style>
-        <div
-          style={{
-            display: 'flex',
-            gap: 12,
-            fontSize: 40,
-            lineHeight: 1,
-            borderRadius: 16,
-            padding: '2px 8px',
-            animation: stars >= 3 ? 'flStarGlow 600ms ease-out 380ms forwards' : undefined,
-          }}
-        >
-          {[1, 2, 3].map((n) => {
-            const earned = n <= stars;
-            return (
-              <span
-                key={n}
-                style={{
-                  display: 'inline-block',
-                  color: earned ? GOLD : STAR_EMPTY,
-                  ...(earned
-                    ? {
-                        opacity: 0,
-                        animation: `flStarBounce 120ms ease-out ${(n - 1) * 130}ms forwards`,
-                      }
-                    : {}),
-                }}
-              >
-                {earned ? '★' : '☆'}
-              </span>
-            );
-          })}
+        {/* Stars */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 8 }}>
+          {[1, 2, 3].map(starSpan)}
         </div>
-
-        {/* ✨ PERFECT CLEAR badge */}
         {perfectClear && (
-          <div
-            style={{
-              fontFamily: skin.fontDisplay,
-              fontSize: 13,
-              color: skin.gold,
-              textAlign: 'center',
-              marginTop: -4,
-            }}
-          >
-            ✨ PERFECT CLEAR!
-          </div>
+          <div style={{ fontSize: 13, color: GOLD, textAlign: 'center', marginBottom: 16 }}>✨ PERFECT CLEAR!</div>
         )}
+        {!perfectClear && <div style={{ marginBottom: 16 }} />}
 
-        {/* Score breakdown card */}
-        <div style={card}>
-          <div style={{ fontFamily: skin.fontDisplay, fontSize: 13, color: skin.purpleLight, marginBottom: 8, letterSpacing: 1 }}>
-            SCORE BREAKDOWN
+        {/* Score breakdown */}
+        <div style={{ ...card, animation: 'flFadeSlideUp 300ms ease-out 200ms both' }}>
+          <div style={cardHeader}>SCORE BREAKDOWN</div>
+          <Row label="Dots connected" value={`${b.dotsScore} / 250`} />
+          <Row label="Board filled" value={`${b.coverageScore} / 250`} />
+          <Row label={isClassic ? 'Move efficiency' : 'Time efficiency'} value={`${b.efficiencyScore} / 300`} />
+          <Row label={isClassic ? 'Time bonus' : 'Move bonus'} value={`${b.bonusScore} / 200`} />
+          {hintsUsed > 0 && <Row label={`Hints used (×${hintsUsed})`} value={`${b.hintPenalty}`} />}
+          {clueUsed && <Row label="Auto-complete used" value={`${cluePenalty}`} />}
+          <div style={{ borderTop: '1px solid rgba(127,119,221,0.2)', margin: '6px 0' }} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: 15, fontWeight: 700, color: '#FFFFFF' }}>TOTAL</span>
+            <span style={{ fontSize: 18, fontWeight: 700, color: GOLD }}>{result.total} / 1000</span>
           </div>
-          {breakdown ? (
+        </div>
+
+        {/* Your stats */}
+        <div style={{ ...card, animation: 'flFadeSlideUp 300ms ease-out 320ms both' }}>
+          <div style={cardHeader}>YOUR STATS</div>
+          {isCampaign && (
             <>
-              {breakdownRows.map((r) => (
-                <div key={r.label} style={row}>
-                  <span style={{ color: MUTED }}>{r.label}</span>
-                  <span>{r.value}</span>
-                </div>
-              ))}
-              <div style={{ height: 1, background: 'rgba(127,119,221,0.2)', margin: '8px 0' }} />
-              <div style={{ ...row, fontFamily: skin.fontDisplay }}>
-                <span>Total</span>
-                <span style={{ color: GOLD }}>{breakdown.total}</span>
-              </div>
+              <Row label="Time taken" value={mmss(timeElapsed)} />
+              <Row label="Timer limit" value={mmss(timeLimitSeconds)} />
+              <Row label="Cell moves" value={`${moveCount}`} />
+              <Row label="Best time" value={bestTime != null ? mmss(bestTime) : 'First clear! 🎉'} last />
             </>
-          ) : (
-            <div style={row}>
-              <span style={{ color: MUTED }}>Score</span>
-              <span style={{ color: GOLD }}>{score}</span>
-            </div>
+          )}
+          {isClassic && (
+            <>
+              <Row label="Moves used" value={`${gestureCount} of ${classicMoveLimitTotal}`} />
+              <Row label="Time taken" value={mmss(timeElapsed)} />
+              <Row label="Best moves" value={bestMoves != null ? `${bestMoves}` : 'First clear! 🎉'} last />
+            </>
+          )}
+          {!isCampaign && !isClassic && (
+            <>
+              <Row label="Moves taken" value={`${moveCount}`} />
+              <Row label="Time" value={mmss(timeElapsed)} last />
+            </>
           )}
         </div>
 
-        {/* Pack progress — never end a session on a zero; show a bar to fill. */}
-        <div
-          style={{
-            margin: '0',
-            background: 'rgba(255,255,255,0.04)',
-            border: '1px solid rgba(127,119,221,0.2)',
-            borderRadius: 12,
-            padding: '12px 16px',
-            width: '100%',
-            boxSizing: 'border-box',
-          }}
-        >
-          <div style={{ fontSize: 10, color: MUTED, fontFamily: skin.fontDisplay, marginBottom: 8, letterSpacing: 1 }}>
-            PACK {currentPack} PROGRESS
-          </div>
-          <div style={{ height: 6, background: 'rgba(127,119,221,0.2)', borderRadius: 3, marginBottom: 6, overflow: 'hidden' }}>
-            <div
-              style={{
-                height: '100%',
-                width: `${(Math.min((packProgress[currentPack]?.solved ?? 0), 50) / 50) * 100}%`,
-                background: 'linear-gradient(90deg, #7F77DD, #EF9F27)',
-                borderRadius: 3,
-                transition: 'width 0.6s ease-out',
-              }}
-            />
-          </div>
-          <div style={{ fontSize: 11, color: skin.purpleLight }}>
-            {packProgress[currentPack]?.solved ?? 0} / 50 levels solved
-          </div>
-        </div>
-
-        {/* YOUR RANK snippet — own-row highlight style from VD-08 */}
-        <div
-          style={{
-            ...card,
-            background: 'rgba(255,215,0,0.08)',
-            border: '1px solid rgba(255,215,0,0.25)',
-          }}
-        >
-          <div style={{ fontFamily: skin.fontDisplay, fontSize: 13, color: skin.purpleLight, marginBottom: 8, letterSpacing: 1 }}>
-            YOUR RANK
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: skin.white }}>
-            {/* TODO Sprint 4: real rank from Supabase */}
-            <span style={{ fontFamily: skin.fontDisplay, color: GOLD, minWidth: 34 }}>#--</span>
-            <span style={{ fontSize: 11, color: MUTED }}>{playerUid || '—'}</span>
-            <span style={{ fontSize: 16 }}>{flag}</span>
-            <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {alias || 'You'}
-            </span>
-            <span style={{ fontFamily: skin.fontDisplay, color: GOLD }}>{score}</span>
-          </div>
-        </div>
-
-        {/* Stat row */}
-        <div style={{ width: '100%', textAlign: 'center', color: MUTED, fontSize: 12, lineHeight: 1.6 }}>
-          <div>
-            Moves: <span style={{ color: skin.white }}>{moveCount}</span> &nbsp;|&nbsp; Optimal:{' '}
-            <span style={{ color: skin.white }}>{optimalMoves}</span>
-          </div>
-          <div>
-            Coverage: <span style={{ color: skin.white }}>{coverage}%</span>
-          </div>
-        </div>
-
-        {/* CTA */}
+        {/* CTAs */}
         <button
-          onClick={nextLevel}
-          style={{
-            width: '100%',
-            padding: '14px',
-            background: GOLD,
-            color: skin.bgDeep,
-            border: 'none',
-            borderRadius: 12,
-            fontFamily: skin.fontDisplay,
-            fontSize: 15,
-            fontWeight: 700,
-            cursor: 'pointer',
-          }}
+          onPointerDown={() => hasNextLevel ? navigate(`/game?pack=${packId}&level=${nextLevelIdx}&mode=${mode}`) : navigate(`/packs?mode=${mode}`)}
+          style={{ width: 'calc(100% - 40px)', margin: '0 20px 10px', background: GOLD, color: '#0D0620', border: 'none', borderRadius: 12, padding: 16, fontSize: 16, fontWeight: 700, cursor: 'pointer' }}
         >
-          ▶ NEXT LEVEL
+          {hasNextLevel ? `▶  NEXT LEVEL (Level ${String(nextLevelIdx).padStart(2, '0')})` : '▶  PACK COMPLETE!'}
         </button>
-        <div style={{ display: 'flex', gap: 16 }}>
-          <button onClick={replay} style={{ background: 'none', border: 'none', color: skin.purpleLight, fontSize: 13, cursor: 'pointer' }}>
-            Replay
-          </button>
-          <button onClick={goPackSelect} style={{ background: 'none', border: 'none', color: skin.purpleLight, fontSize: 13, cursor: 'pointer' }}>
-            Pack Select
-          </button>
+        <div style={{ margin: '0 20px 16px', display: 'flex', gap: 10 }}>
+          <button onPointerDown={() => navigate(`/game?pack=${packId}&level=${levelIdx}&mode=${mode}&replay=true`)} style={ghostBtn}>↩  Replay</button>
+          <button onPointerDown={() => navigate(`/levels/${packId}?mode=${mode}`)} style={ghostBtn}>☰  Levels</button>
         </div>
 
         {/* Cross-promo (CLAUDE.md §9: ResultScreen bottom slot = GazeticaPromoCard only) */}
-        <div style={{ width: '100%', height: 1, background: 'rgba(127,119,221,0.2)', marginTop: 4 }} />
-        <GazeticaPromoCard />
+        <div style={{ margin: '0 20px 24px' }}>
+          <GazeticaPromoCard />
+        </div>
       </div>
+    </div>
+  );
+}
+
+function Row({ label, value, last }: { label: string; value: string; last?: boolean }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', fontSize: 13, borderBottom: last ? 'none' : '1px solid rgba(127,119,221,0.08)' }}>
+      <span style={{ color: 'rgba(255,255,255,0.55)' }}>{label}</span>
+      <span style={{ color: '#FFFFFF', fontWeight: 600 }}>{value}</span>
     </div>
   );
 }
