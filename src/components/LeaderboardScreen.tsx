@@ -1,148 +1,218 @@
 // LeaderboardScreen.tsx
-// Flow Lines | Gazetica Studio | Sprint 3 Day 16 | Task FL-S3-016 (VD-08)
+// Flow Lines | Gazetica Studio | UX Sprint D | Task FL-UX-D-011 (CF-013 / VD-08)
 //
-// UI shell with 3 tabs and mock rows. Real Supabase queries are Sprint 4.
+// Rebuilt from the Sprint-3 scaffold (Daily | Timed | All-Time) to the confirmed
+// final tab set: CAMPAIGN | CLASSIC | DAILY.
+//   • Campaign — flowlines_scores, mode='campaign', score DESC, pack filter
+//   • Classic  — flowlines_scores, mode='classic',  moves ASC,  pack filter
+//   • Daily    — flowlines_daily_scores, date=today, score DESC, no pack filter
+// Per-tab/per-pack session cache, loading + error + empty states, pinned player
+// row, FloatingPathCanvas background, BottomNav. Reads identity from flowSettingsStore.
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { CSSProperties } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { skin } from '../styles/skin';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
-import { getDailyLeaderboard } from '../services/flDailyScores';
-import { getCampaignLeaderboard } from '../services/flCampaignScores';
+import { fetchCampaignLeaderboard, fetchClassicLeaderboard } from '../services/flCampaignScores';
+import { fetchDailyLeaderboard } from '../services/flDailyScores';
+import { flagOf } from '../data/countries';
+import { FloatingPathCanvas } from './FloatingPathCanvas';
 import { BottomNav } from './BottomNav';
-import { flagOf } from './CountrySelector';
 
 const GOLD = '#FFD700';
-const PURPLE_LIGHT = '#ADA7F0';
+const UID_PURPLE = '#ADA7F0';
 
-type Row = { rank: number; uid: string; code: string; alias: string; score: number; moves: number };
-
-/** Today's UTC date 'YYYY-MM-DD' (matches the daily-scores `date` column). */
-function todayUtc(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
-type Tab = 'daily' | 'timed' | 'alltime';
+type Tab = 'campaign' | 'classic' | 'daily';
 const TABS: Array<{ key: Tab; label: string }> = [
+  { key: 'campaign', label: 'CAMPAIGN' },
+  { key: 'classic', label: 'CLASSIC' },
   { key: 'daily', label: 'DAILY' },
-  { key: 'timed', label: 'TIMED' },
-  { key: 'alltime', label: 'ALL-TIME' },
 ];
 
-function LeaderRow({ row, isPlayer }: { row: Row; isPlayer?: boolean }) {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 10,
-        padding: '10px 12px',
-        borderBottom: '1px solid rgba(127,119,221,0.12)',
-        background: isPlayer ? 'rgba(255,215,0,0.08)' : 'none',
-      }}
-    >
-      <span style={{ fontFamily: skin.fontDisplay, fontSize: 10, color: skin.muted, minWidth: 26 }}>
-        {isPlayer && row.rank < 0 ? '#--' : `#${row.rank}`}
-      </span>
-      <span style={{ fontFamily: skin.fontDisplay, fontSize: 9, color: PURPLE_LIGHT, minWidth: 48 }}>{row.uid}</span>
-      <span style={{ fontSize: 14 }}>{flagOf(row.code)}</span>
-      <span style={{ fontSize: 12, color: skin.white, flex: 1 }}>{row.alias || 'Player'}</span>
-      {isPlayer && row.rank < 0 && <span style={{ color: GOLD, fontSize: 12 }}>▶</span>}
-      <span style={{ fontFamily: skin.fontDisplay, fontSize: 12, color: GOLD }}>{row.score}</span>
-    </div>
-  );
+// Normalised row for rendering — `value` is the score (Campaign/Daily) or the
+// move count (Classic), already chosen per tab.
+interface Row {
+  player_uid: string;
+  alias: string;
+  country: string;
+  value: number;
 }
 
 export default function LeaderboardScreen() {
-  const [tab, setTab] = useState<Tab>('daily');
-  const [rows, setRows] = useState<Row[]>([]);
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
   const playerUid = useFlowSettingsStore((s) => s.playerUid);
   const alias = useFlowSettingsStore((s) => s.alias);
   const country = useFlowSettingsStore((s) => s.country);
 
-  const dateLabel = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  const [tab, setTab] = useState<Tab>('campaign');
+  const [rows, setRows] = useState<Row[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
-  // Fetch real scores from Supabase per active tab. DAILY → today's daily board;
-  // ALL-TIME → campaign board; TIMED → campaign board for now (TODO Sprint 5:
-  // dedicated timed leaderboard). Fails silently to an empty list.
+  // Session cache keyed by tab so re-visiting a tab doesn't re-fetch.
+  const cache = useRef<Record<string, Row[]>>({});
+
   useEffect(() => {
+    if (cache.current[tab]) {
+      setRows(cache.current[tab]);
+      setError(null);
+      setLoading(false);
+      return;
+    }
+
     let cancelled = false;
     setLoading(true);
-    (async () => {
-      const data =
-        tab === 'daily'
-          ? await getDailyLeaderboard(todayUtc(), 20)
-          : await getCampaignLeaderboard(20);
-      if (cancelled) return;
-      const mapped: Row[] = data.map((r, i) => ({
-        rank: i + 1,
-        uid: r.player_uid || 'NT------',
-        code: r.country || 'XX',
-        alias: r.alias,
-        score: r.score,
-        moves: r.moves,
-      }));
-      setRows(mapped);
-      setLoading(false);
-    })();
-    return () => { cancelled = true; };
-  }, [tab]);
+    setError(null);
 
-  // Player's own row: real rank if they appear in the results, else '#--'.
-  const playerInList = rows.find((r) => r.uid === playerUid);
-  const playerRow: Row = playerInList
-    ? { ...playerInList }
-    : { rank: -1, uid: playerUid || 'NT------', code: country || 'IN', alias, score: 0, moves: 0 };
+    const run = async (): Promise<Row[]> => {
+      if (tab === 'campaign') {
+        const data = await fetchCampaignLeaderboard();
+        return data.map((r) => ({ player_uid: r.player_uid, alias: r.alias, country: r.country, value: r.score }));
+      }
+      if (tab === 'classic') {
+        const data = await fetchClassicLeaderboard();
+        return data.map((r) => ({ player_uid: r.player_uid, alias: r.alias, country: r.country, value: r.score }));
+      }
+      const data = await fetchDailyLeaderboard();
+      return data.map((r) => ({ player_uid: r.player_uid, alias: r.alias, country: r.country, value: r.score }));
+    };
+
+    run()
+      .then((data) => {
+        if (cancelled) return;
+        cache.current[tab] = data;
+        setRows(data);
+      })
+      .catch(() => {
+        if (!cancelled) setError("Couldn't load scores. Check your connection.");
+      })
+      .finally(() => { if (!cancelled) setLoading(false); });
+
+    return () => { cancelled = true; };
+  }, [tab, reloadKey]);
+
+  const retry = () => {
+    delete cache.current[tab];
+    setReloadKey((k) => k + 1);
+  };
+
+  // Player's own pinned row: best (= first) appearance in the sorted list. All
+  // tabs are score-DESC, so the first hit is the player's best.
+  const playerIdx = rows.findIndex((r) => r.player_uid === playerUid);
+  const playerRank = playerIdx >= 0 ? playerIdx + 1 : -1;
+  const playerValue = playerIdx >= 0 ? rows[playerIdx].value : 0;
+
+  const dateLabel = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
   return (
-    <div style={{ width: '100%', height: '100vh', background: skin.bgDeep, display: 'flex', flexDirection: 'column', fontFamily: skin.fontBody }}>
-      <div style={{ padding: '12px 16px' }}>
+    <div style={{ position: 'relative', height: '100dvh', width: '100%', background: skin.bgDeep, overflowX: 'hidden', display: 'flex', flexDirection: 'column', fontFamily: skin.fontBody }}>
+      <FloatingPathCanvas />
+      <style>{`@keyframes flLbSpin { to { transform: rotate(360deg) } }`}</style>
+
+      {/* Header */}
+      <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px', position: 'relative', zIndex: 1 }}>
+        <button onClick={() => navigate('/home')} style={{ background: 'none', border: 'none', color: skin.white, fontSize: 22, cursor: 'pointer', lineHeight: 1 }}>‹</button>
         <span style={{ fontFamily: skin.fontDisplay, fontSize: 16, color: GOLD, letterSpacing: 2 }}>LEADERBOARD</span>
       </div>
 
-      {/* Tabs */}
-      <div style={{ display: 'flex', gap: 8, padding: '0 16px 8px' }}>
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            style={{
-              flex: 1,
-              padding: '8px',
-              background: tab === t.key ? 'rgba(255,215,0,0.12)' : 'rgba(255,255,255,0.04)',
-              border: `1px solid ${tab === t.key ? 'rgba(255,215,0,0.4)' : 'rgba(127,119,221,0.2)'}`,
-              borderRadius: 8,
-              color: tab === t.key ? GOLD : skin.muted,
-              fontFamily: skin.fontDisplay,
-              fontSize: 11,
-              cursor: 'pointer',
-            }}
-          >
-            {t.label}
-          </button>
-        ))}
+      {/* Tab bar */}
+      <div style={{ flexShrink: 0, display: 'flex', gap: 8, padding: '0 16px 8px', position: 'relative', zIndex: 1 }}>
+        {TABS.map((t) => {
+          const active = tab === t.key;
+          return (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              style={{
+                flex: 1, padding: '9px 4px', borderRadius: 8, cursor: 'pointer',
+                fontFamily: skin.fontDisplay, fontSize: 11, letterSpacing: 0.5,
+                background: active ? GOLD : 'rgba(255,255,255,0.05)',
+                border: `1px solid ${active ? GOLD : 'rgba(255,255,255,0.2)'}`,
+                color: active ? '#0D0620' : 'rgba(255,255,255,0.4)',
+                fontWeight: active ? 700 : 500,
+              }}
+            >
+              {t.label}
+            </button>
+          );
+        })}
       </div>
 
+      {/* Date header (Daily only) */}
       {tab === 'daily' && (
-        <div style={{ padding: '0 16px 6px', fontSize: 11, color: skin.muted }}>{dateLabel}</div>
+        <div style={{ flexShrink: 0, padding: '0 16px 8px', fontFamily: skin.fontDisplay, fontSize: 12, color: 'rgba(255,255,255,0.6)', position: 'relative', zIndex: 1 }}>
+          {dateLabel}
+        </div>
       )}
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px' }}>
+      {/* List */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px', position: 'relative', zIndex: 1, touchAction: 'pan-y' }}>
         {loading ? (
-          <div style={{ textAlign: 'center', color: skin.muted, fontSize: 13, padding: '32px 0' }}>Loading…</div>
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '40px 0' }}>
+            <div style={{ width: 28, height: 28, borderRadius: '50%', border: `3px solid rgba(255,215,0,0.25)`, borderTopColor: GOLD, animation: 'flLbSpin 0.8s linear infinite' }} />
+          </div>
+        ) : error ? (
+          <div style={{ textAlign: 'center', padding: '40px 16px' }}>
+            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginBottom: 14 }}>{error}</div>
+            <button onClick={retry} style={{ background: GOLD, color: '#0D0620', border: 'none', borderRadius: 10, padding: '10px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+              Retry
+            </button>
+          </div>
         ) : rows.length === 0 ? (
-          <div style={{ textAlign: 'center', color: skin.muted, fontSize: 13, padding: '32px 0' }}>No scores yet — be the first!</div>
+          <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: 13, padding: '40px 0' }}>No scores yet — be the first!</div>
         ) : (
-          rows.map((r) => <LeaderRow key={`${r.uid}-${r.rank}`} row={r} />)
+          rows.map((r, i) => (
+            <LeaderRow key={`${r.player_uid}-${i}`} rank={i + 1} row={r} isPlayer={r.player_uid === playerUid} />
+          ))
         )}
       </div>
 
-      {/* Player's own row pinned at the bottom */}
-      <div style={{ padding: '0 16px 8px' }}>
-        <LeaderRow row={playerRow} isPlayer />
+      {/* Pinned player row */}
+      <div style={{ flexShrink: 0, padding: '6px 16px 8px', position: 'relative', zIndex: 1 }}>
+        <LeaderRow
+          rank={playerRank}
+          row={{ player_uid: playerUid || 'NT------', alias: alias || 'Player', country: country || 'IN', value: playerValue }}
+          isPlayer
+          pinned
+        />
       </div>
 
-      <BottomNav />
+      <div style={{ position: 'relative', zIndex: 2 }}><BottomNav /></div>
+    </div>
+  );
+}
+
+function LeaderRow({ rank, row, isPlayer, pinned }: {
+  rank: number; row: Row; isPlayer?: boolean; pinned?: boolean;
+}) {
+  const topThree = rank >= 1 && rank <= 3;
+  const rankColour = topThree ? GOLD : 'rgba(255,255,255,0.5)';
+  const rankLabel = rank < 0 ? '#--' : `#${rank}`;
+  const aliasText = (row.alias || 'Player').slice(0, 12);
+
+  const wrap: CSSProperties = {
+    display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px',
+    borderRadius: pinned ? 10 : 0,
+    borderBottom: pinned ? 'none' : '1px solid rgba(127,119,221,0.12)',
+    background: isPlayer ? 'rgba(255,215,0,0.05)' : 'none',
+    border: isPlayer ? '1px solid rgba(255,215,0,0.4)' : undefined,
+  };
+
+  return (
+    <div style={wrap}>
+      <span style={{ fontFamily: skin.fontDisplay, fontSize: 12, color: rankColour, minWidth: 28, fontWeight: topThree ? 700 : 500 }}>{rankLabel}</span>
+      {/* UID — differentiates players who share an alias */}
+      <span style={{ fontFamily: skin.fontDisplay, fontSize: 9, color: UID_PURPLE, minWidth: 56, letterSpacing: 0.5 }}>{row.player_uid || 'NT------'}</span>
+      <span style={{ fontSize: 16 }}>{flagOf(row.country || 'IN')}</span>
+      <span style={{ fontSize: 13, color: skin.white, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        {aliasText}
+      </span>
+      {isPlayer && rank < 0 && <span style={{ color: GOLD, fontSize: 12 }}>▶</span>}
+      <span style={{ fontFamily: skin.fontDisplay, fontSize: 14, fontWeight: 700, color: topThree ? GOLD : 'rgba(255,255,255,0.85)' }}>
+        {row.value}
+      </span>
     </div>
   );
 }

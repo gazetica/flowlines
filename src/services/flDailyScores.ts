@@ -62,6 +62,21 @@ export async function submitDailyScore(score: number, moves: number): Promise<vo
   }
 }
 
+// FL-UX-D-011 — Daily leaderboard tab. Today's combined daily scores (highest
+// first), top 50. THROWS on error (the LeaderboardScreen needs to distinguish a
+// real failure from an empty board), unlike the fire-and-forget getDailyLeaderboard.
+export async function fetchDailyLeaderboard(): Promise<DailyScoreRow[]> {
+  const date = todayUtc();
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select('date, alias, country, score, moves, player_uid')
+    .eq('date', date)
+    .order('score', { ascending: false })
+    .limit(50);
+  if (error) throw error;
+  return (data ?? []) as DailyScoreRow[];
+}
+
 /** Daily leaderboard for a given UTC date (highest first). Returns [] on error. */
 export async function getDailyLeaderboard(date: string, limit = 20): Promise<DailyScoreRow[]> {
   try {

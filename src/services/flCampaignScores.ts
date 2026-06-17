@@ -92,3 +92,47 @@ export async function getCampaignLeaderboard(limit = 20): Promise<CampaignScoreR
 export async function getDailyLeaderboard_AllTime(limit = 20): Promise<CampaignScoreRow[]> {
   return getCampaignLeaderboard(limit);
 }
+
+// ─── FL-UX-D-011 — Leaderboard queries (Campaign / Classic) ──────────────────
+// NOTE: the live `flowlines_scores` schema uses `pack_id` / `level_id` (not the
+// brief's `pack` / `level`) and has NO `stars` column (submit never writes one),
+// so stars are omitted. `mode` filtering depends on the pending mode-column
+// migration (HANDOVER pending item #1); until it exists these return [].
+// Unlike the fire-and-forget submitters, these THROW on error so the screen can
+// distinguish a real failure (error state) from an empty board (empty state).
+
+export interface FlLeaderboardRow {
+  player_uid: string;
+  alias: string;
+  country: string;
+  score: number;
+  moves: number;
+  pack_id: number;
+  level_id: string;
+}
+
+const LB_COLUMNS = 'player_uid, alias, country, score, moves, pack_id, level_id';
+
+/** Top 50 campaign scores across all packs (highest first). */
+export async function fetchCampaignLeaderboard(): Promise<FlLeaderboardRow[]> {
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select(LB_COLUMNS)
+    .eq('mode', 'campaign')
+    .order('score', { ascending: false })
+    .limit(50);
+  if (error) throw error;
+  return (data ?? []) as FlLeaderboardRow[];
+}
+
+/** Top 50 classic scores across all packs (highest score first). */
+export async function fetchClassicLeaderboard(): Promise<FlLeaderboardRow[]> {
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select(LB_COLUMNS)
+    .eq('mode', 'classic')
+    .order('score', { ascending: false })
+    .limit(50);
+  if (error) throw error;
+  return (data ?? []) as FlLeaderboardRow[];
+}
