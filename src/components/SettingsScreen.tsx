@@ -10,7 +10,9 @@ import { useNavigate } from 'react-router-dom';
 import { Browser } from '@capacitor/browser';
 import { skin } from '../styles/skin';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
+import { reopenForm } from '../services/consentService';
 import { BottomNav } from './BottomNav';
+import { FloatingPathCanvas } from './FloatingPathCanvas';
 import { flagOf, COUNTRIES } from './CountrySelector';
 
 const GOLD = '#FFD700';
@@ -81,13 +83,15 @@ export default function SettingsScreen() {
   };
 
   return (
-    <div style={{ width: '100%', height: '100vh', background: skin.bgDeep, display: 'flex', flexDirection: 'column', fontFamily: skin.fontBody }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px' }}>
+    <div style={{ position: 'relative', width: '100%', height: '100dvh', background: skin.bgDeep, overflow: 'hidden', display: 'flex', flexDirection: 'column', fontFamily: skin.fontBody }}>
+      <FloatingPathCanvas />
+
+      <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px' }}>
         <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', color: skin.white, fontSize: 18, cursor: 'pointer' }}>‹</button>
         <span style={{ fontFamily: skin.fontDisplay, fontSize: 16, color: GOLD, letterSpacing: 2 }}>SETTINGS</span>
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div style={{ position: 'relative', zIndex: 1, flex: 1, overflowY: 'auto', padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
         {/* AUDIO */}
         <Section title="AUDIO">
           <div style={rowStyle}><span>Music</span><Toggle on={s.musicEnabled} onClick={() => void s.toggleMusic()} /></div>
@@ -151,12 +155,13 @@ export default function SettingsScreen() {
 
         {/* ACCOUNT */}
         <Section title="ACCOUNT">
-          {/* TODO Sprint 4: navigate to IAP screen */}
-          <button onClick={() => navigate('/')} style={{ ...rowStyle, width: '100%', background: 'none', border: 'none', borderBottom: '1px solid rgba(127,119,221,0.1)', cursor: 'pointer' }}>
+          {/* FL-UX-D-013: Remove Ads → IAPScreen (/store), was navigate('/') → home */}
+          <button onPointerDown={() => navigate('/store')} style={{ ...rowStyle, width: '100%', background: 'none', border: 'none', borderBottom: '1px solid rgba(127,119,221,0.1)', cursor: 'pointer' }}>
             <span>🚫 Remove Ads · $2.99</span><span style={{ color: skin.muted }}>›</span>
           </button>
-          {/* TODO Sprint 4: open UMP re-consent */}
-          <button onClick={() => navigate('/')} style={{ ...rowStyle, width: '100%', background: 'none', border: 'none', borderBottom: 'none', cursor: 'pointer' }}>
+          {/* FL-UX-D-013: Ad Preferences → re-open the UMP privacy-options form in place
+              (no navigation), was navigate('/') → home */}
+          <button onPointerDown={() => void reopenForm()} style={{ ...rowStyle, width: '100%', background: 'none', border: 'none', borderBottom: 'none', cursor: 'pointer' }}>
             <span>Ad Preferences (GDPR)</span><span style={{ color: skin.muted }}>›</span>
           </button>
         </Section>
@@ -178,7 +183,7 @@ export default function SettingsScreen() {
         </Section>
       </div>
 
-      <BottomNav />
+      <div style={{ position: 'relative', zIndex: 2 }}><BottomNav /></div>
     </div>
   );
 }
