@@ -202,9 +202,11 @@ export const useFlowGameStore = create<FlowGameState>((set, get) => ({
     set((state) => {
       const gestureCount = state.gestureCount + 1;
       const isClassic = state.gameMode === 'classic' || state.gameMode === 'daily_classic';
-      if (!isClassic) return { gestureCount };
+      // FL-UX-D-012: Zen with a move limit decrements too, but never fails.
+      const zenBudget = state.gameMode === 'zen' && state.classicMoveLimitTotal > 0;
+      if (!isClassic && !zenBudget) return { gestureCount };
       const movesRemaining = Math.max(0, state.classicMoveLimitTotal - gestureCount);
-      const failed = movesRemaining === 0 && state.status === 'playing';
+      const failed = isClassic && movesRemaining === 0 && state.status === 'playing';
       return { gestureCount, movesRemaining, status: failed ? 'failed' : state.status };
     }),
 

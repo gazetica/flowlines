@@ -13,8 +13,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { skin } from '../styles/skin';
 import { useFlowGameStore } from '../store/flowGameStore';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
-import { getLevel } from '../game/engine/LevelManager';
+import { getLevel, type LevelData } from '../game/engine/LevelManager';
 import { buildDailyLevelConfig, type DailyMode } from '../utils/dailyPuzzleGenerator';
+import { COLOUR_COUNT } from '../utils/zenLevelGenerator';
+import type { Difficulty } from '../types/level';
 import { ScoreEngine, type ScoreInput, type GameMode } from '../game/engine/ScoreEngine';
 import { onLevelComplete } from '../services/interstitialAdService';
 import { submitCampaignScore } from '../services/flCampaignScores';
@@ -42,6 +44,13 @@ export function ResultScreen() {
   const isCampaign = mode === 'campaign' || mode === 'daily_campaign';
   const isClassic = mode === 'classic' || mode === 'daily_classic';
   const isDaily = mode === 'daily_campaign' || mode === 'daily_classic';
+  const isZen = mode === 'zen';
+
+  // FL-UX-D-012: Zen session params carried in the URL (no pack/level).
+  const zenGrid = parseInt(searchParams.get('grid') ?? '6', 10) || 6;
+  const zenDifficulty = (searchParams.get('difficulty') ?? 'easy') as Difficulty;
+  const zenTimer = parseInt(searchParams.get('timer') ?? '0', 10) || 0;
+  const zenMoves = parseInt(searchParams.get('moves') ?? '0', 10) || 0;
 
   const hintsUsed = useFlowGameStore((s) => s.hintsUsed);
   const clueUsed = useFlowGameStore((s) => s.clueUsed);
@@ -59,11 +68,18 @@ export function ResultScreen() {
   const dailyProgress = useFlowSettingsStore((s) => s.dailyProgress);
   const incrementDailyRetry = useFlowSettingsStore((s) => s.incrementDailyRetry);
 
-  // FL-UX-D-010: daily levels are runtime-generated (not from any pack).
-  const levelData = useMemo(
-    () => (isDaily ? buildDailyLevelConfig(mode as DailyMode) : getLevel(packId, levelIdx)),
-    [isDaily, mode, packId, levelIdx],
-  );
+  // FL-UX-D-010/012: daily + zen levels are runtime sessions (not from any pack).
+  // Zen only needs grid/colours/difficulty here (the puzzle itself already played
+  // out) — build a lightweight descriptor from the URL rather than regenerating.
+  const levelData: LevelData | null = useMemo(() => {
+    if (isZen) {
+      return {
+        id: 'zen', pack: 0, grid: zenGrid, colours: COLOUR_COUNT[zenGrid] ?? 5,
+        optimalMoves: zenGrid * zenGrid, difficulty: zenDifficulty, dots: [],
+      };
+    }
+    return isDaily ? buildDailyLevelConfig(mode as DailyMode) : getLevel(packId, levelIdx);
+  }, [isZen, zenGrid, zenDifficulty, isDaily, mode, packId, levelIdx]);
   const difficulty = levelData?.difficulty ?? 'easy';
   const gridSize = levelData?.grid ?? 6;
   const totalTiles = gridSize * gridSize;
@@ -117,7 +133,6 @@ export function ResultScreen() {
       });
     }
 
-    const isZen = mode === 'zen';
     const removeAds = useFlowSettingsStore.getState().removeAdsPurchased ?? false;
     const adTimer = setTimeout(() => { void onLevelComplete(isZen, removeAds); }, 1500);
 
@@ -142,9 +157,11 @@ export function ResultScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const breadcrumb = isDaily
-    ? `Daily Challenge · ${isCampaign ? 'Campaign' : 'Classic'}`
-    : `Pack ${packId} · Level ${String(levelIdx).padStart(2, '0')} · ${cap(String(difficulty))}`;
+  const breadcrumb = isZen
+    ? `Zen · ${gridSize}×${gridSize} · ${cap(String(difficulty))}`
+    : isDaily
+      ? `Daily Challenge · ${isCampaign ? 'Campaign' : 'Classic'}`
+      : `Pack ${packId} · Level ${String(levelIdx).padStart(2, '0')} · ${cap(String(difficulty))}`;
 
   const card: CSSProperties = {
     margin: '0 20px 12px', background: 'rgba(255,255,255,0.04)',
@@ -273,7 +290,19 @@ export function ResultScreen() {
       </div>
 
       {/* CTAs */}
-      {isDaily ? (
+      {isZen ? (
+        <>
+          <button
+            onPointerDown={() => navigate(`/game?mode=zen&grid=${zenGrid}&difficulty=${zenDifficulty}&timer=${zenTimer}&moves=${zenMoves}`)}
+            style={{ width: 'calc(100% - 40px)', margin: '0 20px 10px', background: GOLD, color: '#0D0620', border: 'none', borderRadius: 12, padding: 16, fontSize: 16, fontWeight: 700, cursor: 'pointer' }}
+          >
+            ▶  PLAY AGAIN
+          </button>
+          <div style={{ margin: '0 20px 16px' }}>
+            <button onPointerDown={() => navigate('/packs?mode=zen')} style={{ ...ghostBtn, width: '100%' }}>⚙  CHANGE CONFIG</button>
+          </div>
+        </>
+      ) : isDaily ? (
         <button
           onPointerDown={() => navigate('/daily')}
           style={{ width: 'calc(100% - 40px)', margin: '0 20px 16px', background: GOLD, color: '#0D0620', border: 'none', borderRadius: 12, padding: 16, fontSize: 16, fontWeight: 700, cursor: 'pointer' }}

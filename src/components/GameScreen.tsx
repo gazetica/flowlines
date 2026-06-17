@@ -16,6 +16,9 @@ import Phaser from 'phaser';
 import { GameScene, type LevelConfig } from '../game/scenes/GameScene';
 import { getLevel, type LevelData } from '../game/engine/LevelManager';
 import { buildDailyLevelConfig, type DailyMode } from '../utils/dailyPuzzleGenerator';
+import { buildZenLevelConfig } from '../utils/zenLevelGenerator';
+import type { ZenConfig } from '../store/flowSettingsStore';
+import type { Difficulty } from '../types/level';
 import type { DotPair } from '../game/engine/GridEngine';
 import type { GameMode } from '../game/engine/ScoreEngine';
 import { skin } from '../styles/skin';
@@ -134,23 +137,38 @@ export function GameScreen() {
   // FL-UX-D-010: daily challenges are generated at runtime (not from any pack).
   const isDailyMode = rawMode === 'daily_campaign' || rawMode === 'daily_classic';
   const retryParam = searchParams.get('retry') === 'true';
-  const levelData: LevelData = useMemo(
-    () => (isDailyMode ? buildDailyLevelConfig(rawMode as DailyMode) : getLevel(packId, levelIndex) ?? TEST_LEVEL),
-    [isDailyMode, rawMode, packId, levelIndex],
-  );
 
   // Mode flags derived from the URL (stable, no first-frame flicker).
   const isCampaign = mode === 'campaign' || mode === 'daily_campaign';
   const isClassic = mode === 'classic' || mode === 'daily_classic';
   const isZen = mode === 'zen';
 
-  // Zen reads grid/difficulty from URL (PackSelect zen config); others from JSON.
-  const zenGrid = parseInt(searchParams.get('grid') ?? String(levelData.grid), 10);
-  const difficulty = (isZen ? searchParams.get('difficulty') : levelData.difficulty) ?? 'easy';
+  // FL-UX-D-012: Zen sessions are generated at runtime from the PackSelect config
+  // passed via the URL (grid/difficulty/timer/moves) — NOT from a pack level. The
+  // old code fell through to getLevel(1,1) → a 6×6 pack level regardless of grid.
+  const zenGridParam = (parseInt(searchParams.get('grid') ?? '6', 10) || 6) as ZenConfig['grid'];
+  const zenDifficultyParam = (searchParams.get('difficulty') ?? 'easy') as Difficulty;
+  const zenTimerParam = parseInt(searchParams.get('timer') ?? '0', 10) || 0;
+  const zenMovesParam = parseInt(searchParams.get('moves') ?? '0', 10) || 0;
+
+  const levelData: LevelData = useMemo(
+    () => (isZen
+      ? buildZenLevelConfig({ grid: zenGridParam, difficulty: zenDifficultyParam, timerSeconds: zenTimerParam, moveLimit: zenMovesParam })
+      : isDailyMode ? buildDailyLevelConfig(rawMode as DailyMode) : getLevel(packId, levelIndex) ?? TEST_LEVEL),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [isZen, zenGridParam, zenDifficultyParam, zenTimerParam, zenMovesParam, isDailyMode, rawMode, packId, levelIndex],
+  );
+
+  const zenGrid = levelData.grid;
+  const difficulty = levelData.difficulty ?? 'easy';
 
   const timeRemaining = Math.max(0, timeLimitSeconds - timeElapsed);
   const timerDanger = timeRemaining <= 20 && timeRemaining > 0;
   const movesDanger = movesRemaining <= 3;
+
+  // FL-UX-D-012: Zen optionally has a timer and/or a move budget (neither fails).
+  const zenHasTimer = isZen && timeLimitSeconds > 0;
+  const zenHasMoves = isZen && classicMoveLimitTotal > 0;
 
   // FL-UX-D-008b: tiles remaining (replaces the centre coverage% stat).
   const gridSize = levelData.grid ?? 6;
@@ -213,8 +231,15 @@ export function GameScreen() {
 
     const handleWin = () => {
       useFlowGameStore.getState().triggerWin(levelData.optimalMoves);
+      if (isDaily) { navigate('/daily?completed=true'); return; }
+      if (isZen) {
+        // FL-UX-D-012: carry the Zen config to the result so it can show the right
+        // breadcrumb + a PLAY AGAIN that regenerates the same session shape.
+        navigate(`/result?mode=zen&grid=${zenGrid}&difficulty=${difficulty}&timer=${zenTimerParam}&moves=${zenMovesParam}`);
+        return;
+      }
       const retryQ = retryParam ? '&retry=true' : '';
-      navigate(isDaily ? '/daily?completed=true' : `/result?pack=${packId}&level=${levelIndex}&mode=${rawMode}${retryQ}`);
+      navigate(`/result?pack=${packId}&level=${levelIndex}&mode=${rawMode}${retryQ}`);
     };
     window.addEventListener('fl:win', handleWin);
 
@@ -242,8 +267,9 @@ export function GameScreen() {
     useFlowGameStore.getState().initLevel({
       levelId: levelData.id,
       mode,
-      timeLimit: isCampaign ? (levelData.timeLimit ?? 90) : 0,
-      classicMoveLimit: isClassic ? (levelData.classicMoveLimit ?? 15) : 0,
+      // FL-UX-D-012: Zen passes its own optional timer/move budget (0 = off).
+      timeLimit: isCampaign ? (levelData.timeLimit ?? 90) : isZen ? (levelData.timeLimit ?? 0) : 0,
+      classicMoveLimit: isClassic ? (levelData.classicMoveLimit ?? 15) : isZen ? (levelData.classicMoveLimit ?? 0) : 0,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [levelData.id, mode]);
@@ -252,15 +278,18 @@ export function GameScreen() {
   // counts up for the time bonus). Zen has no tick. Uses store.getState() so the
   // interval need not be recreated every second.
   useEffect(() => {
-    if (!(isCampaign || isClassic)) return;
+    // FL-UX-D-012: Zen ticks only when it has a timer; campaign/classic always tick.
+    if (!(isCampaign || isClassic || zenHasTimer)) return;
     if (status !== 'playing') return;
     const interval = setInterval(() => {
       if (adInFlightRef.current) return; // FL-UX-D-008L: paused while a rewarded ad is up
       const s = useFlowGameStore.getState();
+      // Zen has no fail — freeze the countdown at 0 instead of letting it overrun.
+      if (s.gameMode === 'zen' && s.timeLimitSeconds > 0 && s.timeElapsed >= s.timeLimitSeconds) return;
       s.setTimeElapsed(s.timeElapsed + 1);
     }, 1000);
     return () => clearInterval(interval);
-  }, [isCampaign, isClassic, status]);
+  }, [isCampaign, isClassic, zenHasTimer, status]);
 
   // ─── FL-UX-D-008c / 010c: gesture counter — GameScene fires fl:gestureComplete
   // on each completed drag gesture. Registered for ALL modes: gestureCount feeds
@@ -496,10 +525,19 @@ export function GameScreen() {
           )}
 
           {isZen && (
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 40, alignItems: 'baseline', padding: '4px 0 2px' }}>
+            // FL-UX-D-012: optional TIMER (when on) + MOVES + TILES — all the same
+            // 36px (Bug 2: MOVES was 26px vs TILES 36px). MOVES shows the remaining
+            // budget when a move limit is on, else an informational count-up.
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 32, alignItems: 'baseline', padding: '4px 0 2px' }}>
+              {zenHasTimer && (
+                <div style={{ textAlign: 'center' }}>
+                  <div style={statLabel}>TIMER</div>
+                  <div style={{ ...statValue, fontSize: 36, color: timerDanger ? DANGER : ZEN_TEAL }}>{formatTime(timeRemaining)}</div>
+                </div>
+              )}
               <div style={{ textAlign: 'center' }}>
-                <div style={statLabel}>MOVES</div>
-                <div style={{ ...statValue, fontSize: 26, color: ZEN_TEAL }}>{moveCount}</div>
+                <div style={statLabel}>{zenHasMoves ? 'MOVES LEFT' : 'MOVES'}</div>
+                <div style={{ ...statValue, fontSize: 36, color: zenHasMoves && movesDanger ? DANGER : ZEN_TEAL }}>{zenHasMoves ? movesRemaining : moveCount}</div>
               </div>
               <div style={{ textAlign: 'center' }}>
                 <div style={statLabel}>TILES</div>
