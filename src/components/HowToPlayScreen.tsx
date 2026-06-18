@@ -34,6 +34,29 @@ const COLOURS: Record<string, string> = {
   purple: '#9B59B6',
 };
 
+// FL-UX-D-014: colour → in-dot letter, matching the live GameScene dot letters.
+const COLOUR_LETTER: Record<string, string> = {
+  red: 'R', blue: 'B', green: 'G', yellow: 'Y',
+  violet: 'V', purple: 'V', orange: 'O', teal: 'T', pink: 'P',
+};
+
+// FL-UX-D-014 Fix 4 (revised): the ACTUAL solved board for Pack 1 · Level 01 (p1_001),
+// transcribed from real gameplay. Each entry is the ORDERED cell path [row,col] from
+// one dot to its partner — drawn as a rounded line so it shows HOW to draw the path.
+// Real dots: purple (0,0)-(2,0), blue (0,5)-(2,5), green (3,2)-(3,5), yellow (0,3)-(5,1),
+// red (4,1)-(3,3). Verified full cover: 36/36 cells, each path contiguous end-to-end.
+const SOLVED_PATHS: Array<{ colour: string; cells: Array<[number, number]> }> = [
+  { colour: 'purple', cells: [[0, 0], [1, 0], [2, 0]] },
+  { colour: 'blue', cells: [[0, 5], [1, 5], [2, 5]] },
+  { colour: 'yellow', cells: [[0, 3], [0, 4], [1, 4], [1, 3], [1, 2], [0, 2], [0, 1], [1, 1], [2, 1], [3, 1], [3, 0], [4, 0], [5, 0], [5, 1]] },
+  { colour: 'green', cells: [[3, 2], [2, 2], [2, 3], [2, 4], [3, 4], [3, 5]] },
+  { colour: 'red', cells: [[4, 1], [4, 2], [5, 2], [5, 3], [5, 4], [5, 5], [4, 5], [4, 4], [4, 3], [3, 3]] },
+];
+
+// Cell → colour tint map, derived from the paths (single source of truth).
+const SOLVED_CELL: Record<string, string> = {};
+for (const p of SOLVED_PATHS) for (const [r, c] of p.cells) SOLVED_CELL[`${r},${c}`] = p.colour;
+
 /** Which colour (if any) has a dot at [row,col]. */
 function dotColourAt(row: number, col: number): string | null {
   for (const [colour, [[r1, c1], [r2, c2]]] of Object.entries(DOTS)) {
@@ -149,7 +172,16 @@ function InteractiveGrid() {
               }}
             >
               {dot && (
-                <div style={{ width: '60%', height: '60%', borderRadius: '50%', backgroundColor: COLOURS[dot], flexShrink: 0 }} />
+                <div
+                  style={{
+                    width: '60%', height: '60%', borderRadius: '50%', backgroundColor: COLOURS[dot], flexShrink: 0,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontFamily: skin.fontDisplay, fontWeight: 400, color: 'rgba(255,255,255,0.9)',
+                    fontSize: 'clamp(11px, 4.2vw, 20px)', lineHeight: 1, userSelect: 'none', pointerEvents: 'none',
+                  }}
+                >
+                  {COLOUR_LETTER[dot]}
+                </div>
               )}
             </div>
           );
@@ -211,6 +243,80 @@ function PageHeading({ title, subtitle }: { title: string; subtitle: string }) {
   );
 }
 
+// ─── FL-UX-D-014: static solved-board illustration + in-game help cards ───────
+
+function SolvedGrid() {
+  const hexOf = (colour: string) => skin.pathColors[colour as keyof typeof skin.pathColors] ?? COLOURS[colour];
+  const cx = (c: number) => c + 0.5;
+  const cy = (r: number) => r + 0.5;
+
+  return (
+    <div style={{ margin: '4px 0 2px' }}>
+      <div style={{ position: 'relative', width: 264, maxWidth: '100%', aspectRatio: '1', margin: '0 auto', padding: 6, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(127,119,221,0.25)', borderRadius: 12, boxSizing: 'border-box' }}>
+        <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+          {/* Faint colour-tinted cells (transparent fill — the line is the focus) */}
+          <div style={{ position: 'absolute', inset: 0, display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gridTemplateRows: 'repeat(6, 1fr)' }}>
+            {Array.from({ length: 36 }, (_, i) => {
+              const colour = SOLVED_CELL[`${Math.floor(i / 6)},${i % 6}`];
+              return (
+                <div
+                  key={i}
+                  style={{
+                    border: '1px solid rgba(13,6,32,0.55)', borderRadius: 4, boxSizing: 'border-box',
+                    backgroundColor: colour ? `${hexOf(colour)}26` : 'rgba(255,255,255,0.04)',
+                  }}
+                />
+              );
+            })}
+          </div>
+
+          {/* Prominent rounded path lines + endpoint dots (SVG over the cells) */}
+          <svg viewBox="0 0 6 6" preserveAspectRatio="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
+            {SOLVED_PATHS.map((p) => (
+              <polyline
+                key={`line-${p.colour}`}
+                points={p.cells.map(([r, c]) => `${cx(c)},${cy(r)}`).join(' ')}
+                fill="none" stroke={hexOf(p.colour)} strokeWidth={0.42}
+                strokeLinecap="round" strokeLinejoin="round"
+              />
+            ))}
+            {SOLVED_PATHS.flatMap((p) => [p.cells[0], p.cells[p.cells.length - 1]].map(([r, c], k) => (
+              <g key={`dot-${p.colour}-${k}`}>
+                <circle cx={cx(c)} cy={cy(r)} r={0.34} fill={hexOf(p.colour)} stroke="rgba(255,255,255,0.95)" strokeWidth={0.06} />
+                <text x={cx(c)} y={cy(r)} fontSize={0.42} fill="#fff" fontFamily="'Space Mono', monospace" textAnchor="middle" dominantBaseline="central">
+                  {COLOUR_LETTER[p.colour]}
+                </text>
+              </g>
+            )))}
+          </svg>
+        </div>
+      </div>
+      <div style={{ textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 8 }}>
+        A solved board (Pack 1 · Level 01) — draw each colour end to end ✓
+      </div>
+    </div>
+  );
+}
+
+function HelpCard({ icon, title, sub }: { icon: string; title: string; sub: string }) {
+  return (
+    <div
+      style={{
+        background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(127,119,221,0.2)',
+        borderRadius: 12, padding: '12px 14px', display: 'flex', gap: 12, alignItems: 'flex-start',
+      }}
+    >
+      <div style={{ fontSize: 20, flexShrink: 0, lineHeight: 1.2 }}>{icon}</div>
+      <div>
+        <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.9)' }}>{title}</div>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', lineHeight: 1.4, marginTop: 2 }}>{sub}</div>
+      </div>
+    </div>
+  );
+}
+
+const helpHeading: CSSProperties = { fontSize: 13, fontWeight: 700, color: GOLD, letterSpacing: 1, margin: '20px 0 4px' };
+
 // ─── Pages ───────────────────────────────────────────────────────────────────
 
 function Page1() {
@@ -233,14 +339,27 @@ function Page2() {
     'Paths move up, down, left, right only — no diagonal moves allowed',
     'Paths cannot cross each other — if you draw over another colour, it erases from that point',
     'You can retract your own path — drag backward over your own line to undo cells',
-    'Stuck? Tap 💡 HINT — watch a short ad to reveal the optimal next cell for one colour',
+    'Stuck? Use the in-game help below — hints, clues and extensions can get you moving again',
     'Grids grow from 6×6 (Pack 1) up to 9×9 (Pack 4) — more cells, more planning required',
   ];
   return (
     <>
       <PageHeading title="Master the puzzle" subtitle="Learn the rules, plan ahead" />
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+
+      {/* FL-UX-D-014 (revised): the solved board comes FIRST, then the explanation */}
+      <SolvedGrid />
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 16 }}>
         {rules.map((t, i) => <InstructionCard key={i} n={i + 1}>{t}</InstructionCard>)}
+      </div>
+
+      {/* FL-UX-D-014 Fix 3: rescue mechanics */}
+      <div style={helpHeading}>IN-GAME HELP</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <HelpCard icon="💡" title="USE HINT" sub="Spend 1 gem — a ghost path briefly reveals the full solution for one colour." />
+        <HelpCard icon="🎯" title="GET A CLUE  ·  at 33% used" sub="Watch a short ad — the hardest colour is auto-completed for you." />
+        <HelpCard icon="⏱" title="TIME EXT +30s  ·  Campaign, at 66% used" sub="Watch a short ad — 30 seconds added to your timer." />
+        <HelpCard icon="➕" title="MOVE EXT +5  ·  Classic, at 66% used" sub="Watch a short ad — 5 extra moves added to your budget." />
       </div>
     </>
   );
@@ -248,10 +367,10 @@ function Page2() {
 
 function Page3() {
   const modes = [
-    { icon: '🎯', name: 'Classic', desc: '200 levels across 4 packs · 6×6 to 9×9 grids · earn up to 3 stars per level' },
-    { icon: '📅', name: 'Daily Challenge', desc: 'One fresh puzzle every day · global leaderboard · build your streak' },
-    { icon: '⏱', name: 'Timed', desc: 'Solve as many 6×6 levels as possible in 3 minutes · score as high as you can' },
-    { icon: '🧘', name: 'Zen', desc: 'No timer, no score · pure relaxed solving at your own pace' },
+    { icon: '⏱', name: 'Campaign', desc: 'Race the clock · 200 levels · 4 packs · 6×6 to 9×9 grids · up to 3 stars per level' },
+    { icon: '🎯', name: 'Classic', desc: 'Solve within a move budget · 200 levels · 4 packs · up to 3 stars per level' },
+    { icon: '📅', name: 'Daily Challenge', desc: 'Two fresh puzzles every day · global leaderboard · build your streak' },
+    { icon: '🧘', name: 'Zen', desc: 'No limits · choose your grid · relax at your own pace' },
   ];
   return (
     <>
