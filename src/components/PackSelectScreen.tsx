@@ -144,12 +144,12 @@ export default function PackSelectScreen() {
     <div
       style={{
         position: 'relative',
-        minHeight: '100dvh',
+        height: '100dvh',
         width: '100%',
         background: '#0D0620',
-        overflowX: 'hidden',
-        touchAction: 'pan-y',
-        paddingBottom: 72,
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
         fontFamily: skin.fontBody,
       }}
     >
@@ -159,7 +159,7 @@ export default function PackSelectScreen() {
         50%     { box-shadow: 0 0 0 4px rgba(230,126,34,0.2); }
       }`}</style>
 
-      <div style={{ position: 'relative', zIndex: 1 }}>
+      <div style={{ position: 'relative', zIndex: 1, flex: 1, overflowY: 'auto', overflowX: 'hidden', touchAction: 'pan-y', paddingBottom: 16 }}>
         {headerRow}
 
         {isBottomNavEntry && (
@@ -314,7 +314,7 @@ export default function PackSelectScreen() {
             {/* IAP row — campaign / classic only */}
             <div style={{ margin: '0 20px 16px', display: 'flex', gap: 12 }}>
               {[
-                { icon: '💡', label: 'Hint Pack', price: '$0.99' },
+                { icon: '💡', label: 'Hint Pack', price: '$1.99' },
                 { icon: '🚫', label: 'Remove Ads', price: '$2.99' },
               ].map((iap) => (
                 <button
@@ -335,7 +335,7 @@ export default function PackSelectScreen() {
         )}
       </div>
 
-      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 2 }}>
+      <div style={{ position: 'relative', zIndex: 2 }}>
         <BottomNav />
       </div>
     </div>
