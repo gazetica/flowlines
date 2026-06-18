@@ -11,13 +11,22 @@ import { useNavigate } from 'react-router-dom';
 import { Browser } from '@capacitor/browser';
 import { App } from '@capacitor/app';
 import { skin } from '../styles/skin';
+import { reopenForm } from '../services/consentService';
 import { GazeticaPromoCard } from './GazeticaPromoCard';
 import { BottomNav } from './BottomNav';
 
 const GOLD = '#FFD700';
 
+/** Open a web (http/https) URL in the in-app Capacitor Browser. */
 function openUrl(url: string) {
   void Browser.open({ url });
+}
+
+/** Open a non-web URI (mailto:/market:) — the Browser plugin no-ops on these, so
+ *  hand it to the WebView's URL loader, which delegates to the OS app (Gmail /
+ *  Play Store) via an Android Intent. */
+function openExternal(uri: string) {
+  window.location.href = uri;
 }
 
 export function AboutScreen() {
@@ -54,10 +63,10 @@ export function AboutScreen() {
     boxSizing: 'border-box',
   };
 
-  function LinkRow({ label, onClick }: { label: string; onClick: () => void }) {
+  function LinkRow({ label, onPress }: { label: string; onPress: () => void }) {
     return (
       <button
-        onClick={onClick}
+        onPointerDown={onPress}
         style={{
           width: '100%',
           display: 'flex',
@@ -101,22 +110,22 @@ export function AboutScreen() {
         {/* Legal */}
         <div style={sectionLabel}>LEGAL</div>
         <div style={card}>
-          <LinkRow label="Privacy Policy" onClick={() => openUrl('https://gazetica.com/flowlines/privacy.html')} />
-          <LinkRow label="Terms of Service" onClick={() => openUrl('https://gazetica.com/flowlines/terms.html')} />
-          <LinkRow label="Open Source Licences" onClick={() => openUrl('https://gazetica.com/flowlines/licences.html')} />
+          <LinkRow label="Privacy Policy" onPress={() => openUrl('https://gazetica.com/privacy-policy')} />
+          <LinkRow label="Terms of Service" onPress={() => openUrl('https://gazetica.com/terms')} />
+          <LinkRow label="Open Source Licences" onPress={() => navigate('/licences')} />
         </div>
 
         {/* Support */}
         <div style={sectionLabel}>SUPPORT</div>
         <div style={card}>
-          <LinkRow label="Contact Us" onClick={() => openUrl('mailto:support@gazetica.com')} />
-          <LinkRow label="Rate the App" onClick={() => openUrl('market://details?id=com.gazetica.flowlines')} />
+          <LinkRow label="Contact Us" onPress={() => openExternal('mailto:support@gazetica.com')} />
+          <LinkRow label="Rate the App" onPress={() => openExternal('market://details?id=com.gazetica.flowlines')} />
         </div>
 
         {/* GDPR */}
         <div style={card}>
-          {/* TODO Sprint 4: UMP re-consent */}
-          <LinkRow label="Ad Preferences (GDPR)" onClick={() => { /* TODO Sprint 4: UMP re-consent */ }} />
+          {/* FL-UX-D-016: re-open the UMP privacy-options form in place (no navigation) */}
+          <LinkRow label="Ad Preferences (GDPR)" onPress={() => void reopenForm()} />
         </div>
       </div>
 

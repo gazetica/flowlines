@@ -26,6 +26,7 @@ import LeaderboardScreen from './components/LeaderboardScreen';
 import SettingsScreen from './components/SettingsScreen';
 import HowToPlayScreen from './components/HowToPlayScreen';
 import AboutScreen from './components/AboutScreen';
+import LicencesScreen from './components/LicencesScreen';
 import LanguageScreen from './components/LanguageScreen';
 import CountrySelector from './components/CountrySelector';
 import IAPScreen from './components/IAPScreen';
@@ -83,6 +84,7 @@ export function App() {
         <Route path="/settings" element={<SettingsScreen />} />
         <Route path="/tutorial" element={<HowToPlayScreen />} />
         <Route path="/about" element={<AboutScreen />} />
+        <Route path="/licences" element={<LicencesScreen />} />
         <Route path="/language" element={<LanguageScreen />} />
         <Route path="/country" element={<CountrySelector />} />
         <Route path="/store" element={<IAPScreen />} />
