@@ -25,6 +25,7 @@ const KEYS = {
   PACK_PROGRESS:   'FL_PACK_PROGRESS',
   DAILY_STREAK:    'FL_DAILY_STREAK',
   LAST_DAILY:      'FL_LAST_DAILY_DATE',
+  LAST_DAILY_VISIT: 'FL_LAST_DAILY_VISIT_DATE', // FL-UX-D-015: +1 gem per day visited
   FIRST_LAUNCH:    'FL_FIRST_LAUNCH',
   CONSENT_REQ:     'FL_CONSENT_REQUESTED',
   NOTIF_SCHED:     'FL_NOTIF_SCHEDULED',
@@ -105,6 +106,7 @@ interface FlowSettingsState {
   packProgress: Record<number, PackLevelProgress>;
   dailyStreakFL: number;
   lastDailyDateFL: string;
+  lastDailyVisitDate: string; // FL-UX-D-015: UTC day the +1 visit gem was last granted
 
   // FL-UX-D-004 per-mode progression
   campaignProgress: ModeProgress;
@@ -130,6 +132,7 @@ interface FlowSettingsState {
   toggleMusic: () => Promise<void>;
   toggleHaptics: () => Promise<void>;
   addGems: (n: number) => Promise<void>;
+  claimDailyVisitGem: () => void;
   setRemoveAds: (v: boolean) => Promise<void>;
   markLevelSolved: (packId: number, levelId: string, stars: 1 | 2 | 3) => Promise<void>;
   saveStars: (levelId: string, packId: number, stars: 0 | 1 | 2 | 3) => void;
@@ -173,6 +176,7 @@ export const useFlowSettingsStore = create<FlowSettingsState>((set, get) => ({
   packProgress: {},
   dailyStreakFL: 0,
   lastDailyDateFL: '',
+  lastDailyVisitDate: '',
   campaignProgress: defaultModeProgress(),
   classicProgress: defaultModeProgress(),
   dailyProgress: defaultDailyProgress(),
@@ -219,6 +223,17 @@ export const useFlowSettingsStore = create<FlowSettingsState>((set, get) => ({
     const next = get().gemBalance + n;
     await Preferences.set({ key: KEYS.GEM_BALANCE, value: String(next) });
     set({ gemBalance: next });
+  },
+
+  // FL-UX-D-015: grant +1 gem the first time the player opens the app each UTC day.
+  // Idempotent — safe to call on every HomeScreen mount (guarded by lastDailyVisitDate).
+  claimDailyVisitGem: () => {
+    const today = utcDay();
+    if (get().lastDailyVisitDate === today) return;
+    const gemBalance = get().gemBalance + 1;
+    set({ lastDailyVisitDate: today, gemBalance });
+    void Preferences.set({ key: KEYS.LAST_DAILY_VISIT, value: today });
+    void Preferences.set({ key: KEYS.GEM_BALANCE, value: String(gemBalance) });
   },
 
   setRemoveAds: async (v) => {
@@ -370,15 +385,15 @@ export const useFlowSettingsStore = create<FlowSettingsState>((set, get) => ({
     void Preferences.set({ key: KEYS.DAILY_PROG, value: JSON.stringify(dp) });
   },
 
-  // FL-UX-D-010: manual claim of the both-challenges-complete gem reward. Adds 3
-  // gems exactly once per day; a no-op unless both challenges are done and unclaimed.
+  // FL-UX-D-010 / 015b: manual claim of the both-challenges-complete gem reward.
+  // Adds 2 gems exactly once per day; a no-op unless both challenges are done and unclaimed.
   claimDailyGemReward: () => {
     const dp = get().dailyProgress;
     if (dp.campaignChallengeComplete && dp.classicChallengeComplete && !dp.gemRewardClaimed) {
       const next: DailyProgress = { ...dp, gemRewardClaimed: true };
       set({ dailyProgress: next });
       void Preferences.set({ key: KEYS.DAILY_PROG, value: JSON.stringify(next) });
-      void get().addGems(3);
+      void get().addGems(2);
     }
   },
 
@@ -430,6 +445,7 @@ export const useFlowSettingsStore = create<FlowSettingsState>((set, get) => ({
     const removeAds = (await read(KEYS.REMOVE_ADS)) === 'true';
     const streak = parseInt((await read(KEYS.DAILY_STREAK)) || '0', 10);
     const lastDaily = (await read(KEYS.LAST_DAILY)) || '';
+    const lastDailyVisit = (await read(KEYS.LAST_DAILY_VISIT)) || '';
     const firstLaunchComplete = (await read(KEYS.FIRST_LAUNCH)) === 'true';
     const consentRequested = (await read(KEYS.CONSENT_REQ)) === 'true';
     const notificationScheduled = (await read(KEYS.NOTIF_SCHED)) === 'true';
@@ -493,6 +509,7 @@ export const useFlowSettingsStore = create<FlowSettingsState>((set, get) => ({
       removeAdsPurchased: removeAds,
       dailyStreakFL: streak,
       lastDailyDateFL: lastDaily,
+      lastDailyVisitDate: lastDailyVisit,
       firstLaunchComplete,
       consentRequested,
       notificationScheduled,

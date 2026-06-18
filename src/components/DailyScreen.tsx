@@ -193,7 +193,7 @@ function RewardCard({ bothComplete, claimed, onClaim }: { bothComplete: boolean;
     }}>
       <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,215,0,0.7)', letterSpacing: 1.5, marginBottom: 10 }}>TODAY'S REWARD</div>
       <div style={{ fontSize: 18, fontWeight: 700, color: claimed ? '#2ECC71' : GOLD, marginBottom: 6, animation: active ? 'flStarBounce 700ms ease-in-out infinite alternate' : 'none' }}>
-        💎 3 Hint Gems
+        💎 2 Hint Gems
       </div>
       <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: active ? 12 : 0 }}>
         {claimed ? 'Reward collected — back tomorrow!' : bothComplete ? 'Both challenges complete!' : 'Complete both challenges to unlock'}

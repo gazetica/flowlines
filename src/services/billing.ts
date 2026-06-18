@@ -36,14 +36,14 @@ export const PRODUCT_IDS = {
   CAMPAIGN3: 'numtap_campaign3',
 } as const;
 
-// FL-S4-020: Flow Lines storefront SKUs. Must match Play Console (Task 20.7) +
-// BillingPlugin.java's PRODUCT_IDS list. FL: +5 gems per Hint Pack (not Numtap's
-// +20). Entitlements are applied by the caller (IAPScreen / BuyHintModal) on a
+// FL-S4-020 / FL-UX-D-015: Flow Lines storefront SKUs. Must match Play Console
+// (Task 20.7) + BillingPlugin.java's PRODUCT_IDS list. FL: +20 gems per Hint Pack
+// ($1.99). Entitlements are applied by the caller (IAPScreen / BuyHintModal) on a
 // successful purchaseProduct() — REMOVE_ADS → setRemoveAds(true); HINT_PACK →
-// addGems(5) + consumePurchase(token).
+// addGems(20) + consumePurchase(token).
 export const FL_PRODUCTS = {
   REMOVE_ADS: 'flowlines_remove_ads', // non-consumable, $2.99
-  HINT_PACK: 'flowlines_hint_pack',   // consumable, $0.99 → +5 gems
+  HINT_PACK: 'flowlines_hint_pack',   // consumable, $1.99 → +20 gems
 } as const;
 
 // Native plugin surface (implemented by BillingPlugin.java).

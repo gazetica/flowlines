@@ -10,6 +10,7 @@
 // Reads flowSettingsStore (never mutates). Shared BottomNav reused as-is.
 
 import type { CSSProperties } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { skin } from '../styles/skin';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
@@ -17,6 +18,7 @@ import type { PackModeProgress } from '../store/flowSettingsStore';
 import type { Difficulty } from '../types/level';
 import { flagOf } from '../data/countries';
 import { FloatingPathCanvas } from './FloatingPathCanvas';
+import { FlowLinesLogo } from './FlowLinesLogo';
 import { BottomNav } from './BottomNav';
 
 const GOLD = '#FFD700';
@@ -153,6 +155,13 @@ export function HomeScreen() {
   const campaignProgress = useFlowSettingsStore((s) => s.campaignProgress);
   const classicProgress = useFlowSettingsStore((s) => s.classicProgress);
   const dailyProgress = useFlowSettingsStore((s) => s.dailyProgress);
+  const lastDailyVisitDate = useFlowSettingsStore((s) => s.lastDailyVisitDate);
+  const claimDailyVisitGem = useFlowSettingsStore((s) => s.claimDailyVisitGem);
+
+  // FL-UX-D-015: grant +1 gem the first time the app is opened each day. Safe to
+  // call every mount (store guards on the date). Status shown below the streak card.
+  useEffect(() => { claimDailyVisitGem(); }, [claimDailyVisitGem]);
+  const isDailyGemClaimedToday = lastDailyVisitDate === new Date().toISOString().slice(0, 10);
 
   const campaign = findCurrentPack(campaignProgress);
   const classic = findCurrentPack(classicProgress);
@@ -215,16 +224,20 @@ export function HomeScreen() {
           }}
         >
           <div>
-            <div
-              style={{
-                fontFamily: skin.fontDisplay,
-                fontSize: 22,
-                fontWeight: 700,
-                color: GOLD,
-                letterSpacing: 2,
-              }}
-            >
-              FLOW LINES
+            {/* FL-UX-D-015: logo to the left of the title */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <FlowLinesLogo size={28} />
+              <span
+                style={{
+                  fontFamily: skin.fontDisplay,
+                  fontSize: 22,
+                  fontWeight: 700,
+                  color: GOLD,
+                  letterSpacing: 2,
+                }}
+              >
+                FLOW LINES
+              </span>
             </div>
             <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', letterSpacing: 0.5, marginTop: 2 }}>
               {alias || 'Player'} · {flagOf(country)}
@@ -420,6 +433,11 @@ export function HomeScreen() {
               🔥 {remainingForBonus} more day{remainingForBonus === 1 ? '' : 's'} for +7 💎
             </div>
           )}
+        </div>
+
+        {/* FL-UX-D-015b: daily visit-gem status — standalone line below the streak card */}
+        <div style={{ textAlign: 'center', fontFamily: skin.fontDisplay, fontSize: 12, margin: '0 20px 8px', color: isDailyGemClaimedToday ? '#2ECC71' : GOLD }}>
+          {isDailyGemClaimedToday ? '💎 Daily gem collected ✓' : '💎 +1 gem for visiting today'}
         </div>
       </div>
 

@@ -80,6 +80,12 @@ html, body, #root {
   50%       { transform: scale(1.05); }
 }
 
+/* —— FL-UX-D-015: REMOVE ADS ↔ BUY HINTS card swap fade-in —— */
+@keyframes flAdSwap {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
 /* —— FL-UX-D-009: ResultScreen star bounce-in + card fade-slide-up —— */
 @keyframes flStarBounce {
   0%   { transform: scale(0) rotate(-20deg); opacity: 0; }

@@ -2,8 +2,8 @@
 // Flow Lines | Gazetica Studio | Sprint 4 Day 19 | Task FL-S4-019 (VD-10)
 //
 // Store screen at /store. Two products: Remove Ads (non-consumable $2.99) and
-// Hint Pack (consumable $0.99, +5 gems). BUY is display-only for now — real
-// Google Play billing is wired in Day 21. Replaces the Numtap i18n/billing stub.
+// Hint Pack (consumable $1.99, +20 gems — FL-UX-D-015). Real Google Play billing
+// wired via services/billing.ts. Replaces the Numtap i18n/billing stub.
 
 import type { CSSProperties, ReactNode } from 'react';
 import { useState } from 'react';
@@ -51,17 +51,17 @@ export function IAPScreen() {
     setPurchasing(false);
   };
 
-  // Hint Pack — consumable. +5 gems (FL: not Numtap's +20), then consume the
+  // Hint Pack — consumable. FL-UX-D-015: +20 gems for $1.99, then consume the
   // token so it can be bought again.
   const handleHintPackBuy = async () => {
     if (purchasing) return;
     setPurchasing(true);
     const result = await purchaseProduct(FL_PRODUCTS.HINT_PACK);
     if (result.success) {
-      await addGems(5);
+      await addGems(20);
       if (result.purchaseToken) await consumePurchase(result.purchaseToken);
-      trackIapPurchase({ product_id: FL_PRODUCTS.HINT_PACK, value: 0.99 });
-      flashToast('+5 gems added!');
+      trackIapPurchase({ product_id: FL_PRODUCTS.HINT_PACK, value: 1.99 });
+      flashToast('+20 gems added!');
     } else if (result.error !== 'USER_CANCELED') {
       flashToast(result.error ?? 'Purchase failed');
     }
@@ -175,8 +175,8 @@ export function IAPScreen() {
         <ProductCard
           icon="💡"
           title="HINT PACK"
-          bullets={['5 extra hints (+5 gems)', 'Reveal the next cell', 'Works on any level']}
-          price="$0.99"
+          bullets={['20 hints credited', 'Use when stuck on any level', 'Works on any grid size']}
+          price="$1.99"
         >
           <button onClick={() => void handleHintPackBuy()} disabled={purchasing} style={{ ...buyBtn, opacity: purchasing ? 0.5 : 1 }}>BUY</button>
         </ProductCard>

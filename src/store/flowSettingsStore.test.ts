@@ -31,10 +31,28 @@ function reset() {
     classicProgress: dmp(),
     dailyProgress: { lastDailyDate: '', campaignChallengeComplete: false, classicChallengeComplete: false, campaignRetryCount: 0, classicRetryCount: 0, streakCount: 0, lastStreakDate: '', gemRewardClaimed: false },
     gemBalance: 0,
+    lastDailyVisitDate: '',
   });
 }
 
 beforeEach(reset);
+
+describe('claimDailyVisitGem (FL-UX-D-015)', () => {
+  const today = () => new Date().toISOString().slice(0, 10);
+
+  it('adds 1 gem on the first call of the day', () => {
+    useFlowSettingsStore.setState({ lastDailyVisitDate: '2000-01-01', gemBalance: 5 });
+    set().claimDailyVisitGem();
+    expect(set().gemBalance).toBe(6);
+    expect(set().lastDailyVisitDate).toBe(today());
+  });
+
+  it('does not add a gem if already claimed today', () => {
+    useFlowSettingsStore.setState({ lastDailyVisitDate: today(), gemBalance: 5 });
+    set().claimDailyVisitGem();
+    expect(set().gemBalance).toBe(5);
+  });
+});
 
 describe('recordLevelComplete', () => {
   it('updates campaignProgress (solved/stars/bestScore/bestTime)', () => {
@@ -93,12 +111,12 @@ describe('recordDailyComplete', () => {
 });
 
 describe('claimDailyGemReward (FL-UX-D-010)', () => {
-  it('adds 3 gems when both challenges complete and unclaimed', async () => {
+  it('adds 2 gems when both challenges complete and unclaimed', async () => {
     set().recordDailyComplete('campaign');
     set().recordDailyComplete('classic');
     set().claimDailyGemReward();
     await tick();
-    expect(set().gemBalance).toBe(3);
+    expect(set().gemBalance).toBe(2);
     expect(set().dailyProgress.gemRewardClaimed).toBe(true);
   });
 
@@ -108,7 +126,7 @@ describe('claimDailyGemReward (FL-UX-D-010)', () => {
     set().claimDailyGemReward();
     set().claimDailyGemReward();
     await tick();
-    expect(set().gemBalance).toBe(3);
+    expect(set().gemBalance).toBe(2);
   });
 
   it('does nothing if only one challenge complete', async () => {

@@ -6,9 +6,8 @@
 // Native init (consent → AdMob, billing, music) + settings hydration preserved.
 
 import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
-import { useSettingsStore } from './store/settingsStore';
 import { initAdmob } from './services/admob';
 import { initialiseBilling } from './services/billing';
 import * as analytics from './services/analytics';
@@ -48,11 +47,9 @@ export function App() {
     void hydrateFlowSettings();
   }, [hydrateFlowSettings]);
 
-  // Background music — auto-play only if previously left on.
-  useEffect(() => {
-    musicService.init();
-    if (useSettingsStore.getState().musicEnabled) musicService.play();
-  }, []);
+  // Background music (Numtap bg_music.mp3) — initialised here; playback is driven
+  // by <RouteMusicController> (inside the Router so it can read the active route).
+  useEffect(() => { musicService.init(); }, []);
 
   // FL-UX-D-006e: guard the Android 13 predictive-back edge gesture so it can't
   // pop /home (or /) off the stack into a blank WebView. Push a sentinel state on
@@ -72,6 +69,7 @@ export function App() {
 
   return (
     <BrowserRouter>
+      <RouteMusicController />
       <PageTransition>
         <Routes>
         <Route path="/" element={<SplashScreen />} />
@@ -94,4 +92,20 @@ export function App() {
       </PageTransition>
     </BrowserRouter>
   );
+}
+
+// FL-UX-D-015b: background-music playback controller (must live inside the Router
+// to read the active route). Plays bg_music on menus when the Music toggle is on,
+// and PAUSES it during gameplay (/game) — the puzzle has its own tick/path SFX.
+function RouteMusicController() {
+  const location = useLocation();
+  const flHydrated = useFlowSettingsStore((s) => s.hydrated);
+  const flMusicEnabled = useFlowSettingsStore((s) => s.musicEnabled);
+  useEffect(() => {
+    if (!flHydrated) return;
+    const onGameScreen = location.pathname === '/game';
+    if (flMusicEnabled && !onGameScreen) musicService.play();
+    else musicService.pause();
+  }, [flHydrated, flMusicEnabled, location.pathname]);
+  return null;
 }

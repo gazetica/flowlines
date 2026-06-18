@@ -30,7 +30,6 @@ import { trackLevelStart, trackLevelAbandon, trackAdImpression } from '../servic
 import {
   playPathDraw, stopPathDraw, playLockIn, playUndo, playWinFl, playHint,
 } from '../services/soundService';
-import { startGameMusic, stopGameMusic, pauseGameMusic, resumeGameMusic } from '../services/musicService';
 import { hapticLockIn, hapticWin, hapticUndo } from '../services/hapticService';
 
 const ZEN_TEAL = '#1ABC9C';
@@ -122,6 +121,8 @@ export function GameScreen() {
   const [showAbandonDialog, setShowAbandonDialog] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [adBusy, setAdBusy] = useState(false); // a rewarded ad is in flight
+  // FL-UX-D-015: left action card alternates REMOVE ADS ↔ BUY HINTS every 5s.
+  const [adCardState, setAdCardState] = useState<'remove_ads' | 'buy_hints'>('remove_ads');
 
   const flashToast = (msg: string) => {
     setToast(msg);
@@ -302,14 +303,61 @@ export function GameScreen() {
     return () => window.removeEventListener('fl:gestureComplete', handleGesture);
   }, [onGestureComplete]);
 
-  // ─── FL-UX-D-008j: Campaign timer tick (Web Audio, fires each second). Skips
-  // silently until the AudioContext is created on first pointer interaction.
+  // ─── FL-UX-D-015: alternate the left action card every 5 seconds ─────────────
   useEffect(() => {
-    if (!isCampaign) return;
+    const interval = setInterval(() => {
+      setAdCardState((prev) => (prev === 'remove_ads' ? 'buy_hints' : 'remove_ads'));
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // ─── FL-UX-D-015: keep the Phaser canvas matched to the container on resize /
+  // orientation change (foldables, split-screen). Portrait is also locked in the
+  // manifest, so this is a belt-and-suspenders fallback. Resize only (no reload)
+  // so an in-progress board is never wiped.
+  useEffect(() => {
+    const handleResize = () => {
+      setTimeout(() => {
+        const game = gameRef.current;
+        const container = document.getElementById('phaser-container');
+        if (game && container) {
+          game.scale.resize(container.clientWidth, container.clientHeight);
+          game.scale.refresh();
+        }
+      }, 300);
+    };
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+    };
+  }, []);
+
+  // ─── FL-UX-D-015c: create + resume the tick AudioContext at GAME START so the
+  // clock tick is audible from the first second in BOTH Campaign and Classic — not
+  // only after the first board touch. SPA navigation keeps the document's sticky
+  // user activation (the PLAY tap), so resume() is allowed here without a new gesture.
+  useEffect(() => {
+    if (!(isCampaign || isClassic)) return;
+    if (!audioCtxRef.current) {
+      try {
+        const Ctor = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        audioCtxRef.current = new Ctor();
+      } catch { /* AudioContext unavailable — tick stays silent */ }
+    }
+    void audioCtxRef.current?.resume();
+  }, [isCampaign, isClassic]);
+
+  // ─── FL-UX-D-008j / 015c: timer tick (Web Audio, fires each second) in Campaign
+  // AND Classic. Campaign counts down → urgency in the last 10s; Classic counts up
+  // → a steady tick.
+  useEffect(() => {
+    if (!(isCampaign || isClassic)) return;
     if (status !== 'playing') return;
     if (!audioCtxRef.current) return;
-    if (timeLimitSeconds <= 0) return;
-    playTick(audioCtxRef.current, timeRemaining <= 10 ? 'intense' : 'normal');
+    const intensity = isCampaign && timeLimitSeconds > 0 && timeRemaining <= 10 ? 'intense' : 'normal';
+    playTick(audioCtxRef.current, intensity);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeElapsed]);
 
@@ -333,9 +381,10 @@ export function GameScreen() {
     }
   }, [status, navigate, packId, levelIndex, rawMode, retryParam]);
 
-  // Audio + haptics (UNCHANGED).
+  // Audio (path/colour/undo/win SFX) + haptics. FL-UX-D-015b: the gameplay ambient
+  // loop (ambient-drops.wav) is gone — background music is paused on /game by
+  // RouteMusicController, and the puzzle keeps only its tick + path SFX.
   useEffect(() => {
-    startGameMusic();
     const onPathExtend = () => playPathDraw();
     const onPathRelease = () => stopPathDraw();
     const onColourLocked = () => { playLockIn(); void hapticLockIn(); };
@@ -346,19 +395,13 @@ export function GameScreen() {
     window.addEventListener('fl:colour-locked', onColourLocked);
     window.addEventListener('fl:undo', onUndoFx);
     window.addEventListener('fl:win', onWinFx);
-    const lifecycle = App.addListener('appStateChange', ({ isActive }) => {
-      if (isActive) resumeGameMusic();
-      else pauseGameMusic();
-    });
     return () => {
       stopPathDraw();
-      stopGameMusic();
       window.removeEventListener('fl:path-extend', onPathExtend);
       window.removeEventListener('fl:path-release', onPathRelease);
       window.removeEventListener('fl:colour-locked', onColourLocked);
       window.removeEventListener('fl:undo', onUndoFx);
       window.removeEventListener('fl:win', onWinFx);
-      void lifecycle.then((h) => h.remove());
     };
   }, []);
 
@@ -563,12 +606,13 @@ export function GameScreen() {
         id="phaser-container"
         ref={phaserRef}
         onPointerDown={() => {
-          // FL-UX-D-008j: WebView audio policy requires AudioContext creation
-          // after a user gesture — lazily create it on first board touch.
+          // FL-UX-D-008j: WebView audio policy fallback — create (and resume) the
+          // tick AudioContext on board touch if game-start creation was blocked.
           if (!audioCtxRef.current) {
             const Ctor = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
             audioCtxRef.current = new Ctor();
           }
+          void audioCtxRef.current?.resume();
         }}
         style={{
           flex: 1,
@@ -637,9 +681,22 @@ export function GameScreen() {
           onPointerDown={() => navigate('/store')}
           style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(127,119,221,0.2)', borderRadius: 12, padding: '10px 6px', cursor: 'pointer' }}
         >
-          <span style={{ fontSize: 20 }}>🚫</span>
-          <span style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.7)', letterSpacing: 0.5 }}>REMOVE ADS</span>
-          <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.35)' }}>Play without interruptions</span>
+          {/* FL-UX-D-015: alternates every 5s (key remount = quick fade-in) */}
+          <div key={adCardState} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, animation: 'flAdSwap 0.3s ease' }}>
+            {adCardState === 'remove_ads' ? (
+              <>
+                <span style={{ fontSize: 20 }}>🚫</span>
+                <span style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.7)', letterSpacing: 0.5 }}>REMOVE ADS</span>
+                <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.35)' }}>Play without interruptions</span>
+              </>
+            ) : (
+              <>
+                <span style={{ fontSize: 20 }}>💡</span>
+                <span style={{ fontSize: 9, fontWeight: 700, color: skin.gold, letterSpacing: 0.5 }}>BUY HINTS</span>
+                <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.35)' }}>Get 20 hints for $1.99</span>
+              </>
+            )}
+          </div>
         </button>
         <button
           onPointerDown={watchAdAvailable ? () => void handleWatchAd() : undefined}

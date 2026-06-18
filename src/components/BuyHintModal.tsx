@@ -3,7 +3,7 @@
 //
 // Clean FL rewrite of the last @ts-nocheck Numtap component. Modal sheet offered
 // when the HINT flow can't grant a hint via a rewarded ad (e.g. no ad fill) and
-// the player has 0 gems. Two outs: buy a Hint Pack (+5 gems) or retry the ad.
+// the player has 0 gems. Two outs: buy a Hint Pack (+20 gems) or retry the ad.
 //
 // Props keep it self-contained and testable: it owns the purchase (billing.ts +
 // flowSettingsStore), and delegates the ad retry to the caller (GameScreen owns
@@ -33,7 +33,7 @@ export function BuyHintModal({
     setBusy(true);
     const result = await purchaseProduct(FL_PRODUCTS.HINT_PACK);
     if (result.success) {
-      await addGems(5); // FL: +5 gems per Hint Pack (not Numtap's +20)
+      await addGems(20); // FL-UX-D-015: +20 gems per Hint Pack ($1.99)
       if (result.purchaseToken) await consumePurchase(result.purchaseToken);
     }
     setBusy(false);
@@ -102,7 +102,7 @@ export function BuyHintModal({
           }}
         >
           <div style={{ fontFamily: skin.fontDisplay, fontSize: 14, color: skin.white, marginBottom: 6 }}>💎 Hint Pack</div>
-          <div style={{ fontSize: 12, color: skin.muted, marginBottom: 12 }}>5 gems · $0.99</div>
+          <div style={{ fontSize: 12, color: skin.muted, marginBottom: 12 }}>20 gems · $1.99</div>
           <button
             onClick={() => void handleBuy()}
             disabled={busy}
