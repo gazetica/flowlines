@@ -10,6 +10,7 @@
 import type { CSSProperties, ReactNode, PointerEvent as ReactPointerEvent } from 'react';
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { skin } from '../styles/skin';
 import { FloatingPathCanvas } from './FloatingPathCanvas';
 
@@ -246,6 +247,7 @@ function PageHeading({ title, subtitle }: { title: string; subtitle: string }) {
 // ─── FL-UX-D-014: static solved-board illustration + in-game help cards ───────
 
 function SolvedGrid() {
+  const { t } = useTranslation();
   const hexOf = (colour: string) => skin.pathColors[colour as keyof typeof skin.pathColors] ?? COLOURS[colour];
   const cx = (c: number) => c + 0.5;
   const cy = (r: number) => r + 0.5;
@@ -292,7 +294,7 @@ function SolvedGrid() {
         </div>
       </div>
       <div style={{ textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 8 }}>
-        A solved board (Pack 1 · Level 01) — draw each colour end to end ✓
+        {t('howtoplay.page2_caption')}
       </div>
     </div>
   );
@@ -320,61 +322,58 @@ const helpHeading: CSSProperties = { fontSize: 13, fontWeight: 700, color: GOLD,
 // ─── Pages ───────────────────────────────────────────────────────────────────
 
 function Page1() {
+  const { t } = useTranslation();
   return (
     <>
-      <PageHeading title="Connect the colours" subtitle="Fill every cell on the board" />
+      <PageHeading title={t('howtoplay.page1_title')} subtitle={t('howtoplay.page1_sub')} />
       <div style={{ marginBottom: 20 }}>
         <InteractiveGrid />
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <InstructionCard n={1}>Press on a coloured dot and drag to its matching partner</InstructionCard>
-        <InstructionCard n={2}>Every cell must be filled — connecting the dots alone is not enough</InstructionCard>
+        <InstructionCard n={1}>{t('howtoplay.page1_rule1')}</InstructionCard>
+        <InstructionCard n={2}>{t('howtoplay.page1_rule2')}</InstructionCard>
       </div>
     </>
   );
 }
 
 function Page2() {
-  const rules = [
-    'Paths move up, down, left, right only — no diagonal moves allowed',
-    'Paths cannot cross each other — if you draw over another colour, it erases from that point',
-    'You can retract your own path — drag backward over your own line to undo cells',
-    'Stuck? Use the in-game help below — hints, clues and extensions can get you moving again',
-    'Grids grow from 6×6 (Pack 1) up to 9×9 (Pack 4) — more cells, more planning required',
-  ];
+  const { t } = useTranslation();
+  const ruleKeys = ['page2_rule1', 'page2_rule2', 'page2_rule3', 'page2_rule4', 'page2_rule5'];
   return (
     <>
-      <PageHeading title="Master the puzzle" subtitle="Learn the rules, plan ahead" />
+      <PageHeading title={t('howtoplay.page2_title')} subtitle={t('howtoplay.page2_sub')} />
 
       {/* FL-UX-D-014 (revised): the solved board comes FIRST, then the explanation */}
       <SolvedGrid />
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 16 }}>
-        {rules.map((t, i) => <InstructionCard key={i} n={i + 1}>{t}</InstructionCard>)}
+        {ruleKeys.map((k, i) => <InstructionCard key={k} n={i + 1}>{t(`howtoplay.${k}`)}</InstructionCard>)}
       </div>
 
       {/* FL-UX-D-014 Fix 3: rescue mechanics */}
-      <div style={helpHeading}>IN-GAME HELP</div>
+      <div style={helpHeading}>{t('howtoplay.page2_help_title')}</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <HelpCard icon="💡" title="USE HINT" sub="Spend 1 gem — a ghost path briefly reveals the full solution for one colour." />
-        <HelpCard icon="🎯" title="GET A CLUE  ·  at 33% used" sub="Watch a short ad — the hardest colour is auto-completed for you." />
-        <HelpCard icon="⏱" title="TIME EXT +30s  ·  Campaign, at 66% used" sub="Watch a short ad — 30 seconds added to your timer." />
-        <HelpCard icon="➕" title="MOVE EXT +5  ·  Classic, at 66% used" sub="Watch a short ad — 5 extra moves added to your budget." />
+        <HelpCard icon="💡" title={t('howtoplay.page2_hint_title')} sub={t('howtoplay.page2_hint_desc')} />
+        <HelpCard icon="🎯" title={t('howtoplay.page2_clue_title')} sub={t('howtoplay.page2_clue_desc')} />
+        <HelpCard icon="⏱" title={t('howtoplay.page2_timeext_title')} sub={t('howtoplay.page2_timeext_desc')} />
+        <HelpCard icon="➕" title={t('howtoplay.page2_moveext_title')} sub={t('howtoplay.page2_moveext_desc')} />
       </div>
     </>
   );
 }
 
 function Page3() {
+  const { t } = useTranslation();
   const modes = [
-    { icon: '⏱', name: 'Campaign', desc: 'Race the clock · 200 levels · 4 packs · 6×6 to 9×9 grids · up to 3 stars per level' },
-    { icon: '🎯', name: 'Classic', desc: 'Solve within a move budget · 200 levels · 4 packs · up to 3 stars per level' },
-    { icon: '📅', name: 'Daily Challenge', desc: 'Two fresh puzzles every day · global leaderboard · build your streak' },
-    { icon: '🧘', name: 'Zen', desc: 'No limits · choose your grid · relax at your own pace' },
+    { icon: '⏱', name: t('howtoplay.page3_campaign_title'), desc: t('howtoplay.page3_campaign_desc') },
+    { icon: '🎯', name: t('howtoplay.page3_classic_title'), desc: t('howtoplay.page3_classic_desc') },
+    { icon: '📅', name: t('howtoplay.page3_daily_title'), desc: t('howtoplay.page3_daily_desc') },
+    { icon: '🧘', name: t('howtoplay.page3_zen_title'), desc: t('howtoplay.page3_zen_desc') },
   ];
   return (
     <>
-      <PageHeading title="Choose your challenge" subtitle="Four ways to play Flow Lines" />
+      <PageHeading title={t('howtoplay.page3_title')} subtitle={t('howtoplay.page3_sub')} />
       <div>
         {modes.map((m) => (
           <div
@@ -402,6 +401,7 @@ function Page3() {
 
 export function HowToPlayScreen() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [page, setPage] = useState(0); // 0,1,2
 
   const goNext = () => { if (page < 2) setPage((p) => p + 1); else navigate('/home'); };
@@ -432,10 +432,10 @@ export function HowToPlayScreen() {
           ‹
         </div>
         <span style={{ border: '1px solid rgba(255,215,0,0.5)', borderRadius: 6, padding: '5px 12px', fontSize: 11, fontWeight: 700, letterSpacing: 2, color: GOLD, background: 'rgba(255,215,0,0.08)' }}>
-          HOW TO PLAY
+          {t('howtoplay.title')}
         </span>
         {page < 2 ? (
-          <button onClick={skip} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 13, cursor: 'pointer', width: 40, textAlign: 'right' }}>Skip ›</button>
+          <button onClick={skip} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 13, cursor: 'pointer', width: 40, textAlign: 'right' }}>{t('howtoplay.skip')}</button>
         ) : (
           <span style={{ width: 40 }} />
         )}
@@ -470,14 +470,14 @@ export function HowToPlayScreen() {
           onClick={goNext}
           style={{ background: GOLD, color: DARK, border: 'none', borderRadius: 12, padding: 17, fontSize: 16, fontWeight: 700, letterSpacing: 1.5, width: '100%', cursor: 'pointer', fontFamily: skin.fontDisplay }}
         >
-          {page === 2 ? "LET'S PLAY!" : 'NEXT →'}
+          {page === 2 ? t('howtoplay.lets_play') : t('howtoplay.next_btn')}
         </button>
         {page < 2 && (
           <button
             onClick={skip}
             style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 12, padding: 14, fontSize: 14, color: 'rgba(255,255,255,0.4)', width: '100%', cursor: 'pointer' }}
           >
-            Skip Tutorial
+            {t('common.skip_tutorial')}
           </button>
         )}
       </div>

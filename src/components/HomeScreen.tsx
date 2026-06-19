@@ -12,6 +12,7 @@
 import type { CSSProperties } from 'react';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { skin } from '../styles/skin';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
 import type { PackModeProgress } from '../store/flowSettingsStore';
@@ -56,7 +57,7 @@ function findCurrentPack(progress: ModeProgress): CurrentPack {
 }
 
 function HeroCard({
-  label, icon, accent, gradient, cur, ctaRoute, ctaIdle,
+  label, icon, accent, gradient, cur, ctaRoute, ctaLabel,
 }: {
   label: string;
   icon: string;
@@ -64,10 +65,10 @@ function HeroCard({
   gradient: string;
   cur: CurrentPack;
   ctaRoute: string;
-  ctaIdle: string;   // CTA verb for fresh player ("START") vs ongoing ("PLAY")
+  ctaLabel: string;  // pre-translated CTA, e.g. "▶ PLAY CAMPAIGN"
 }) {
   const navigate = useNavigate();
-  const fresh = cur.solved === 0 && cur.levelIndex <= 1;
+  const { t } = useTranslation();
   const pct = Math.min(100, (cur.solved / 50) * 100);
 
   const badge: CSSProperties = {
@@ -97,11 +98,11 @@ function HeroCard({
         <span style={{ fontSize: 13, fontWeight: 700, color: accent, letterSpacing: 1.5 }}>
           {icon} {label}
         </span>
-        <span style={badge}>{cur.difficulty.toUpperCase()}</span>
+        <span style={badge}>{t(`home.${cur.difficulty}`)}</span>
       </div>
 
       <div style={{ fontSize: 15, fontWeight: 600, color: '#FFFFFF', margin: '6px 0 4px' }}>
-        Pack {cur.packId} · Level {cur.levelIndex}
+        {t('home.pack_level', { pack: cur.packId, level: cur.levelIndex })}
       </div>
 
       <div
@@ -117,7 +118,7 @@ function HeroCard({
       </div>
 
       <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 14 }}>
-        {cur.solved}/50 levels
+        {t('home.levels_progress', { done: cur.solved, total: 50 })}
       </div>
 
       <button
@@ -135,7 +136,7 @@ function HeroCard({
           cursor: 'pointer',
         }}
       >
-        ▶  {fresh ? `START ${ctaIdle}` : `PLAY ${ctaIdle}`}
+        {ctaLabel}
       </button>
     </div>
   );
@@ -149,6 +150,7 @@ function gradientForBar(accent: string): string {
 
 export function HomeScreen() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const alias = useFlowSettingsStore((s) => s.alias);
   const country = useFlowSettingsStore((s) => s.country);
   const gemBalance = useFlowSettingsStore((s) => s.gemBalance);
@@ -172,9 +174,9 @@ export function HomeScreen() {
   // Daily status line
   let dailyStatus: string;
   let dailyStatusColour: string;
-  if (dailyDone === 0) { dailyStatus = '2 puzzles waiting'; dailyStatusColour = 'rgba(255,255,255,0.6)'; }
-  else if (dailyDone === 1) { dailyStatus = '1 of 2 done ✓'; dailyStatusColour = GOLD; }
-  else { dailyStatus = 'All done today! ✓'; dailyStatusColour = '#2ECC71'; }
+  if (dailyDone === 0) { dailyStatus = t('home.puzzles_waiting'); dailyStatusColour = 'rgba(255,255,255,0.6)'; }
+  else if (dailyDone === 1) { dailyStatus = t('home.one_of_two'); dailyStatusColour = GOLD; }
+  else { dailyStatus = t('home.all_done_today'); dailyStatusColour = '#2ECC71'; }
 
   const remainingForBonus = 7 - streakCount;
 
@@ -264,24 +266,24 @@ export function HomeScreen() {
 
         {/* Section 2 — Campaign hero card */}
         <HeroCard
-          label="CAMPAIGN"
+          label={t('home.campaign')}
           icon="🎯"
           accent={CAMPAIGN_ACCENT}
           gradient="linear-gradient(135deg, rgba(230,126,34,0.12) 0%, rgba(255,215,0,0.06) 100%)"
           cur={campaign}
           ctaRoute="/packs?mode=campaign"
-          ctaIdle="CAMPAIGN"
+          ctaLabel={t('home.play_campaign')}
         />
 
         {/* Section 3 — Classic hero card */}
         <HeroCard
-          label="CLASSIC"
+          label={t('home.classic')}
           icon="♟"
           accent={CLASSIC_ACCENT}
           gradient="linear-gradient(135deg, rgba(127,119,221,0.12) 0%, rgba(155,89,182,0.06) 100%)"
           cur={classic}
           ctaRoute="/packs?mode=classic"
-          ctaIdle="CLASSIC"
+          ctaLabel={t('home.play_classic')}
         />
 
         {/* Section 4 — Daily + Zen row */}
@@ -297,10 +299,10 @@ export function HomeScreen() {
               flexDirection: 'column',
             }}
           >
-            <div style={{ fontSize: 12, fontWeight: 700, color: GOLD }}>📅 DAILY</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: GOLD }}>📅 {t('home.daily')}</div>
             <div style={{ fontSize: 12, color: dailyStatusColour, margin: '6px 0' }}>{dailyStatus}</div>
             <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>
-              🔥 {streakCount} day streak
+              {t('home.day_streak', { count: streakCount })}
             </div>
             <button
               onPointerDown={() => navigate('/daily')}
@@ -317,7 +319,7 @@ export function HomeScreen() {
                 cursor: 'pointer',
               }}
             >
-              PLAY DAILY
+              {t('home.play_daily')}
             </button>
           </div>
 
@@ -332,9 +334,9 @@ export function HomeScreen() {
               flexDirection: 'column',
             }}
           >
-            <div style={{ fontSize: 12, fontWeight: 700, color: ZEN_ACCENT }}>🧘 ZEN</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: ZEN_ACCENT }}>🧘 {t('home.zen')}</div>
             <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', margin: '6px 0 10px' }}>
-              Your grid<br />Your pace
+              {t('home.zen_tagline')}<br />{t('home.zen_tagline2')}
             </div>
             <button
               onPointerDown={() => navigate('/packs?mode=zen')}
@@ -351,7 +353,7 @@ export function HomeScreen() {
                 cursor: 'pointer',
               }}
             >
-              EXPLORE
+              {t('home.explore_zen')}
             </button>
           </div>
         </div>
@@ -368,10 +370,10 @@ export function HomeScreen() {
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(127,119,221,0.8)', letterSpacing: 1.5 }}>
-              DAILY STREAK
+              {t('home.daily_streak')}
             </span>
             <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>
-              {streakCount > 0 ? `Day ${Math.min(streakCount, 7)} of 7` : 'Start your streak!'}
+              {streakCount > 0 ? t('home.day_of_7', { count: Math.min(streakCount, 7) }) : t('home.start_streak')}
             </span>
           </div>
 
@@ -430,14 +432,14 @@ export function HomeScreen() {
 
           {streakCount >= 5 && streakCount <= 7 && (
             <div style={{ fontSize: 11, color: GOLD, textAlign: 'center', marginTop: 8 }}>
-              🔥 {remainingForBonus} more day{remainingForBonus === 1 ? '' : 's'} for +7 💎
+              {t('home.bonus_days', { count: remainingForBonus })}
             </div>
           )}
         </div>
 
         {/* FL-UX-D-015b: daily visit-gem status — standalone line below the streak card */}
         <div style={{ textAlign: 'center', fontFamily: skin.fontDisplay, fontSize: 12, margin: '0 20px 8px', color: isDailyGemClaimedToday ? '#2ECC71' : GOLD }}>
-          {isDailyGemClaimedToday ? '💎 Daily gem collected ✓' : '💎 +1 gem for visiting today'}
+          {isDailyGemClaimedToday ? t('home.daily_gem_collected') : t('home.daily_gem_available')}
         </div>
       </div>
 

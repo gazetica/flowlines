@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import type { ReactNode, CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Browser } from '@capacitor/browser';
 import { skin } from '../styles/skin';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
@@ -73,6 +74,7 @@ const LANGS = ['en', 'de', 'fr', 'ko', 'pt', 'es'];
 
 export default function SettingsScreen() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const s = useFlowSettingsStore();
   const [aliasDraft, setAliasDraft] = useState(s.alias);
 
@@ -88,25 +90,25 @@ export default function SettingsScreen() {
 
       <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px' }}>
         <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', color: skin.white, fontSize: 18, cursor: 'pointer' }}>‹</button>
-        <span style={{ fontFamily: skin.fontDisplay, fontSize: 16, color: GOLD, letterSpacing: 2 }}>SETTINGS</span>
+        <span style={{ fontFamily: skin.fontDisplay, fontSize: 16, color: GOLD, letterSpacing: 2 }}>{t('settings.title')}</span>
       </div>
 
       <div style={{ position: 'relative', zIndex: 1, flex: 1, overflowY: 'auto', padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
         {/* AUDIO */}
-        <Section title="AUDIO">
-          <div style={rowStyle}><span>Music</span><Toggle on={s.musicEnabled} onClick={() => void s.toggleMusic()} /></div>
-          <div style={rowStyle}><span>Sound Effects</span><Toggle on={s.soundEnabled} onClick={() => void s.toggleSound()} /></div>
-          <div style={{ ...rowStyle, borderBottom: 'none' }}><span>Haptics</span><Toggle on={s.hapticsEnabled} onClick={() => void s.toggleHaptics()} /></div>
+        <Section title={t('settings.section_audio')}>
+          <div style={rowStyle}><span>{t('settings.music')}</span><Toggle on={s.musicEnabled} onClick={() => void s.toggleMusic()} /></div>
+          <div style={rowStyle}><span>{t('settings.sound_effects')}</span><Toggle on={s.soundEnabled} onClick={() => void s.toggleSound()} /></div>
+          <div style={{ ...rowStyle, borderBottom: 'none' }}><span>{t('settings.haptics')}</span><Toggle on={s.hapticsEnabled} onClick={() => void s.toggleHaptics()} /></div>
         </Section>
 
         {/* PLAYER */}
-        <Section title="PLAYER">
+        <Section title={t('settings.section_player')}>
           <div style={rowStyle}>
-            <span>Alias</span>
+            <span>{t('settings.alias')}</span>
             <input
               value={aliasDraft}
               maxLength={20}
-              placeholder="Your name"
+              placeholder={t('settings.alias_placeholder')}
               onChange={(e) => setAliasDraft(e.target.value)}
               onBlur={() => void s.setAlias(aliasDraft)}
               onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
@@ -114,20 +116,20 @@ export default function SettingsScreen() {
             />
           </div>
           <button onClick={() => navigate('/country')} style={{ ...rowStyle, width: '100%', background: 'none', border: 'none', borderBottom: '1px solid rgba(127,119,221,0.1)', cursor: 'pointer' }}>
-            <span>Country</span>
+            <span>{t('settings.country')}</span>
             <span style={{ color: skin.muted }}>{flagOf(s.country || 'IN')} {countryName} ›</span>
           </button>
           <div style={{ ...rowStyle, borderBottom: 'none', flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-              <span>UID</span>
+              <span>{t('settings.uid')}</span>
               <span style={{ fontFamily: skin.fontDisplay, fontSize: 12, color: skin.purpleLight }}>{s.playerUid || '—'} 🔒</span>
             </div>
-            <span style={{ fontSize: 10, color: skin.muted }}>Permanent · Cannot be changed</span>
+            <span style={{ fontSize: 10, color: skin.muted }}>{t('settings.uid_permanent')}</span>
           </div>
         </Section>
 
         {/* LANGUAGE */}
-        <Section title="LANGUAGE">
+        <Section title={t('settings.language')}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, padding: 12 }}>
             {LANGS.map((lng) => {
               const active = s.language === lng;
@@ -154,31 +156,31 @@ export default function SettingsScreen() {
         </Section>
 
         {/* ACCOUNT */}
-        <Section title="ACCOUNT">
+        <Section title={t('settings.section_account')}>
           {/* FL-UX-D-013: Remove Ads → IAPScreen (/store), was navigate('/') → home */}
           <button onPointerDown={() => navigate('/store')} style={{ ...rowStyle, width: '100%', background: 'none', border: 'none', borderBottom: '1px solid rgba(127,119,221,0.1)', cursor: 'pointer' }}>
-            <span>🚫 Remove Ads · $2.99</span><span style={{ color: skin.muted }}>›</span>
+            <span>{t('settings.remove_ads')}</span><span style={{ color: skin.muted }}>›</span>
           </button>
           {/* FL-UX-D-013: Ad Preferences → re-open the UMP privacy-options form in place
               (no navigation), was navigate('/') → home */}
           <button onPointerDown={() => void reopenForm()} style={{ ...rowStyle, width: '100%', background: 'none', border: 'none', borderBottom: 'none', cursor: 'pointer' }}>
-            <span>Ad Preferences (GDPR)</span><span style={{ color: skin.muted }}>›</span>
+            <span>{t('settings.ad_preferences')}</span><span style={{ color: skin.muted }}>›</span>
           </button>
         </Section>
 
         {/* SUPPORT */}
-        <Section title="SUPPORT">
+        <Section title={t('settings.section_support')}>
           <button onClick={() => navigate('/tutorial')} style={{ ...rowStyle, width: '100%', background: 'none', border: 'none', borderBottom: '1px solid rgba(127,119,221,0.1)', cursor: 'pointer' }}>
-            <span>How To Play</span><span style={{ color: skin.muted }}>›</span>
+            <span>{t('settings.how_to_play')}</span><span style={{ color: skin.muted }}>›</span>
           </button>
           <button onClick={() => openUrl('https://gazetica.com/privacy')} style={{ ...rowStyle, width: '100%', background: 'none', border: 'none', borderBottom: '1px solid rgba(127,119,221,0.1)', cursor: 'pointer' }}>
-            <span>Privacy Policy</span><span style={{ color: skin.muted }}>›</span>
+            <span>{t('settings.privacy_policy')}</span><span style={{ color: skin.muted }}>›</span>
           </button>
           <button onClick={() => openUrl('https://gazetica.com/terms')} style={{ ...rowStyle, width: '100%', background: 'none', border: 'none', borderBottom: '1px solid rgba(127,119,221,0.1)', cursor: 'pointer' }}>
-            <span>Terms of Service</span><span style={{ color: skin.muted }}>›</span>
+            <span>{t('settings.terms_of_service')}</span><span style={{ color: skin.muted }}>›</span>
           </button>
           <button onClick={() => navigate('/about')} style={{ ...rowStyle, width: '100%', background: 'none', border: 'none', borderBottom: 'none', cursor: 'pointer' }}>
-            <span>About Flow Lines</span><span style={{ color: skin.muted }}>›</span>
+            <span>{t('settings.about')}</span><span style={{ color: skin.muted }}>›</span>
           </button>
         </Section>
       </div>

@@ -4,14 +4,13 @@
     "tagline": "Number Tap Puzzle",
     "by": "by Gazetica"
   },
-
   "nav": {
     "home": "Home",
-    "leaderboard": "Board",
+    "leaderboard": "Leaderboard",
     "settings": "Settings",
-    "about": "About"
+    "about": "About",
+    "packs": "Packs"
   },
-
   "home": {
     "daily_pill_title": "CLAIM 3 DAILY GEMS",
     "daily_pill_sub": "Visit every day for your free gems",
@@ -33,7 +32,7 @@
     "mode_endless": "ENDLESS",
     "mode_endless_sub": "5×5 · 3 min",
     "best_score": "Best Score",
-    "day_streak": "Day Streak",
+    "day_streak": "🔥 {{count}} day streak",
     "rank": "RANK",
     "games": "GAMES",
     "avg": "AVG",
@@ -44,9 +43,37 @@
     "win_pro_tag": "WIN PRO TAG",
     "win_pro_sub": "Complete Campaign Level 100",
     "win_expert_tag": "WIN EXPERT TAG",
-    "win_expert_sub": "Complete Campaign Level 200"
+    "win_expert_sub": "Complete Campaign Level 200",
+    "title": "FLOW LINES",
+    "campaign": "CAMPAIGN",
+    "classic": "CLASSIC",
+    "daily": "DAILY",
+    "zen": "ZEN",
+    "pack_level": "Pack {{pack}} · Level {{level}}",
+    "levels_progress": "{{done}}/{{total}} levels",
+    "level_next": "Level {{level}} next",
+    "play_campaign": "▶ PLAY CAMPAIGN",
+    "play_classic": "▶ PLAY CLASSIC",
+    "play_daily": "PLAY DAILY",
+    "explore_zen": "EXPLORE",
+    "all_done_today": "All done today! ✓",
+    "streak_days": "🔥 {{count}} day",
+    "streak_days_plural": "🔥 {{count}} days",
+    "daily_streak": "DAILY STREAK",
+    "day_of_7": "Day {{count}} of 7",
+    "zen_tagline": "Your grid",
+    "zen_tagline2": "Your pace",
+    "daily_gem_collected": "💎 Daily gem collected ✓",
+    "daily_gem_available": "💎 +1 gem for visiting today",
+    "easy": "EASY",
+    "medium": "MEDIUM",
+    "hard": "HARD",
+    "hardest": "HARDEST",
+    "puzzles_waiting": "2 puzzles waiting",
+    "one_of_two": "1 of 2 done ✓",
+    "start_streak": "Start your streak!",
+    "bonus_days": "🔥 {{count}} more days for +7 💎"
   },
-
   "game": {
     "clue_pill_title": "GET A CLUE",
     "clue_pill_sub_5": "Watch ad → reveal 5 tiles",
@@ -79,9 +106,41 @@
     "get_more_hints": "GET MORE HINTS",
     "get_more_hints_sub": "Tap to buy gem packs",
     "toast_no_hints": "No more hints this session",
-    "toast_no_ad": "No ad available"
+    "toast_no_ad": "No ad available",
+    "moves_left": "MOVES LEFT",
+    "tiles": "TILES",
+    "time": "TIME",
+    "moves": "MOVES",
+    "timer": "TIMER",
+    "paused": "PAUSED",
+    "resume": "Resume",
+    "quit": "Quit",
+    "remove_ads_card": "REMOVE ADS",
+    "buy_hints_card": "BUY HINTS",
+    "buy_hints_sub": "Get 20 hints for $1.99",
+    "watch_ad_watched": "Watched",
+    "hint_left": "💎 ×{{count}} left",
+    "get_a_clue": "GET A CLUE",
+    "get_a_clue_desc": "Watch ad · auto-complete 1 path",
+    "low_on_time": "LOW ON TIME",
+    "time_ext_desc": "Watch ad — Add +30s",
+    "low_on_moves": "LOW ON MOVES",
+    "move_ext_desc": "Watch ad — Add +5 moves",
+    "you": "YOU",
+    "leader": "LEADER",
+    "score": "Score",
+    "zen_label": "ZEN",
+    "abandon_title": "Abandon this level?",
+    "keep_playing": "Keep Playing",
+    "abandon": "Abandon",
+    "tutorial_hint": "Tap a dot and drag to its match",
+    "tutorial_dismiss": "Tap anywhere to dismiss",
+    "breadcrumb_zen": "Zen · {{grid}}×{{grid}} · {{difficulty}}",
+    "breadcrumb_daily_campaign": "Daily Challenge · Campaign",
+    "breadcrumb_daily_classic": "Daily Challenge · Classic",
+    "ad_unavailable": "Ad unavailable — try again",
+    "breadcrumb_pack": "Pack {{pack}} · Level {{level}} · {{difficulty}}"
   },
-
   "result": {
     "difficulty": "Difficulty",
     "level_complete": "LEVEL COMPLETE!",
@@ -92,7 +151,7 @@
     "time_bonus": "Time Bonus",
     "speed_bonus": "Speed Bonus",
     "accuracy": "Accuracy",
-    "total": "Total",
+    "total": "TOTAL",
     "btn_next_level": "NEXT LEVEL",
     "btn_play_again": "PLAY AGAIN",
     "btn_home": "HOME",
@@ -102,9 +161,45 @@
     "time_out": "TIME OUT",
     "grid_label": "{{size}}×{{size}} Grid",
     "time_label": "{{seconds}}s",
-    "best_config": "★ Best (this config):"
+    "best_config": "★ Best (this config):",
+    "title": "LEVEL COMPLETE!",
+    "failed_title": "LEVEL FAILED",
+    "perfect_clear": "✨ PERFECT CLEAR!",
+    "result_label": "RESULT",
+    "dots_connected": "Dots connected",
+    "board_filled": "Board filled",
+    "time_efficiency": "Time efficiency",
+    "move_efficiency": "Move efficiency",
+    "gesture_bonus": "Gesture bonus",
+    "hints_used": "Hints used (×{{count}})",
+    "auto_complete_used": "Auto-complete used",
+    "moves_taken": "Moves",
+    "time_taken": "Time taken",
+    "timer_limit": "Timer limit",
+    "gestures": "Gestures",
+    "budget": "Budget",
+    "best_time": "Best time",
+    "best_moves": "Best moves",
+    "first_time": "First! 🎉",
+    "next_level": "▶  NEXT LEVEL (Level {{number}})",
+    "pack_complete": "▶  PACK COMPLETE!",
+    "replay": "↩  Replay",
+    "levels": "☰  Levels",
+    "play_again": "▶  PLAY AGAIN",
+    "change_config": "⚙  CHANGE CONFIG",
+    "back_to_daily": "✓  BACK TO DAILY",
+    "try_again": "↩  TRY AGAIN",
+    "back_to_levels": "‹ Back to Levels",
+    "back_to_daily_link": "‹ Back to Daily",
+    "no_retries_today": "No more retries today",
+    "you_reached": "You reached",
+    "tiles_filled": "Tiles filled",
+    "cell_moves": "Cell moves",
+    "moves_used": "Moves used",
+    "how_far": "HOW FAR YOU GOT",
+    "time_ran_out": "Time ran out",
+    "no_moves_remaining": "No moves remaining"
   },
-
   "leader": {
     "you": "YOU",
     "leader": "LEADER",
@@ -116,14 +211,20 @@
     "tab_daily": "DAILY",
     "tab_endless": "ENDLESS",
     "tab_alltime": "ALL-TIME",
-    "you": "You",
+    "you": "YOU",
     "anonymous_note": "Anonymous · No login required · Set alias in Settings",
     "loading": "Loading...",
     "empty": "No scores yet. Be the first!",
     "your_ranking": "YOUR RANKING",
-    "no_score": "No score yet"
+    "no_score": "No score yet",
+    "tab_campaign": "CAMPAIGN",
+    "tab_classic": "CLASSIC",
+    "rank_unknown": "#--",
+    "leader": "LEADER",
+    "score": "Score",
+    "moves": "Moves",
+    "player": "Player"
   },
-
   "settings": {
     "title": "SETTINGS",
     "player_identity_title": "PLAYER IDENTITY",
@@ -134,19 +235,29 @@
     "music": "Music",
     "section_display": "DISPLAY",
     "haptic_feedback": "Haptic Feedback",
-    "language": "Language",
+    "language": "LANGUAGE",
     "section_profile": "PROFILE",
     "alias_label": "Leaderboard Alias",
     "alias_sub": "Shown on global board",
-    "alias_placeholder": "Enter alias",
+    "alias_placeholder": "Your name",
     "section_purchases": "PURCHASES",
-    "remove_ads": "Remove Ads Forever",
+    "remove_ads": "🚫 Remove Ads · $2.99",
     "remove_ads_sub": "One-time purchase",
     "remove_ads_purchased": "Purchased ✓",
     "restore_purchases": "Restore Purchases",
-    "country": "Country"
+    "country": "Country",
+    "haptics": "Haptics",
+    "section_player": "PLAYER",
+    "alias": "Alias",
+    "uid": "UID",
+    "section_account": "ACCOUNT",
+    "ad_preferences": "Ad Preferences (GDPR)",
+    "section_support": "SUPPORT",
+    "how_to_play": "How To Play",
+    "privacy_policy": "Privacy Policy",
+    "terms_of_service": "Terms of Service",
+    "about": "About Flow Lines"
   },
-
   "iap": {
     "toast_purchase_complete": "Purchase complete ✓",
     "toast_purchase_failed": "Purchase failed",
@@ -170,7 +281,6 @@
     "expert_campaign_title": "EXPERT CAMPAIGN — EARLY ACCESS",
     "expert_campaign_desc": "Unlock 100 Expert levels now. Keep forever."
   },
-
   "consent": {
     "title": "Your Privacy Matters",
     "body": "Numtap uses advertising to stay free. We and our partners may use your data to show you personalised ads. You can choose to accept or use limited ads. You can change this anytime in Settings.",
@@ -179,7 +289,6 @@
     "privacy_link": "Privacy Policy",
     "terms_link": "Terms & Conditions"
   },
-
   "how_to_play": {
     "step5": "Running low on time? Watch a short ad — we'll highlight your next targets in amber so you can finish the level.",
     "step1": "A grid of shuffled numbers appears. Tap them in sequence — the HUD shows your next target.",
@@ -207,58 +316,92 @@
     "mode_speed": "SPEED",
     "mode_speed_sub": "4×4 · Halved timer · 2× score"
   },
-
   "language": {
     "nameLabel": "What should we call you?",
     "countryLabel": "Where are you from?",
-    "title": "Choose Your Language",
+    "title": "LANGUAGE",
     "sub": "You can change this anytime in Settings",
     "detected": "Detected: {{language}}",
     "btn_continue": "CONTINUE",
-    "btn_later": "I'll choose later"
+    "btn_later": "I'll choose later",
+    "subtitle": "Select your language",
+    "en_tagline": "Connect colours. Fill the board.",
+    "de_tagline": "Verbinde Farben und fülle das Feld",
+    "fr_tagline": "Reliez les couleurs, remplissez la grille",
+    "ko_tagline": "색깔을 연결하고 보드를 채우세요",
+    "pt_tagline": "Conecte as cores, preencha o tabuleiro",
+    "es_tagline": "Conecta los colores, llena el tablero",
+    "choose": "Choose your language",
+    "alias_prompt": "What should we call you?",
+    "alias_placeholder": "Player",
+    "country_prompt": "Where are you from?",
+    "choose_later": "I'll choose later",
+    "select_country": "Select your country",
+    "search_countries": "Search countries...",
+    "no_countries": "No countries found"
   },
-
   "about": {
     "title": "ABOUT",
     "version": "Version {{version}}",
     "bundle_id": "com.gazetica.numtap",
     "how_to_play": "How to Play",
     "privacy_policy": "Privacy Policy",
-    "terms": "Terms & Conditions",
+    "terms": "Terms of Service",
     "ad_preferences": "Ad Preferences (GDPR)",
-    "rate_app": "Rate Numtap ★",
+    "rate_app": "Rate the App",
     "contact": "Contact / Support",
     "more_games": "More Games by Gazetica",
     "footer": "Gazetica Studio · Voraky Retail LLP",
-    "copyright": "© 2026 Voraky Retail LLP. All rights reserved."
+    "copyright": "© 2026 Voraky Retail LLP. All rights reserved.",
+    "app_title": "FLOW LINES",
+    "more_from": "MORE FROM GAZETICA",
+    "legal": "LEGAL",
+    "open_source": "Open Source Licences",
+    "support": "SUPPORT",
+    "contact_us": "Contact Us"
   },
-
   "splash": {
-    "loading": "Loading..."
+    "loading": "Loading puzzles…",
+    "by": "by Gazetica",
+    "tagline": "Colour Connection Puzzle"
   },
-
   "common": {
     "ok": "OK",
     "cancel": "Cancel",
     "close": "Close",
     "back": "Back",
     "save": "Save",
-    "loading": "Loading...",
+    "loading": "Loading…",
     "error": "Something went wrong.",
-    "retry": "Try Again",
+    "retry": "RETRY",
     "pack_locked": "Complete Pack {{pack}} to unlock",
     "pack_coming_soon": "Coming Soon",
     "level": "Level {{id}}",
-    "pack": "Pack {{pack}}"
+    "pack": "Pack {{pack}}",
+    "next": "NEXT",
+    "skip": "Skip",
+    "skip_tutorial": "Skip Tutorial",
+    "play_now": "PLAY NOW",
+    "continue": "CONTINUE",
+    "confirm": "CONFIRM",
+    "error_load": "Couldn't load scores. Check your connection.",
+    "retry_btn": "Retry",
+    "no_scores": "No scores yet — be the first!",
+    "gems": "gems",
+    "gem_symbol": "💎",
+    "locked": "LOCKED",
+    "done": "✓ DONE",
+    "failed": "✕ FAILED",
+    "pending": "PENDING",
+    "claimed": "✓ CLAIMED",
+    "version": "Version {{version}} · Gazetica Studio"
   },
-
   "modes": {
     "campaign": "Campaign",
     "daily": "Daily Challenge",
     "endless": "Endless",
     "speed": "Speed"
   },
-
   "modifiers": {
     "none": "",
     "shuffle": "Shuffle",
@@ -266,7 +409,6 @@
     "mirror": "Mirror",
     "countdown": "Countdown"
   },
-
   "daily": {
     "gems_awarded": "+3 Gems!",
     "weekly_bonus": "+7 Weekly Bonus!",
@@ -286,20 +428,37 @@
     "gem_reward_sub": "Daily Challenge Reward",
     "claim_daily": "CLAIM YOUR DAILY",
     "claim_weekly": "CLAIM YOUR WEEKLY 7",
-    "streak_label": "Streak:"
+    "streak_label": "Streak:",
+    "challenge1": "CHALLENGE 1 · CAMPAIGN",
+    "challenge2": "CHALLENGE 2 · CLASSIC",
+    "time_mode": "⏱ Time Mode",
+    "move_mode": "🎯 Move Mode",
+    "retries": "RETRIES",
+    "no_retries": "NO RETRIES LEFT",
+    "play_now": "▶  PLAY NOW",
+    "retry": "↺  RETRY",
+    "locked_hint": "Unlocks after Challenge 1 is attempted.",
+    "todays_reward": "TODAY'S REWARD",
+    "hint_gems": "💎 {{count}} Hint Gems",
+    "both_complete": "Both challenges complete!",
+    "complete_both": "Complete both challenges to unlock",
+    "claim_reward": "CLAIM REWARD",
+    "reward_collected": "Reward collected — back tomorrow!",
+    "streak_progress": "7-DAY STREAK PROGRESS"
   },
-
   "difficulty": {
-    "easy": "EASY",
+    "easy": "Easy",
     "easy_sub": "Ascending 1 → N²",
     "pro": "PRO",
     "pro_sub": "Descending N² → 1",
     "expert": "EXPERT",
     "expert_sub": "Random order",
     "select_title": "SELECT DIFFICULTY",
-    "start": "START"
+    "start": "START",
+    "medium": "Medium",
+    "hard": "Hard",
+    "hardest": "Hardest"
   },
-
   "freeplay": {
     "title": "FREE PLAY",
     "grid_size": "Grid Size",
@@ -308,7 +467,6 @@
     "off": "OFF",
     "toggle_on": "ON"
   },
-
   "campaign": {
     "title": "CAMPAIGN",
     "coming_soon": "COMING SOON",
@@ -326,19 +484,135 @@
     "expert_gate_sub": "Expert Campaign Gate opens on 1,000 Players Completing Campaign 200",
     "gate_counter": "{{count}} / {{total}}"
   },
-
   "hints": {
     "no_ads": "No ads available right now. Try buying gems."
   },
-
   "country": {
     "prefer_not": "Prefer not to say"
   },
-
   "tier": {
     "pro": "PRO",
     "expert": "EXPERT",
     "pro_tag": "(PRO)",
     "expert_tag": "(EXPERT)"
+  },
+  "packs": {
+    "title_campaign": "CAMPAIGN PACKS",
+    "title_classic": "CLASSIC PACKS",
+    "tab_campaign": "CAMPAIGN",
+    "tab_classic": "CLASSIC",
+    "campaign_desc": "Time pressure · 4 parameters · level fails on timeout",
+    "classic_desc": "Move budget · plan each path · fewer moves = better rank",
+    "pack_title": "PACK {{number}} · {{grid}} Grid",
+    "pack_progress": "{{done}}/{{total}} levels",
+    "level_next": "Level {{level}} next",
+    "continue_campaign": "▶ CONTINUE CAMPAIGN",
+    "continue_classic": "▶ CONTINUE CLASSIC",
+    "unlock_pack2": "Solve 25 Pack 1 levels to unlock",
+    "unlock_pack3": "Complete Pack 1 to unlock",
+    "unlock_pack4": "Complete Pack 2 to unlock",
+    "all_complete": "All {{count}} levels complete",
+    "hint_pack": "Hint Pack",
+    "hint_pack_price": "$1.99",
+    "remove_ads": "Remove Ads",
+    "remove_ads_price": "$2.99"
+  },
+  "levels": {
+    "title": "PACK {{number}} LEVELS",
+    "level": "Level {{number}}",
+    "locked_level": "Locked",
+    "header": "PACK {{number}} · {{grid}}"
+  },
+  "store": {
+    "title": "STORE",
+    "your_gems": "💎 Your gems: {{count}}",
+    "remove_ads_title": "REMOVE ADS",
+    "remove_ads_b1": "No interstitials ever",
+    "remove_ads_b2": "One-time purchase",
+    "remove_ads_b3": "Hints always free",
+    "remove_ads_price": "$2.99",
+    "hint_pack_title": "HINT PACK",
+    "hint_pack_b1": "20 hints credited",
+    "hint_pack_b2": "Use when stuck on any level",
+    "hint_pack_b3": "Works on any grid size",
+    "hint_pack_price": "$1.99",
+    "buy_btn": "BUY",
+    "purchased": "✓ Purchased",
+    "gems_added": "+{{count}} gems added!",
+    "ads_removed": "Ads removed — thank you!",
+    "purchase_failed": "Purchase failed",
+    "restore": "Restore Purchases",
+    "restored": "Purchases restored",
+    "nothing_restore": "No purchases to restore",
+    "managed_by": "Purchases managed by Google Play. Tap BUY to start the checkout flow."
+  },
+  "buyhint": {
+    "title": "💡 GET MORE HINTS",
+    "subtitle": "Buy a Hint Pack or watch an ad to earn gems.",
+    "hint_pack": "💎 Hint Pack",
+    "hint_pack_sub": "20 gems · $1.99",
+    "watch_ad": "📺 Watch ad for +3 gems",
+    "maybe_later": "Maybe later",
+    "you_have": "You have {{count}} 💎 gems",
+    "buy_now": "BUY NOW",
+    "watch_ad_instead": "Watch Ad Instead"
+  },
+  "howtoplay": {
+    "title": "HOW TO PLAY",
+    "skip": "Skip ›",
+    "page1_title": "Connect the colours",
+    "page1_sub": "Fill every cell on the board",
+    "page1_rule1": "Press on a coloured dot and drag to its matching partner",
+    "page1_rule2": "Every cell must be filled — connecting the dots alone is not enough",
+    "page2_title": "Master the puzzle",
+    "page2_sub": "Learn the rules, plan ahead",
+    "page2_caption": "A solved board (Pack 1 · Level 01) — draw each colour end to end ✓",
+    "page2_rule1": "Paths move up, down, left, right only — no diagonal moves allowed",
+    "page2_rule2": "Paths cannot cross each other — if you draw over another colour, it erases from that point",
+    "page2_rule3": "You can retract your own path — drag backward over your own line to undo cells",
+    "page2_rule4": "Stuck? Use the in-game help below — hints, clues and extensions can get you moving again",
+    "page2_rule5": "Grids grow from 6×6 (Pack 1) up to 9×9 (Pack 4) — more cells, more planning required",
+    "page2_help_title": "IN-GAME HELP",
+    "page2_hint_title": "USE HINT",
+    "page2_hint_desc": "Spend 1 gem — a ghost path briefly reveals the full solution for one colour.",
+    "page2_clue_title": "GET A CLUE  ·  at 33% used",
+    "page2_clue_desc": "Watch a short ad — the hardest colour is auto-completed for you.",
+    "page2_timeext_title": "TIME EXT +30s  ·  Campaign, at 66% used",
+    "page2_timeext_desc": "Watch a short ad — 30 seconds added to your timer.",
+    "page2_moveext_title": "MOVE EXT +5  ·  Classic, at 66% used",
+    "page2_moveext_desc": "Watch a short ad — 5 extra moves added to your budget.",
+    "page3_title": "Choose your challenge",
+    "page3_sub": "Four ways to play Flow Lines",
+    "page3_campaign_title": "Campaign",
+    "page3_campaign_desc": "Race the clock · 200 levels · 4 packs · 6×6 to 9×9 grids · up to 3 stars per level",
+    "page3_classic_title": "Classic",
+    "page3_classic_desc": "Solve within a move budget · 200 levels · 4 packs · up to 3 stars per level",
+    "page3_daily_title": "Daily Challenge",
+    "page3_daily_desc": "Two fresh puzzles every day · global leaderboard · build your streak",
+    "page3_zen_title": "Zen",
+    "page3_zen_desc": "No limits · choose your grid · relax at your own pace",
+    "lets_play": "LET'S PLAY!",
+    "next_btn": "NEXT →"
+  },
+  "zen": {
+    "title": "ZEN MODE",
+    "tagline": "No limits · your pace · choose any grid",
+    "configure": "Configure Your Session",
+    "grid_size": "GRID SIZE",
+    "difficulty": "DIFFICULTY",
+    "timer": "TIMER",
+    "move_limit": "MOVE LIMIT",
+    "off": "Off",
+    "on": "On",
+    "easy": "Easy",
+    "medium": "Medium",
+    "hard": "Hard",
+    "hardest": "Hardest",
+    "start": "▶  START ZEN SESSION"
+  },
+  "licences": {
+    "title": "OPEN SOURCE LICENCES",
+    "subtitle": "Flow Lines is built with these open-source libraries. Tap any to view its repository and full licence.",
+    "footer": "© Gazetica Studio · Voraky Retail LLP"
   }
 }

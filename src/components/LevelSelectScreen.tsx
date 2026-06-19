@@ -8,6 +8,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { skin } from '../styles/skin';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
 import { FloatingPathCanvas } from './FloatingPathCanvas';
@@ -20,7 +21,7 @@ const PACK_SIZE = 50;
 type Mode = 'campaign' | 'classic' | 'zen';
 
 // Difficulty tier dividers injected before these 1-based level indices.
-const DIVIDERS: Record<number, string> = { 16: 'MEDIUM', 31: 'HARD', 43: 'HARDEST' };
+const DIVIDERS: Record<number, string> = { 16: 'home.medium', 31: 'home.hard', 43: 'home.hardest' };
 
 function starString(stars: number): string {
   if (stars >= 3) return '★★★';
@@ -31,6 +32,7 @@ function starString(stars: number): string {
 
 export default function LevelSelectScreen() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { packId: packIdParam } = useParams<{ packId: string }>();
   const [searchParams] = useSearchParams();
   const packId = parseInt(packIdParam ?? '1', 10);
@@ -85,7 +87,7 @@ export default function LevelSelectScreen() {
               ‹
             </button>
             <span style={{ fontFamily: skin.fontDisplay, fontSize: 15, color: GOLD, letterSpacing: 1 }}>
-              PACK {packId} · {grid}×{grid}
+              {t('levels.header', { number: packId, grid: `${grid}×${grid}` })}
             </span>
           </div>
           <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{solved}/{PACK_SIZE}</span>
@@ -166,7 +168,7 @@ export default function LevelSelectScreen() {
                 <div key={`wrap-${levelIndex}`} style={{ display: 'contents' }}>
                   <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 8, margin: '6px 0 2px' }}>
                     <div style={{ flex: 1, height: 1, background: 'rgba(127,119,221,0.15)' }} />
-                    <span style={{ fontSize: 9, color: 'rgba(127,119,221,0.5)', letterSpacing: 1.5 }}>{divider}</span>
+                    <span style={{ fontSize: 9, color: 'rgba(127,119,221,0.5)', letterSpacing: 1.5 }}>{t(divider)}</span>
                     <div style={{ flex: 1, height: 1, background: 'rgba(127,119,221,0.15)' }} />
                   </div>
                   {tile}

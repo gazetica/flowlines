@@ -7,6 +7,7 @@
 
 import type { CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Browser } from '@capacitor/browser';
 import { skin } from '../styles/skin';
 import { FloatingPathCanvas } from './FloatingPathCanvas';
@@ -29,6 +30,7 @@ const LICENCES: Array<{ name: string; version: string; licence: string; url: str
 
 export function LicencesScreen() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const card: CSSProperties = {
     background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(127,119,221,0.2)',
@@ -42,12 +44,12 @@ export function LicencesScreen() {
       {/* Header */}
       <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px' }}>
         <button onPointerDown={() => navigate(-1)} style={{ background: 'none', border: 'none', color: skin.white, fontSize: 22, cursor: 'pointer', lineHeight: 1 }}>‹</button>
-        <span style={{ fontFamily: skin.fontDisplay, fontSize: 16, color: GOLD, letterSpacing: 2 }}>OPEN SOURCE LICENCES</span>
+        <span style={{ fontFamily: skin.fontDisplay, fontSize: 16, color: GOLD, letterSpacing: 2 }}>{t('licences.title')}</span>
       </div>
 
       <div style={{ position: 'relative', zIndex: 1, flex: 1, overflowY: 'auto', padding: '8px 20px 24px', maxWidth: 480, margin: '0 auto', width: '100%', boxSizing: 'border-box', touchAction: 'pan-y' }}>
         <div style={{ fontSize: 12, color: skin.muted, lineHeight: 1.6, marginBottom: 12 }}>
-          Flow Lines is built with these open-source libraries. Tap any to view its repository and full licence.
+          {t('licences.subtitle')}
         </div>
 
         <div style={card}>
@@ -69,7 +71,7 @@ export function LicencesScreen() {
         </div>
 
         <div style={{ fontSize: 11, color: skin.muted, textAlign: 'center', marginTop: 16 }}>
-          © Gazetica Studio · Voraky Retail LLP
+          {t('licences.footer')}
         </div>
       </div>
     </div>

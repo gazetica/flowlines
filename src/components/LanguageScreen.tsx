@@ -10,6 +10,7 @@
 import type { CSSProperties } from 'react';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { skin } from '../styles/skin';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
 import { FloatingPathCanvas } from './FloatingPathCanvas';
@@ -48,6 +49,7 @@ function detectDefaultCountry(): string {
 
 export function LanguageScreen() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const isFirstLaunch = !useFlowSettingsStore((s) => s.firstLaunchComplete);
 
   const [selectedLang, setSelectedLang] = useState(() => useFlowSettingsStore.getState().language || 'en');
@@ -112,7 +114,7 @@ export function LanguageScreen() {
         ) : (
           <span style={{ width: 28 }} />
         )}
-        <span style={{ flex: 1, textAlign: 'center', fontSize: 13, letterSpacing: 2, color: 'rgba(255,255,255,0.7)' }}>CHOOSE YOUR LANGUAGE</span>
+        <span style={{ flex: 1, textAlign: 'center', fontSize: 13, letterSpacing: 2, color: 'rgba(255,255,255,0.7)' }}>{t('language.choose')}</span>
         <span style={{ width: 28 }} />
       </div>
 
@@ -142,11 +144,11 @@ export function LanguageScreen() {
 
         {/* Alias */}
         <div>
-          <div style={sectionLabel}>What should we call you?</div>
+          <div style={sectionLabel}>{t('language.alias_prompt')}</div>
           <input
             value={alias}
             maxLength={20}
-            placeholder="Player"
+            placeholder={t('language.alias_placeholder')}
             onChange={(e) => setAlias(e.target.value)}
             onFocus={() => setAliasFocused(true)}
             onBlur={() => setAliasFocused(false)}
@@ -159,7 +161,7 @@ export function LanguageScreen() {
 
         {/* Country */}
         <div>
-          <div style={sectionLabel}>Where are you from?</div>
+          <div style={sectionLabel}>{t('language.country_prompt')}</div>
           <button
             onClick={openCountry}
             style={{ ...fieldRow, display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', textAlign: 'left' }}
@@ -177,14 +179,14 @@ export function LanguageScreen() {
             onClick={() => void onContinue()}
             style={{ background: GOLD, color: DARK, border: 'none', borderRadius: 10, padding: 16, fontSize: 16, fontWeight: 700, letterSpacing: 1.5, width: '100%', cursor: 'pointer', fontFamily: skin.fontDisplay }}
           >
-            CONTINUE
+            {t('common.continue')}
           </button>
           {isFirstLaunch && (
             <button
               onClick={onSkip}
               style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 10, padding: 14, fontSize: 14, color: 'rgba(255,255,255,0.5)', width: '100%', cursor: 'pointer' }}
             >
-              I'll choose later
+              {t('language.choose_later')}
             </button>
           )}
         </div>
@@ -212,7 +214,7 @@ export function LanguageScreen() {
           }}
         >
           <div style={{ width: 40, height: 4, background: 'rgba(255,255,255,0.2)', borderRadius: 2, margin: '12px auto 16px' }} />
-          <div style={{ fontSize: 16, fontWeight: 600, color: skin.white, padding: '0 20px 12px' }}>Select your country</div>
+          <div style={{ fontSize: 16, fontWeight: 600, color: skin.white, padding: '0 20px 12px' }}>{t('language.select_country')}</div>
 
           {/* Search */}
           <div style={{ position: 'relative', margin: '0 16px 8px' }}>
@@ -220,7 +222,7 @@ export function LanguageScreen() {
             <input
               value={countrySearch}
               autoFocus
-              placeholder="Search countries..."
+              placeholder={t('language.search_countries')}
               onChange={(e) => setCountrySearch(e.target.value)}
               style={{
                 width: '100%', boxSizing: 'border-box',
@@ -239,7 +241,7 @@ export function LanguageScreen() {
           {/* List */}
           <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px' }}>
             {filteredCountries.length === 0 ? (
-              <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: 14, padding: '32px 0' }}>No countries found</div>
+              <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: 14, padding: '32px 0' }}>{t('language.no_countries')}</div>
             ) : (
               filteredCountries.map((c) => {
                 const sel = c.code === selectedCountry;

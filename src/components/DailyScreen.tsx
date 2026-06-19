@@ -11,6 +11,7 @@
 import { useEffect } from 'react';
 import type { CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { skin } from '../styles/skin';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
 import { BottomNav } from './BottomNav';
@@ -22,6 +23,7 @@ type Status = 'locked' | 'pending' | 'complete' | 'failed';
 
 export default function DailyScreen() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const dailyProgress = useFlowSettingsStore((s) => s.dailyProgress);
   const gemBalance = useFlowSettingsStore((s) => s.gemBalance);
@@ -84,23 +86,23 @@ export default function DailyScreen() {
       {/* Header */}
       <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px', position: 'relative', zIndex: 1 }}>
         <button onClick={() => navigate('/home')} style={{ background: 'none', border: 'none', color: skin.white, fontSize: 22, cursor: 'pointer', lineHeight: 1 }}>‹</button>
-        <span style={{ fontFamily: skin.fontDisplay, fontSize: 16, color: GOLD, letterSpacing: 2 }}>DAILY CHALLENGE</span>
+        <span style={{ fontFamily: skin.fontDisplay, fontSize: 16, color: GOLD, letterSpacing: 2 }}>{t('daily.title')}</span>
       </div>
 
       {/* Scroll body */}
       <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', position: 'relative', zIndex: 1, padding: '4px 16px 16px', display: 'flex', flexDirection: 'column', gap: 14, touchAction: 'pan-y' }}>
         <div style={{ textAlign: 'center', color: skin.white, fontSize: 14 }}>{dateLabel}</div>
         <div style={{ textAlign: 'center', color: GOLD, fontFamily: skin.fontDisplay, fontSize: 14 }}>
-          🔥 {streakCount} day{streakCount === 1 ? '' : 's'}
+          {t(streakCount === 1 ? 'home.streak_days' : 'home.streak_days_plural', { count: streakCount })}
         </div>
 
         <ChallengeCard
-          title="CHALLENGE 1 · CAMPAIGN" mode="⏱ Time Mode"
+          title={t('daily.challenge1')} mode={t('daily.time_mode')}
           status={statusOf('campaign')} attempts={c1Attempts}
           onLaunch={() => launch('campaign')}
         />
         <ChallengeCard
-          title="CHALLENGE 2 · CLASSIC" mode="🎯 Move Mode"
+          title={t('daily.challenge2')} mode={t('daily.move_mode')}
           status={statusOf('classic')} attempts={c2Attempts}
           onLaunch={() => launch('classic')}
         />
@@ -112,7 +114,7 @@ export default function DailyScreen() {
 
         {/* 7-day streak progress */}
         <div style={{ ...cardBase, padding: '14px 16px' }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(127,119,221,0.7)', letterSpacing: 1.5, marginBottom: 12, textAlign: 'center' }}>7-DAY STREAK PROGRESS</div>
+          <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(127,119,221,0.7)', letterSpacing: 1.5, marginBottom: 12, textAlign: 'center' }}>{t('daily.streak_progress')}</div>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             {days.map((d, i) => {
               const filled = i >= filledFrom;
@@ -132,7 +134,7 @@ export default function DailyScreen() {
           </div>
         </div>
 
-        <div style={{ textAlign: 'center', fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>💎 {gemBalance} gems</div>
+        <div style={{ textAlign: 'center', fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>💎 {gemBalance} {t('common.gems')}</div>
       </div>
 
       <div style={{ position: 'relative', zIndex: 2 }}><BottomNav /></div>
@@ -144,6 +146,7 @@ export default function DailyScreen() {
 function ChallengeCard({ title, mode, status, attempts, onLaunch }: {
   title: string; mode: string; status: Status; attempts: number; onLaunch: () => void;
 }) {
+  const { t } = useTranslation();
   const pill = PILLS[status];
   const retriesRemaining = Math.max(0, 2 - Math.max(0, attempts - 1)); // 2 retries max
   const dim = status === 'locked';
@@ -152,17 +155,17 @@ function ChallengeCard({ title, mode, status, attempts, onLaunch }: {
     <div style={{ ...cardBase, padding: 16, opacity: dim ? 0.55 : 1 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
         <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.55)', letterSpacing: 1 }}>{title}</span>
-        <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 8, ...pill.style }}>{pill.label}</span>
+        <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 8, ...pill.style }}>{t(pill.labelKey)}</span>
       </div>
       <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', marginBottom: 10 }}>{mode}</div>
 
       {status === 'locked' && (
-        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 10 }}>Unlocks after Challenge 1 is attempted.</div>
+        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 10 }}>{t('daily.locked_hint')}</div>
       )}
 
       {status !== 'complete' && status !== 'locked' && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
-          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', letterSpacing: 0.5 }}>RETRIES</span>
+          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', letterSpacing: 0.5 }}>{t('daily.retries')}</span>
           <span style={{ fontSize: 14, color: GOLD, letterSpacing: 2 }}>
             {'●'.repeat(retriesRemaining)}<span style={{ color: 'rgba(255,255,255,0.2)' }}>{'●'.repeat(2 - retriesRemaining)}</span>
           </span>
@@ -170,11 +173,11 @@ function ChallengeCard({ title, mode, status, attempts, onLaunch }: {
       )}
 
       {/* CTA */}
-      {status === 'locked' && <CtaDisabled label="🔒 LOCKED" />}
-      {status === 'failed' && <div style={{ textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.4)', padding: '10px 0' }}>NO RETRIES LEFT</div>}
+      {status === 'locked' && <CtaDisabled label={`🔒 ${t('common.locked')}`} />}
+      {status === 'failed' && <div style={{ textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.4)', padding: '10px 0' }}>{t('daily.no_retries')}</div>}
       {status === 'pending' && (
         <button onPointerDown={onLaunch} style={goldCta}>
-          {attempts >= 1 ? '↺  RETRY' : '▶  PLAY NOW'}
+          {attempts >= 1 ? t('daily.retry') : t('daily.play_now')}
         </button>
       )}
       {/* complete → status pill only, no CTA */}
@@ -184,6 +187,7 @@ function ChallengeCard({ title, mode, status, attempts, onLaunch }: {
 
 // ─── Reward card ─────────────────────────────────────────────────────────────
 function RewardCard({ bothComplete, claimed, onClaim }: { bothComplete: boolean; claimed: boolean; onClaim: () => void; }) {
+  const { t } = useTranslation();
   const active = bothComplete && !claimed;
   return (
     <div style={{
@@ -191,15 +195,15 @@ function RewardCard({ bothComplete, claimed, onClaim }: { bothComplete: boolean;
       border: `1px solid ${active ? 'rgba(255,215,0,0.45)' : 'rgba(255,215,0,0.15)'}`,
       opacity: bothComplete ? 1 : 0.55, textAlign: 'center',
     }}>
-      <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,215,0,0.7)', letterSpacing: 1.5, marginBottom: 10 }}>TODAY'S REWARD</div>
+      <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,215,0,0.7)', letterSpacing: 1.5, marginBottom: 10 }}>{t('daily.todays_reward')}</div>
       <div style={{ fontSize: 18, fontWeight: 700, color: claimed ? '#2ECC71' : GOLD, marginBottom: 6, animation: active ? 'flStarBounce 700ms ease-in-out infinite alternate' : 'none' }}>
-        💎 2 Hint Gems
+        {t('daily.hint_gems', { count: 2 })}
       </div>
       <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: active ? 12 : 0 }}>
-        {claimed ? 'Reward collected — back tomorrow!' : bothComplete ? 'Both challenges complete!' : 'Complete both challenges to unlock'}
+        {claimed ? t('daily.reward_collected') : bothComplete ? t('daily.both_complete') : t('daily.complete_both')}
       </div>
-      {active && <button onPointerDown={onClaim} style={goldCta}>CLAIM REWARD</button>}
-      {claimed && <div style={{ marginTop: 10, fontSize: 13, fontWeight: 700, color: '#2ECC71' }}>✓ CLAIMED</div>}
+      {active && <button onPointerDown={onClaim} style={goldCta}>{t('daily.claim_reward')}</button>}
+      {claimed && <div style={{ marginTop: 10, fontSize: 13, fontWeight: 700, color: '#2ECC71' }}>{t('common.claimed')}</div>}
     </div>
   );
 }
@@ -218,9 +222,9 @@ const goldCta: CSSProperties = {
   padding: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer',
 };
 
-const PILLS: Record<Status, { label: string; style: CSSProperties }> = {
-  locked: { label: '🔒 LOCKED', style: { background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.4)' } },
-  pending: { label: 'PENDING', style: { background: 'rgba(133,100,4,0.4)', color: '#FFD75E' } },
-  complete: { label: '✓ DONE', style: { background: 'rgba(20,83,45,0.45)', color: '#4ADE80' } },
-  failed: { label: '✕ FAILED', style: { background: 'rgba(120,30,30,0.45)', color: '#F87171' } },
+const PILLS: Record<Status, { labelKey: string; style: CSSProperties }> = {
+  locked: { labelKey: 'common.locked', style: { background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.4)' } },
+  pending: { labelKey: 'common.pending', style: { background: 'rgba(133,100,4,0.4)', color: '#FFD75E' } },
+  complete: { labelKey: 'common.done', style: { background: 'rgba(20,83,45,0.45)', color: '#4ADE80' } },
+  failed: { labelKey: 'common.failed', style: { background: 'rgba(120,30,30,0.45)', color: '#F87171' } },
 };

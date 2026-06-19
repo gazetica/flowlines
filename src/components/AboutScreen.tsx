@@ -8,6 +8,7 @@
 import type { CSSProperties } from 'react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Browser } from '@capacitor/browser';
 import { App } from '@capacitor/app';
 import { skin } from '../styles/skin';
@@ -31,6 +32,7 @@ function openExternal(uri: string) {
 
 export function AboutScreen() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [version, setVersion] = useState('1.0');
 
   useEffect(() => {
@@ -93,39 +95,39 @@ export function AboutScreen() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px' }}>
         <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', color: skin.white, fontSize: 18, cursor: 'pointer' }}>‹</button>
-        <span style={{ fontFamily: skin.fontDisplay, fontSize: 16, color: GOLD, letterSpacing: 2 }}>ABOUT</span>
+        <span style={{ fontFamily: skin.fontDisplay, fontSize: 16, color: GOLD, letterSpacing: 2 }}>{t('about.title')}</span>
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px 24px', maxWidth: 480, margin: '0 auto', width: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 12 }}>
         {/* App identity */}
         <div style={{ textAlign: 'center', marginTop: 8 }}>
-          <div style={{ fontFamily: skin.fontDisplay, fontSize: 24, color: GOLD, letterSpacing: 2 }}>FLOW LINES</div>
-          <div style={{ fontSize: 12, color: skin.muted, marginTop: 4 }}>Version {version} · Gazetica Studio</div>
+          <div style={{ fontFamily: skin.fontDisplay, fontSize: 24, color: GOLD, letterSpacing: 2 }}>{t('about.app_title')}</div>
+          <div style={{ fontSize: 12, color: skin.muted, marginTop: 4 }}>{t('common.version', { version })}</div>
         </div>
 
         {/* More from Gazetica */}
-        <div style={sectionLabel}>MORE FROM GAZETICA</div>
+        <div style={sectionLabel}>{t('about.more_from')}</div>
         <GazeticaPromoCard />
 
         {/* Legal */}
-        <div style={sectionLabel}>LEGAL</div>
+        <div style={sectionLabel}>{t('about.legal')}</div>
         <div style={card}>
-          <LinkRow label="Privacy Policy" onPress={() => openUrl('https://gazetica.com/privacy-policy')} />
-          <LinkRow label="Terms of Service" onPress={() => openUrl('https://gazetica.com/terms')} />
-          <LinkRow label="Open Source Licences" onPress={() => navigate('/licences')} />
+          <LinkRow label={t('about.privacy_policy')} onPress={() => openUrl('https://gazetica.com/privacy-policy')} />
+          <LinkRow label={t('about.terms')} onPress={() => openUrl('https://gazetica.com/terms')} />
+          <LinkRow label={t('about.open_source')} onPress={() => navigate('/licences')} />
         </div>
 
         {/* Support */}
-        <div style={sectionLabel}>SUPPORT</div>
+        <div style={sectionLabel}>{t('about.support')}</div>
         <div style={card}>
-          <LinkRow label="Contact Us" onPress={() => openExternal('mailto:support@gazetica.com')} />
-          <LinkRow label="Rate the App" onPress={() => openExternal('market://details?id=com.gazetica.flowlines')} />
+          <LinkRow label={t('about.contact_us')} onPress={() => openExternal('mailto:support@gazetica.com')} />
+          <LinkRow label={t('about.rate_app')} onPress={() => openExternal('market://details?id=com.gazetica.flowlines')} />
         </div>
 
         {/* GDPR */}
         <div style={card}>
           {/* FL-UX-D-016: re-open the UMP privacy-options form in place (no navigation) */}
-          <LinkRow label="Ad Preferences (GDPR)" onPress={() => void reopenForm()} />
+          <LinkRow label={t('about.ad_preferences')} onPress={() => void reopenForm()} />
         </div>
       </div>
 

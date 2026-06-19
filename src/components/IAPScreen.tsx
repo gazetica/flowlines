@@ -8,6 +8,7 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { skin } from '../styles/skin';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
 import {
@@ -23,6 +24,7 @@ const GOLD = '#FFD700';
 
 export function IAPScreen() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const gemBalance = useFlowSettingsStore((s) => s.gemBalance);
   const removeAdsPurchased = useFlowSettingsStore((s) => s.removeAdsPurchased);
   const setRemoveAds = useFlowSettingsStore((s) => s.setRemoveAds);
@@ -44,9 +46,9 @@ export function IAPScreen() {
     if (result.success) {
       await setRemoveAds(true);
       trackIapPurchase({ product_id: FL_PRODUCTS.REMOVE_ADS, value: 2.99 });
-      flashToast('Ads removed — thank you!');
+      flashToast(t('store.ads_removed'));
     } else if (result.error !== 'USER_CANCELED') {
-      flashToast(result.error ?? 'Purchase failed');
+      flashToast(result.error ?? t('store.purchase_failed'));
     }
     setPurchasing(false);
   };
@@ -61,9 +63,9 @@ export function IAPScreen() {
       await addGems(20);
       if (result.purchaseToken) await consumePurchase(result.purchaseToken);
       trackIapPurchase({ product_id: FL_PRODUCTS.HINT_PACK, value: 1.99 });
-      flashToast('+20 gems added!');
+      flashToast(t('store.gems_added', { count: 20 }));
     } else if (result.error !== 'USER_CANCELED') {
-      flashToast(result.error ?? 'Purchase failed');
+      flashToast(result.error ?? t('store.purchase_failed'));
     }
     setPurchasing(false);
   };
@@ -75,7 +77,7 @@ export function IAPScreen() {
     if (restored.some((p) => p.productId === FL_PRODUCTS.REMOVE_ADS)) {
       await setRemoveAds(true);
     }
-    flashToast(restored.length ? 'Purchases restored' : 'No purchases to restore');
+    flashToast(restored.length ? t('store.restored') : t('store.nothing_restore'));
     setPurchasing(false);
   };
 
@@ -134,7 +136,7 @@ export function IAPScreen() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px' }}>
         <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', color: skin.white, fontSize: 18, cursor: 'pointer' }}>‹</button>
-        <span style={{ fontFamily: skin.fontDisplay, fontSize: 16, color: GOLD, letterSpacing: 2 }}>STORE</span>
+        <span style={{ fontFamily: skin.fontDisplay, fontSize: 16, color: GOLD, letterSpacing: 2 }}>{t('store.title')}</span>
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px 24px', maxWidth: 480, margin: '0 auto', width: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -154,43 +156,43 @@ export function IAPScreen() {
             fontSize: 14,
           }}
         >
-          💎 Your gems: {gemBalance}
+          {t('store.your_gems', { count: gemBalance })}
         </div>
 
         {/* Remove Ads — non-consumable */}
         <ProductCard
           icon="🚫"
-          title="REMOVE ADS"
-          bullets={['No interstitials ever', 'One-time purchase', 'Hints always free']}
+          title={t('store.remove_ads_title')}
+          bullets={[t('store.remove_ads_b1'), t('store.remove_ads_b2'), t('store.remove_ads_b3')]}
           price="$2.99"
         >
           {removeAdsPurchased ? (
-            <span style={{ fontFamily: skin.fontDisplay, fontSize: 13, color: GOLD }}>✓ Purchased</span>
+            <span style={{ fontFamily: skin.fontDisplay, fontSize: 13, color: GOLD }}>{t('store.purchased')}</span>
           ) : (
-            <button onClick={() => void handleRemoveAdsBuy()} disabled={purchasing} style={{ ...buyBtn, opacity: purchasing ? 0.5 : 1 }}>BUY</button>
+            <button onClick={() => void handleRemoveAdsBuy()} disabled={purchasing} style={{ ...buyBtn, opacity: purchasing ? 0.5 : 1 }}>{t('store.buy_btn')}</button>
           )}
         </ProductCard>
 
         {/* Hint Pack — consumable, can buy multiple */}
         <ProductCard
           icon="💡"
-          title="HINT PACK"
-          bullets={['20 hints credited', 'Use when stuck on any level', 'Works on any grid size']}
+          title={t('store.hint_pack_title')}
+          bullets={[t('store.hint_pack_b1'), t('store.hint_pack_b2'), t('store.hint_pack_b3')]}
           price="$1.99"
         >
-          <button onClick={() => void handleHintPackBuy()} disabled={purchasing} style={{ ...buyBtn, opacity: purchasing ? 0.5 : 1 }}>BUY</button>
+          <button onClick={() => void handleHintPackBuy()} disabled={purchasing} style={{ ...buyBtn, opacity: purchasing ? 0.5 : 1 }}>{t('store.buy_btn')}</button>
         </ProductCard>
 
         {/* Footer note + restore */}
         <div style={{ textAlign: 'center', fontSize: 11, color: skin.muted, lineHeight: 1.6, marginTop: 4 }}>
-          Purchases managed by Google Play. Tap BUY to start the checkout flow.
+          {t('store.managed_by')}
         </div>
         <button
           onClick={() => void handleRestore()}
           disabled={purchasing}
           style={{ background: 'none', border: 'none', color: skin.purpleLight, fontSize: 13, cursor: purchasing ? 'default' : 'pointer', padding: 8, opacity: purchasing ? 0.5 : 1 }}
         >
-          Restore Purchases
+          {t('store.restore')}
         </button>
       </div>
 

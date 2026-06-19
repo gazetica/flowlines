@@ -12,6 +12,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { skin } from '../styles/skin';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
 import { fetchCampaignLeaderboard, fetchClassicLeaderboard } from '../services/flCampaignScores';
@@ -24,10 +25,10 @@ const GOLD = '#FFD700';
 const UID_PURPLE = '#ADA7F0';
 
 type Tab = 'campaign' | 'classic' | 'daily';
-const TABS: Array<{ key: Tab; label: string }> = [
-  { key: 'campaign', label: 'CAMPAIGN' },
-  { key: 'classic', label: 'CLASSIC' },
-  { key: 'daily', label: 'DAILY' },
+const TABS: Array<{ key: Tab; labelKey: string }> = [
+  { key: 'campaign', labelKey: 'leaderboard.tab_campaign' },
+  { key: 'classic', labelKey: 'leaderboard.tab_classic' },
+  { key: 'daily', labelKey: 'leaderboard.tab_daily' },
 ];
 
 // Normalised row for rendering — `value` is the score (Campaign/Daily) or the
@@ -41,6 +42,7 @@ interface Row {
 
 export default function LeaderboardScreen() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const playerUid = useFlowSettingsStore((s) => s.playerUid);
   const alias = useFlowSettingsStore((s) => s.alias);
   const country = useFlowSettingsStore((s) => s.country);
@@ -86,7 +88,7 @@ export default function LeaderboardScreen() {
         setRows(data);
       })
       .catch(() => {
-        if (!cancelled) setError("Couldn't load scores. Check your connection.");
+        if (!cancelled) setError(t('common.error_load'));
       })
       .finally(() => { if (!cancelled) setLoading(false); });
 
@@ -114,17 +116,17 @@ export default function LeaderboardScreen() {
       {/* Header */}
       <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px', position: 'relative', zIndex: 1 }}>
         <button onClick={() => navigate('/home')} style={{ background: 'none', border: 'none', color: skin.white, fontSize: 22, cursor: 'pointer', lineHeight: 1 }}>‹</button>
-        <span style={{ fontFamily: skin.fontDisplay, fontSize: 16, color: GOLD, letterSpacing: 2 }}>LEADERBOARD</span>
+        <span style={{ fontFamily: skin.fontDisplay, fontSize: 16, color: GOLD, letterSpacing: 2 }}>{t('leaderboard.title')}</span>
       </div>
 
       {/* Tab bar */}
       <div style={{ flexShrink: 0, display: 'flex', gap: 8, padding: '0 16px 8px', position: 'relative', zIndex: 1 }}>
-        {TABS.map((t) => {
-          const active = tab === t.key;
+        {TABS.map((tb) => {
+          const active = tab === tb.key;
           return (
             <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
+              key={tb.key}
+              onClick={() => setTab(tb.key)}
               style={{
                 flex: 1, padding: '9px 4px', borderRadius: 8, cursor: 'pointer',
                 fontFamily: skin.fontDisplay, fontSize: 11, letterSpacing: 0.5,
@@ -134,7 +136,7 @@ export default function LeaderboardScreen() {
                 fontWeight: active ? 700 : 500,
               }}
             >
-              {t.label}
+              {t(tb.labelKey)}
             </button>
           );
         })}
@@ -155,13 +157,13 @@ export default function LeaderboardScreen() {
           </div>
         ) : error ? (
           <div style={{ textAlign: 'center', padding: '40px 16px' }}>
-            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginBottom: 14 }}>{error}</div>
+            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginBottom: 14 }}>{t('common.error_load')}</div>
             <button onClick={retry} style={{ background: GOLD, color: '#0D0620', border: 'none', borderRadius: 10, padding: '10px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-              Retry
+              {t('common.retry_btn')}
             </button>
           </div>
         ) : rows.length === 0 ? (
-          <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: 13, padding: '40px 0' }}>No scores yet — be the first!</div>
+          <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: 13, padding: '40px 0' }}>{t('common.no_scores')}</div>
         ) : (
           rows.map((r, i) => (
             <LeaderRow key={`${r.player_uid}-${i}`} rank={i + 1} row={r} isPlayer={r.player_uid === playerUid} />

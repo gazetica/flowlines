@@ -12,6 +12,7 @@ import { initAdmob } from './services/admob';
 import { initialiseBilling } from './services/billing';
 import * as analytics from './services/analytics';
 import * as musicService from './services/musicService';
+import i18n from './i18n';
 import { useFlowSettingsStore } from './store/flowSettingsStore';
 
 import { PageTransition } from './components/PageTransition';
@@ -51,6 +52,11 @@ export function App() {
   // Background music (Numtap bg_music.mp3) — initialised here; playback is driven
   // by <RouteMusicController> (inside the Router so it can read the active route).
   useEffect(() => { musicService.init(); }, []);
+
+  // FL-5A-027: keep i18next in sync with the saved language (LanguageScreen /
+  // SettingsScreen call setLanguage → this re-renders every screen immediately).
+  const language = useFlowSettingsStore((s) => s.language);
+  useEffect(() => { void i18n.changeLanguage(language); }, [language]);
 
   // FL-UX-D-006e: guard the Android 13 predictive-back edge gesture so it can't
   // pop /home (or /) off the stack into a blank WebView. Push a sentinel state on

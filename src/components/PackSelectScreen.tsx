@@ -12,6 +12,7 @@
 import { useState } from 'react';
 import type { CSSProperties } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { skin } from '../styles/skin';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
 import type { ZenConfig } from '../store/flowSettingsStore';
@@ -100,6 +101,7 @@ function Segmented<T extends string | number>({
 
 export default function PackSelectScreen() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const rawMode = searchParams.get('mode');
   // No ?mode param == bottom-nav entry: show a Campaign/Classic tab switcher and
@@ -111,6 +113,12 @@ export default function PackSelectScreen() {
   // Zen only arrives via ?mode=zen (HomeScreen EXPLORE); otherwise use the tab.
   const mode: Mode = rawMode === 'zen' ? 'zen' : activeTab;
   const cfg = MODE_CFG[mode] ?? MODE_CFG.campaign;
+
+  // i18n: translate the mode-dependent labels (MODE_CFG keeps styling only).
+  const modeTitle = mode === 'zen' ? t('zen.title') : t(mode === 'classic' ? 'packs.title_classic' : 'packs.title_campaign');
+  const modeName = t(mode === 'classic' ? 'home.classic' : mode === 'zen' ? 'home.zen' : 'home.campaign');
+  const modeTagline = mode === 'zen' ? t('zen.tagline') : t(mode === 'classic' ? 'packs.classic_desc' : 'packs.campaign_desc');
+  const modeCta = t(mode === 'classic' ? 'packs.continue_classic' : 'packs.continue_campaign');
 
   const campaignProgress = useFlowSettingsStore((s) => s.campaignProgress);
   const classicProgress = useFlowSettingsStore((s) => s.classicProgress);
@@ -129,14 +137,14 @@ export default function PackSelectScreen() {
       >
         ‹
       </button>
-      <span style={{ fontFamily: skin.fontDisplay, fontSize: 16, color: GOLD, letterSpacing: 2 }}>{cfg.title}</span>
+      <span style={{ fontFamily: skin.fontDisplay, fontSize: 16, color: GOLD, letterSpacing: 2 }}>{modeTitle}</span>
     </div>
   );
 
   const heroBanner = (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 20px', background: cfg.tint, borderBottom: `1px solid ${cfg.border}` }}>
-      <span style={{ fontSize: 12, color: cfg.accent, fontWeight: 700, letterSpacing: 1.5 }}>{cfg.icon} {cfg.name}</span>
-      <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginLeft: 'auto', textAlign: 'right' }}>{cfg.tagline}</span>
+      <span style={{ fontSize: 12, color: cfg.accent, fontWeight: 700, letterSpacing: 1.5 }}>{cfg.icon} {modeName}</span>
+      <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginLeft: 'auto', textAlign: 'right' }}>{modeTagline}</span>
     </div>
   );
 
@@ -174,14 +182,14 @@ export default function PackSelectScreen() {
             }}
           >
             {([
-              { key: 'campaign', label: '🎯 CAMPAIGN', bg: 'rgba(230,126,34,0.25)', color: '#E67E22' },
-              { key: 'classic', label: '♟ CLASSIC', bg: 'rgba(127,119,221,0.25)', color: '#9B8FFF' },
-            ] as const).map((t) => {
-              const active = activeTab === t.key;
+              { key: 'campaign', icon: '🎯', labelKey: 'packs.tab_campaign', bg: 'rgba(230,126,34,0.25)', color: '#E67E22' },
+              { key: 'classic', icon: '♟', labelKey: 'packs.tab_classic', bg: 'rgba(127,119,221,0.25)', color: '#9B8FFF' },
+            ] as const).map((tab) => {
+              const active = activeTab === tab.key;
               return (
                 <button
-                  key={t.key}
-                  onPointerDown={() => setActiveTab(t.key)}
+                  key={tab.key}
+                  onPointerDown={() => setActiveTab(tab.key)}
                   style={{
                     flex: 1,
                     padding: '11px 8px',
@@ -190,11 +198,11 @@ export default function PackSelectScreen() {
                     cursor: 'pointer',
                     fontSize: 13,
                     fontWeight: active ? 700 : 400,
-                    background: active ? t.bg : 'transparent',
-                    color: active ? t.color : 'rgba(255,255,255,0.35)',
+                    background: active ? tab.bg : 'transparent',
+                    color: active ? tab.color : 'rgba(255,255,255,0.35)',
                   }}
                 >
-                  {t.label}
+                  {tab.icon} {t(tab.labelKey)}
                 </button>
               );
             })}
@@ -231,14 +239,14 @@ export default function PackSelectScreen() {
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ fontSize: 15, fontWeight: 700, color: 'rgba(255,255,255,0.4)' }}>
-                          PACK {meta.packId} · {meta.grid}×{meta.grid} Grid
+                          {t('packs.pack_title', { number: meta.packId, grid: `${meta.grid}×${meta.grid}` })}
                         </span>
                         <span style={{ fontSize: 18 }}>🔒</span>
                       </div>
                       <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 6 }}>
-                        {meta.packId === 2 && 'Solve 25 Pack 1 levels to unlock'}
-                        {meta.packId === 3 && 'Complete Pack 1 to unlock'}
-                        {meta.packId === 4 && 'Complete Pack 2 to unlock'}
+                        {meta.packId === 2 && t('packs.unlock_pack2')}
+                        {meta.packId === 3 && t('packs.unlock_pack3')}
+                        {meta.packId === 4 && t('packs.unlock_pack4')}
                       </div>
                     </div>
                   );
@@ -256,12 +264,12 @@ export default function PackSelectScreen() {
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ fontSize: 15, fontWeight: 700, color: '#FFFFFF' }}>
-                          PACK {meta.packId} · {meta.grid}×{meta.grid} Grid
+                          {t('packs.pack_title', { number: meta.packId, grid: `${meta.grid}×${meta.grid}` })}
                         </span>
                         <span style={{ fontSize: 13, color: allThree ? GOLD : 'rgba(255,255,255,0.6)' }}>★★★ {solved}/50</span>
                       </div>
                       <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', margin: '6px 0 8px' }}>
-                        All {solved} levels complete
+                        {t('packs.all_complete', { count: solved })}
                       </div>
                       <div style={{ height: 3, background: 'rgba(255,215,0,0.15)', borderRadius: 2, overflow: 'hidden' }}>
                         <div style={{ height: '100%', width: '100%', background: GOLD }} />
@@ -292,7 +300,7 @@ export default function PackSelectScreen() {
                       </span>
                     </div>
                     <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', margin: '6px 0 8px' }}>
-                      {solved}/50 levels · Level {highest} next
+                      {t('packs.pack_progress', { done: solved, total: 50 })} · {t('packs.level_next', { level: highest })}
                     </div>
                     <div style={{ height: 4, background: 'rgba(255,255,255,0.08)', borderRadius: 2, overflow: 'hidden', marginBottom: 14 }}>
                       <div style={{ height: '100%', width: `${pct}%`, background: cfg.barGradient }} />
@@ -304,7 +312,7 @@ export default function PackSelectScreen() {
                         borderRadius: 10, padding: 12, fontSize: 14, fontWeight: 700, cursor: 'pointer',
                       }}
                     >
-                      {cfg.cta}
+                      {modeCta}
                     </button>
                   </div>
                 );
@@ -314,8 +322,8 @@ export default function PackSelectScreen() {
             {/* IAP row — campaign / classic only */}
             <div style={{ margin: '0 20px 16px', display: 'flex', gap: 12 }}>
               {[
-                { icon: '💡', label: 'Hint Pack', price: '$1.99' },
-                { icon: '🚫', label: 'Remove Ads', price: '$2.99' },
+                { icon: '💡', label: t('packs.hint_pack'), price: '$1.99' },
+                { icon: '🚫', label: t('packs.remove_ads'), price: '$2.99' },
               ].map((iap) => (
                 <button
                   key={iap.label}
@@ -357,40 +365,42 @@ function ZenConfigCard({
   const [timerSeconds, setTimerSeconds] = useState(zenConfig.timerSeconds > 0 ? zenConfig.timerSeconds : 60);
   const [moveOn, setMoveOn] = useState(zenConfig.moveLimit > 0);
   const [moveLimit, setMoveLimit] = useState(zenConfig.moveLimit > 0 ? zenConfig.moveLimit : 40);
+  const { t } = useTranslation();
 
   const accent = cfg.accent;
   const sectionLabel: CSSProperties = { fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.6)', letterSpacing: 1, margin: '14px 0 6px' };
+  const onOffLabel = (v: string) => t(v === 'On' ? 'zen.on' : 'zen.off');
 
   const start = () => {
-    const t = timerOn ? timerSeconds : 0;
+    const ts = timerOn ? timerSeconds : 0;
     const m = moveOn ? moveLimit : 0;
-    setZenConfig({ grid, difficulty, timerSeconds: t, moveLimit: m });
-    navigate(`/game?mode=zen&grid=${grid}&difficulty=${difficulty}&timer=${t}&moves=${m}`);
+    setZenConfig({ grid, difficulty, timerSeconds: ts, moveLimit: m });
+    navigate(`/game?mode=zen&grid=${grid}&difficulty=${difficulty}&timer=${ts}&moves=${m}`);
   };
 
   return (
     <div style={{ margin: '12px 20px', background: 'rgba(255,255,255,0.04)', border: `1px solid ${cfg.border}`, borderRadius: 16, padding: 16 }}>
-      <div style={{ fontSize: 15, fontWeight: 700, color: '#FFFFFF', marginBottom: 4 }}>Configure Your Session</div>
+      <div style={{ fontSize: 15, fontWeight: 700, color: '#FFFFFF', marginBottom: 4 }}>{t('zen.configure')}</div>
 
-      <div style={sectionLabel}>GRID SIZE</div>
+      <div style={sectionLabel}>{t('zen.grid_size')}</div>
       <Segmented options={[6, 7, 8, 9] as ZenConfig['grid'][]} value={grid} onChange={setGrid} accent={accent} labelOf={(v) => `${v}×${v}`} />
 
-      <div style={sectionLabel}>DIFFICULTY</div>
+      <div style={sectionLabel}>{t('zen.difficulty')}</div>
       <Segmented
         options={['easy', 'medium', 'hard', 'hardest'] as Difficulty[]}
-        value={difficulty} onChange={setDifficulty} accent={accent} labelOf={cap}
+        value={difficulty} onChange={setDifficulty} accent={accent} labelOf={(v) => t(`zen.${v}`)}
       />
 
-      <div style={sectionLabel}>TIMER</div>
-      <Segmented options={['Off', 'On']} value={timerOn ? 'On' : 'Off'} onChange={(v) => setTimerOn(v === 'On')} accent={accent} />
+      <div style={sectionLabel}>{t('zen.timer')}</div>
+      <Segmented options={['Off', 'On']} value={timerOn ? 'On' : 'Off'} onChange={(v) => setTimerOn(v === 'On')} accent={accent} labelOf={onOffLabel} />
       {timerOn && (
         <div style={{ marginTop: 6 }}>
           <Segmented options={[60, 90, 120]} value={timerSeconds} onChange={setTimerSeconds} accent={accent} labelOf={(v) => `${v}s`} />
         </div>
       )}
 
-      <div style={sectionLabel}>MOVE LIMIT</div>
-      <Segmented options={['Off', 'On']} value={moveOn ? 'On' : 'Off'} onChange={(v) => setMoveOn(v === 'On')} accent={accent} />
+      <div style={sectionLabel}>{t('zen.move_limit')}</div>
+      <Segmented options={['Off', 'On']} value={moveOn ? 'On' : 'Off'} onChange={(v) => setMoveOn(v === 'On')} accent={accent} labelOf={onOffLabel} />
       {moveOn && (
         <div style={{ marginTop: 6 }}>
           <Segmented options={[30, 40, 50]} value={moveLimit} onChange={setMoveLimit} accent={accent} labelOf={(v) => `${v} moves`} />
@@ -404,7 +414,7 @@ function ZenConfigCard({
           borderRadius: 10, padding: 13, fontSize: 14, fontWeight: 700, letterSpacing: 1, cursor: 'pointer',
         }}
       >
-        ▶  START ZEN SESSION
+        {t('zen.start')}
       </button>
     </div>
   );

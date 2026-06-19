@@ -11,6 +11,7 @@
 
 import { useState } from 'react';
 import type { CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import { skin } from '../styles/skin';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
 import { purchaseProduct, consumePurchase, FL_PRODUCTS } from '../services/billing';
@@ -24,6 +25,7 @@ export function BuyHintModal({
   onClose: () => void;
   onWatchAd: () => void; // GameScreen retries the rewarded-hint flow
 }) {
+  const { t } = useTranslation();
   const gemBalance = useFlowSettingsStore((s) => s.gemBalance);
   const addGems = useFlowSettingsStore((s) => s.addGems);
   const [busy, setBusy] = useState(false);
@@ -85,10 +87,10 @@ export function BuyHintModal({
         }}
       >
         <div style={{ fontFamily: skin.fontDisplay, fontSize: 16, color: GOLD, letterSpacing: 1, marginBottom: 12 }}>
-          💡 GET MORE HINTS
+          {t('buyhint.title')}
         </div>
         <div style={{ fontSize: 13, color: skin.white, marginBottom: 18 }}>
-          You have {gemBalance} 💎 gem{gemBalance === 1 ? '' : 's'}
+          {t('buyhint.you_have', { count: gemBalance })}
         </div>
 
         {/* Hint Pack product */}
@@ -101,14 +103,14 @@ export function BuyHintModal({
             marginBottom: 16,
           }}
         >
-          <div style={{ fontFamily: skin.fontDisplay, fontSize: 14, color: skin.white, marginBottom: 6 }}>💎 Hint Pack</div>
-          <div style={{ fontSize: 12, color: skin.muted, marginBottom: 12 }}>20 gems · $1.99</div>
+          <div style={{ fontFamily: skin.fontDisplay, fontSize: 14, color: skin.white, marginBottom: 6 }}>{t('buyhint.hint_pack')}</div>
+          <div style={{ fontSize: 12, color: skin.muted, marginBottom: 12 }}>{t('buyhint.hint_pack_sub')}</div>
           <button
             onClick={() => void handleBuy()}
             disabled={busy}
             style={{ ...sheetBtn, background: GOLD, color: skin.bgDeep, fontWeight: 700, opacity: busy ? 0.6 : 1 }}
           >
-            {busy ? '…' : 'BUY NOW'}
+            {busy ? '…' : t('buyhint.buy_now')}
           </button>
         </div>
 
@@ -118,14 +120,14 @@ export function BuyHintModal({
             disabled={busy}
             style={{ ...sheetBtn, flex: 1, background: skin.bgRaised, color: skin.white }}
           >
-            Watch Ad Instead
+            {t('buyhint.watch_ad_instead')}
           </button>
           <button
             onClick={onClose}
             disabled={busy}
             style={{ ...sheetBtn, flex: 1, background: 'none', color: skin.muted, border: '1px solid rgba(127,119,221,0.25)' }}
           >
-            Close
+            {t('common.close')}
           </button>
         </div>
       </div>

@@ -4,14 +4,13 @@
     "tagline": "Quebra-cabeça de tocar números",
     "by": "por Gazetica"
   },
-
   "nav": {
     "home": "Início",
     "leaderboard": "Placar",
-    "settings": "Configurações",
-    "about": "Sobre"
+    "settings": "Ajustes",
+    "about": "Sobre",
+    "packs": "Pacotes"
   },
-
   "home": {
     "daily_pill_title": "REIVINDICAR 3 GEMAS DIÁRIAS",
     "daily_pill_sub": "Visite todos os dias para ganhar gemas grátis",
@@ -33,7 +32,7 @@
     "mode_endless": "INFINITO",
     "mode_endless_sub": "5×5 · 3 min",
     "best_score": "Melhor pontuação",
-    "day_streak": "Sequência de dias",
+    "day_streak": "🔥 sequência de {{count}} dias",
     "rank": "RANK",
     "games": "JOGOS",
     "avg": "MÉD",
@@ -44,9 +43,37 @@
     "win_pro_tag": "GANHAR TAG PRO",
     "win_pro_sub": "Complete o nível 100 da campanha",
     "win_expert_tag": "GANHAR TAG ESPECIALISTA",
-    "win_expert_sub": "Complete o nível 200 da campanha"
+    "win_expert_sub": "Complete o nível 200 da campanha",
+    "title": "FLOW LINES",
+    "campaign": "CAMPANHA",
+    "classic": "CLÁSSICO",
+    "daily": "DIÁRIO",
+    "zen": "ZEN",
+    "pack_level": "Pacote {{pack}} · Nível {{level}}",
+    "levels_progress": "{{done}}/{{total}} níveis",
+    "level_next": "Nível {{level}} a seguir",
+    "play_campaign": "▶ JOGAR CAMPANHA",
+    "play_classic": "▶ JOGAR CLÁSSICO",
+    "play_daily": "JOGAR DIÁRIO",
+    "explore_zen": "EXPLORAR",
+    "all_done_today": "Tudo feito hoje! ✓",
+    "streak_days": "🔥 {{count}} dia",
+    "streak_days_plural": "🔥 {{count}} dias",
+    "daily_streak": "SEQUÊNCIA DIÁRIA",
+    "day_of_7": "Dia {{count}} de 7",
+    "zen_tagline": "Sua grade",
+    "zen_tagline2": "Seu ritmo",
+    "daily_gem_collected": "💎 Gema diária coletada ✓",
+    "daily_gem_available": "💎 +1 gema por visitar hoje",
+    "easy": "FÁCIL",
+    "medium": "MÉDIO",
+    "hard": "DIFÍCIL",
+    "hardest": "ESPECIALISTA",
+    "puzzles_waiting": "2 puzzles esperando",
+    "one_of_two": "1 de 2 feito ✓",
+    "start_streak": "Comece sua sequência!",
+    "bonus_days": "🔥 mais {{count}} dias para +7 💎"
   },
-
   "game": {
     "clue_pill_title": "OBTER DICA",
     "clue_pill_sub_5": "Anúncio → revelar 5 casas",
@@ -79,9 +106,41 @@
     "get_more_hints": "OBTER MAIS DICAS",
     "get_more_hints_sub": "Toque para comprar pacotes de gemas",
     "toast_no_hints": "Sem mais dicas nesta sessão",
-    "toast_no_ad": "Nenhum anúncio disponível"
+    "toast_no_ad": "Nenhum anúncio disponível",
+    "moves_left": "JOGADAS REST.",
+    "tiles": "CÉLULAS",
+    "time": "TEMPO",
+    "moves": "JOGADAS",
+    "timer": "CRONÔMETRO",
+    "paused": "PAUSADO",
+    "resume": "Retomar",
+    "quit": "Sair",
+    "remove_ads_card": "REMOVER ANÚNCIOS",
+    "buy_hints_card": "COMPRAR DICAS",
+    "buy_hints_sub": "20 dicas por $1.99",
+    "watch_ad_watched": "Visto",
+    "hint_left": "💎 ×{{count}} restantes",
+    "get_a_clue": "DICA",
+    "get_a_clue_desc": "Ver anúncio · completa 1 traçado",
+    "low_on_time": "POUCO TEMPO",
+    "time_ext_desc": "Ver anúncio — +30s",
+    "low_on_moves": "POUCAS JOGADAS",
+    "move_ext_desc": "Ver anúncio — +5 jogadas",
+    "you": "VOCÊ",
+    "leader": "LÍDER",
+    "score": "Pontos",
+    "zen_label": "ZEN",
+    "abandon_title": "Abandonar este nível?",
+    "keep_playing": "Continuar jogando",
+    "abandon": "Abandonar",
+    "tutorial_hint": "Toque num ponto e arraste até o par",
+    "tutorial_dismiss": "Toque para fechar",
+    "breadcrumb_zen": "Zen · {{grid}}×{{grid}} · {{difficulty}}",
+    "breadcrumb_daily_campaign": "Desafio diário · Campanha",
+    "breadcrumb_daily_classic": "Desafio diário · Clássico",
+    "ad_unavailable": "Anúncio indisponível — tente de novo",
+    "breadcrumb_pack": "Pacote {{pack}} · Nível {{level}} · {{difficulty}}"
   },
-
   "result": {
     "difficulty": "Dificuldade",
     "level_complete": "NÍVEL CONCLUÍDO!",
@@ -92,7 +151,7 @@
     "time_bonus": "Bônus de tempo",
     "speed_bonus": "Bônus de velocidade",
     "accuracy": "Precisão",
-    "total": "Total",
+    "total": "TOTAL",
     "btn_next_level": "PRÓXIMO NÍVEL",
     "btn_play_again": "JOGAR DE NOVO",
     "btn_home": "INÍCIO",
@@ -102,9 +161,45 @@
     "time_out": "TEMPO ESGOTADO",
     "grid_label": "{{size}}×{{size}} Grade",
     "time_label": "{{seconds}}s",
-    "best_config": "★ Melhor (esta config.):"
+    "best_config": "★ Melhor (esta config.):",
+    "title": "NÍVEL COMPLETO!",
+    "failed_title": "NÍVEL FALHOU",
+    "perfect_clear": "✨ PERFEITO!",
+    "result_label": "RESULTADO",
+    "dots_connected": "Pontos conectados",
+    "board_filled": "Tabuleiro cheio",
+    "time_efficiency": "Eficiência de tempo",
+    "move_efficiency": "Eficiência de jogadas",
+    "gesture_bonus": "Bônus de gestos",
+    "hints_used": "Hints used (×{{count}})",
+    "auto_complete_used": "Auto-complete used",
+    "moves_taken": "Jogadas",
+    "time_taken": "Tempo usado",
+    "timer_limit": "Limite",
+    "gestures": "Gestures",
+    "budget": "Budget",
+    "best_time": "Melhor tempo",
+    "best_moves": "Menos jogadas",
+    "first_time": "Primeiro! 🎉",
+    "next_level": "▶  PRÓXIMO NÍVEL (Nível {{number}})",
+    "pack_complete": "▶  PACOTE COMPLETO!",
+    "replay": "↩  Repetir",
+    "levels": "☰  Níveis",
+    "play_again": "▶  JOGAR DE NOVO",
+    "change_config": "⚙  MUDAR CONFIG",
+    "back_to_daily": "✓  VOLTAR AO DIÁRIO",
+    "try_again": "↩  TENTAR DE NOVO",
+    "back_to_levels": "‹ Back to Levels",
+    "back_to_daily_link": "‹ Back to Daily",
+    "no_retries_today": "No more retries today",
+    "you_reached": "You reached",
+    "tiles_filled": "Tiles filled",
+    "cell_moves": "Cell moves",
+    "moves_used": "Moves used",
+    "how_far": "ATÉ ONDE VOCÊ CHEGOU",
+    "time_ran_out": "Tempo esgotado",
+    "no_moves_remaining": "Sem jogadas"
   },
-
   "leader": {
     "you": "VOCÊ",
     "leader": "LÍDER",
@@ -116,16 +211,22 @@
     "tab_daily": "DIÁRIO",
     "tab_endless": "INFINITO",
     "tab_alltime": "GERAL",
-    "you": "Você",
+    "you": "VOCÊ",
     "anonymous_note": "Anônimo · Sem login · Defina um apelido nas Configurações",
     "loading": "Carregando...",
     "empty": "Ainda sem pontuações. Seja o primeiro!",
     "your_ranking": "SUA CLASSIFICAÇÃO",
-    "no_score": "Sem pontuação ainda"
+    "no_score": "Sem pontuação ainda",
+    "tab_campaign": "CAMPANHA",
+    "tab_classic": "CLÁSSICO",
+    "rank_unknown": "#--",
+    "leader": "LÍDER",
+    "score": "Pontos",
+    "moves": "Jogadas",
+    "player": "Jogador"
   },
-
   "settings": {
-    "title": "CONFIGURAÇÕES",
+    "title": "AJUSTES",
     "player_identity_title": "IDENTIDADE DO JOGADOR",
     "uid_label": "UID",
     "uid_permanent": "Permanente · Não pode ser alterado",
@@ -134,19 +235,29 @@
     "music": "Música",
     "section_display": "EXIBIÇÃO",
     "haptic_feedback": "Vibração",
-    "language": "Idioma",
+    "language": "IDIOMA",
     "section_profile": "PERFIL",
     "alias_label": "Apelido no placar",
     "alias_sub": "Exibido no placar global",
-    "alias_placeholder": "Digite um apelido",
+    "alias_placeholder": "Seu nome",
     "section_purchases": "COMPRAS",
-    "remove_ads": "Remover anúncios para sempre",
+    "remove_ads": "🚫 Remover anúncios · $2.99",
     "remove_ads_sub": "Compra única",
     "remove_ads_purchased": "Comprado ✓",
     "restore_purchases": "Restaurar compras",
-    "country": "País"
+    "country": "País",
+    "haptics": "Vibração",
+    "section_player": "JOGADOR",
+    "alias": "Apelido",
+    "uid": "UID",
+    "section_account": "CONTA",
+    "ad_preferences": "Preferências de anúncios (LGPD)",
+    "section_support": "SUPORTE",
+    "how_to_play": "Como jogar",
+    "privacy_policy": "Privacidade",
+    "terms_of_service": "Termos de serviço",
+    "about": "Sobre o Flow Lines"
   },
-
   "iap": {
     "toast_purchase_complete": "Compra concluída ✓",
     "toast_purchase_failed": "Falha na compra",
@@ -170,7 +281,6 @@
     "expert_campaign_title": "CAMPANHA ESPECIALISTA — ACESSO ANTECIPADO",
     "expert_campaign_desc": "Desbloqueie 100 níveis Especialista agora. Seus para sempre."
   },
-
   "consent": {
     "title": "Sua privacidade importa",
     "body": "O Numtap usa publicidade para continuar gratuito. Nós e nossos parceiros podemos usar seus dados para mostrar anúncios personalizados. Você pode aceitar ou usar anúncios limitados. Você pode mudar isso a qualquer momento nas Configurações.",
@@ -179,7 +289,6 @@
     "privacy_link": "Política de Privacidade",
     "terms_link": "Termos e Condições"
   },
-
   "how_to_play": {
     "step5": "Pouco tempo? Assista um anúncio curto — destacaremos seus próximos alvos em âmbar para você terminar o nível.",
     "step1": "Surge uma grade de números embaralhados. Toque neles em sequência — o HUD mostra seu próximo alvo.",
@@ -207,58 +316,92 @@
     "mode_speed": "VELOCIDADE",
     "mode_speed_sub": "4×4 · Tempo pela metade · pontuação 2×"
   },
-
   "language": {
     "nameLabel": "Como devemos te chamar?",
     "countryLabel": "De onde você é?",
-    "title": "Escolha seu idioma",
+    "title": "IDIOMA",
     "sub": "Você pode mudar isso a qualquer momento nas Configurações",
     "detected": "Detectado: {{language}}",
     "btn_continue": "CONTINUAR",
-    "btn_later": "Escolher depois"
+    "btn_later": "Escolher depois",
+    "subtitle": "Selecione seu idioma",
+    "en_tagline": "Connect colours. Fill the board.",
+    "de_tagline": "Verbinde Farben und fülle das Feld",
+    "fr_tagline": "Reliez les couleurs, remplissez la grille",
+    "ko_tagline": "색깔을 연결하고 보드를 채우세요",
+    "pt_tagline": "Conecte as cores, preencha o tabuleiro",
+    "es_tagline": "Conecta los colores, llena el tablero",
+    "choose": "Escolha seu idioma",
+    "alias_prompt": "Como devemos te chamar?",
+    "alias_placeholder": "Jogador",
+    "country_prompt": "De onde você é?",
+    "choose_later": "Escolher depois",
+    "select_country": "Escolha seu país",
+    "search_countries": "Buscar países...",
+    "no_countries": "Nenhum país encontrado"
   },
-
   "about": {
     "title": "SOBRE",
     "version": "Versão {{version}}",
     "bundle_id": "com.gazetica.numtap",
     "how_to_play": "Como Jogar",
-    "privacy_policy": "Política de Privacidade",
-    "terms": "Termos e Condições",
-    "ad_preferences": "Preferências de anúncios (GDPR)",
-    "rate_app": "Avaliar o Numtap ★",
+    "privacy_policy": "Privacidade",
+    "terms": "Termos de serviço",
+    "ad_preferences": "Preferências de anúncios (LGPD)",
+    "rate_app": "Avaliar o app",
     "contact": "Contato / Suporte",
     "more_games": "Mais jogos da Gazetica",
     "footer": "Gazetica Studio · Voraky Retail LLP",
-    "copyright": "© 2026 Voraky Retail LLP. Todos os direitos reservados."
+    "copyright": "© 2026 Voraky Retail LLP. Todos os direitos reservados.",
+    "app_title": "FLOW LINES",
+    "more_from": "MAIS DA GAZETICA",
+    "legal": "LEGAL",
+    "open_source": "Licenças open source",
+    "support": "SUPORTE",
+    "contact_us": "Fale conosco"
   },
-
   "splash": {
-    "loading": "Carregando..."
+    "loading": "Carregando puzzles…",
+    "by": "por Gazetica",
+    "tagline": "Quebra-cabeça de conexão de cores"
   },
-
   "common": {
     "ok": "OK",
     "cancel": "Cancelar",
     "close": "Fechar",
     "back": "Voltar",
     "save": "Salvar",
-    "loading": "Carregando...",
+    "loading": "Carregando…",
     "error": "Algo deu errado.",
-    "retry": "Tentar de novo",
+    "retry": "TENTAR DE NOVO",
     "pack_locked": "Conclua o Pacote {{pack}} para desbloquear",
     "pack_coming_soon": "Em breve",
     "level": "Nível {{id}}",
-    "pack": "Pacote {{pack}}"
+    "pack": "Pacote {{pack}}",
+    "next": "PRÓXIMO",
+    "skip": "Pular",
+    "skip_tutorial": "Pular tutorial",
+    "play_now": "JOGAR",
+    "continue": "CONTINUAR",
+    "confirm": "CONFIRMAR",
+    "error_load": "Não foi possível carregar as pontuações. Verifique sua conexão.",
+    "retry_btn": "Tentar de novo",
+    "no_scores": "Ainda sem pontuações — seja o primeiro!",
+    "gems": "gemas",
+    "gem_symbol": "💎",
+    "locked": "BLOQUEADO",
+    "done": "✓ CONCLUÍDO",
+    "failed": "✕ FALHOU",
+    "pending": "PENDENTE",
+    "claimed": "✓ RESGATADO",
+    "version": "Versão {{version}} · Gazetica Studio"
   },
-
   "modes": {
     "campaign": "Campanha",
     "daily": "Desafio Diário",
     "endless": "Infinito",
     "speed": "Velocidade"
   },
-
   "modifiers": {
     "none": "",
     "shuffle": "Embaralhar",
@@ -266,7 +409,6 @@
     "mirror": "Espelho",
     "countdown": "Contagem regressiva"
   },
-
   "daily": {
     "gems_awarded": "+3 Gemas!",
     "weekly_bonus": "+7 Bônus semanal!",
@@ -286,20 +428,37 @@
     "gem_reward_sub": "Recompensa Desafio Diário",
     "claim_daily": "RESGATAR DIÁRIO",
     "claim_weekly": "RESGATAR 7 SEMANAL",
-    "streak_label": "Sequência:"
+    "streak_label": "Sequência:",
+    "challenge1": "DESAFIO 1 · CAMPANHA",
+    "challenge2": "DESAFIO 2 · CLÁSSICO",
+    "time_mode": "⏱ Modo tempo",
+    "move_mode": "🎯 Modo jogadas",
+    "retries": "TENTATIVAS",
+    "no_retries": "SEM TENTATIVAS",
+    "play_now": "▶  JOGAR",
+    "retry": "↺  TENTAR DE NOVO",
+    "locked_hint": "Desbloqueia após tentar o Desafio 1.",
+    "todays_reward": "RECOMPENSA DE HOJE",
+    "hint_gems": "💎 {{count}} gemas de dica",
+    "both_complete": "Ambos os desafios completos!",
+    "complete_both": "Complete ambos os desafios para resgatar",
+    "claim_reward": "RESGATAR",
+    "reward_collected": "Recompensa coletada — até amanhã!",
+    "streak_progress": "SEQUÊNCIA DE 7 DIAS"
   },
-
   "difficulty": {
-    "easy": "FÁCIL",
+    "easy": "Fácil",
     "easy_sub": "Crescente 1 → N²",
     "pro": "PRO",
     "pro_sub": "Decrescente N² → 1",
     "expert": "ESPECIALISTA",
     "expert_sub": "Ordem aleatória",
     "select_title": "SELECIONAR DIFICULDADE",
-    "start": "INICIAR"
+    "start": "INICIAR",
+    "medium": "Médio",
+    "hard": "Difícil",
+    "hardest": "Especialista"
   },
-
   "freeplay": {
     "title": "JOGO LIVRE",
     "grid_size": "Tamanho da grade",
@@ -308,7 +467,6 @@
     "off": "OFF",
     "toggle_on": "ON"
   },
-
   "campaign": {
     "title": "CAMPANHA",
     "coming_soon": "EM BREVE",
@@ -326,19 +484,135 @@
     "expert_gate_sub": "A Campanha Especialista abre quando 1.000 jogadores completarem a Campanha 200",
     "gate_counter": "{{count}} / {{total}}"
   },
-
   "hints": {
     "no_ads": "Nenhum anúncio disponível agora. Tente comprar gemas."
   },
-
   "country": {
     "prefer_not": "Prefiro não dizer"
   },
-
   "tier": {
     "pro": "PRO",
     "expert": "ESPECIALISTA",
     "pro_tag": "(PRO)",
     "expert_tag": "(EXPERT)"
+  },
+  "packs": {
+    "title_campaign": "PACOTES CAMPANHA",
+    "title_classic": "PACOTES CLÁSSICO",
+    "tab_campaign": "CAMPANHA",
+    "tab_classic": "CLÁSSICO",
+    "campaign_desc": "Pressão de tempo · 4 parâmetros · falha ao esgotar o tempo",
+    "classic_desc": "Orçamento de jogadas · planeje cada traçado · menos = melhor rank",
+    "pack_title": "PACOTE {{number}} · Grade {{grid}}",
+    "pack_progress": "{{done}}/{{total}} níveis",
+    "level_next": "Nível {{level}} a seguir",
+    "continue_campaign": "▶ CONTINUAR CAMPANHA",
+    "continue_classic": "▶ CONTINUAR CLÁSSICO",
+    "unlock_pack2": "Resolva 25 níveis do Pacote 1 para desbloquear",
+    "unlock_pack3": "Complete o Pacote 1 para desbloquear",
+    "unlock_pack4": "Complete o Pacote 2 para desbloquear",
+    "all_complete": "Todos os {{count}} níveis concluídos",
+    "hint_pack": "Pacote de dicas",
+    "hint_pack_price": "$1.99",
+    "remove_ads": "Remover anúncios",
+    "remove_ads_price": "$2.99"
+  },
+  "levels": {
+    "title": "NÍVEIS DO PACOTE {{number}}",
+    "level": "Nível {{number}}",
+    "locked_level": "Bloqueado",
+    "header": "PACOTE {{number}} · {{grid}}"
+  },
+  "store": {
+    "title": "LOJA",
+    "your_gems": "💎 Suas gemas: {{count}}",
+    "remove_ads_title": "REMOVER ANÚNCIOS",
+    "remove_ads_b1": "Nunca mais intersticiais",
+    "remove_ads_b2": "Compra única",
+    "remove_ads_b3": "Dicas sempre grátis",
+    "remove_ads_price": "$2.99",
+    "hint_pack_title": "PACOTE DE DICAS",
+    "hint_pack_b1": "20 dicas creditadas",
+    "hint_pack_b2": "Use quando travar",
+    "hint_pack_b3": "Funciona em qualquer grade",
+    "hint_pack_price": "$1.99",
+    "buy_btn": "COMPRAR",
+    "purchased": "✓ Comprado",
+    "gems_added": "+{{count}} gemas adicionadas!",
+    "ads_removed": "Anúncios removidos — obrigado!",
+    "purchase_failed": "Falha na compra",
+    "restore": "Restaurar compras",
+    "restored": "Purchases restored",
+    "nothing_restore": "No purchases to restore",
+    "managed_by": "Compras gerenciadas pelo Google Play. Toque COMPRAR para pagar."
+  },
+  "buyhint": {
+    "title": "💡 MAIS DICAS",
+    "subtitle": "Compre um pacote de dicas ou veja um anúncio.",
+    "hint_pack": "💎 Pacote de dicas",
+    "hint_pack_sub": "20 gemas · $1.99",
+    "watch_ad": "📺 Anúncio por +3 gemas",
+    "maybe_later": "Talvez depois",
+    "you_have": "Você tem {{count}} 💎 gemas",
+    "buy_now": "COMPRAR",
+    "watch_ad_instead": "Ver anúncio"
+  },
+  "howtoplay": {
+    "title": "COMO JOGAR",
+    "skip": "Pular ›",
+    "page1_title": "Conecte as cores",
+    "page1_sub": "Preencha cada célula do tabuleiro",
+    "page1_rule1": "Press on a coloured dot and drag to its matching partner",
+    "page1_rule2": "Every cell must be filled — connecting the dots alone is not enough",
+    "page2_title": "Domine o puzzle",
+    "page2_sub": "Aprenda as regras, planeje",
+    "page2_caption": "A solved board (Pack 1 · Level 01) — draw each colour end to end ✓",
+    "page2_rule1": "Paths move up, down, left, right only — no diagonal moves allowed",
+    "page2_rule2": "Paths cannot cross each other — if you draw over another colour, it erases from that point",
+    "page2_rule3": "You can retract your own path — drag backward over your own line to undo cells",
+    "page2_rule4": "Stuck? Use the in-game help below — hints, clues and extensions can get you moving again",
+    "page2_rule5": "Grids grow from 6×6 (Pack 1) up to 9×9 (Pack 4) — more cells, more planning required",
+    "page2_help_title": "AJUDA NO JOGO",
+    "page2_hint_title": "USE HINT",
+    "page2_hint_desc": "Spend 1 gem — a ghost path briefly reveals the full solution for one colour.",
+    "page2_clue_title": "GET A CLUE  ·  at 33% used",
+    "page2_clue_desc": "Watch a short ad — the hardest colour is auto-completed for you.",
+    "page2_timeext_title": "TIME EXT +30s  ·  Campaign, at 66% used",
+    "page2_timeext_desc": "Watch a short ad — 30 seconds added to your timer.",
+    "page2_moveext_title": "MOVE EXT +5  ·  Classic, at 66% used",
+    "page2_moveext_desc": "Watch a short ad — 5 extra moves added to your budget.",
+    "page3_title": "Escolha seu desafio",
+    "page3_sub": "Quatro formas de jogar Flow Lines",
+    "page3_campaign_title": "Campanha",
+    "page3_campaign_desc": "Race the clock · 200 levels · 4 packs · 6×6 to 9×9 grids · up to 3 stars per level",
+    "page3_classic_title": "Clássico",
+    "page3_classic_desc": "Solve within a move budget · 200 levels · 4 packs · up to 3 stars per level",
+    "page3_daily_title": "Desafio diário",
+    "page3_daily_desc": "Two fresh puzzles every day · global leaderboard · build your streak",
+    "page3_zen_title": "Zen",
+    "page3_zen_desc": "No limits · choose your grid · relax at your own pace",
+    "lets_play": "VAMOS JOGAR!",
+    "next_btn": "PRÓXIMO →"
+  },
+  "zen": {
+    "title": "MODO ZEN",
+    "tagline": "Sem limites · seu ritmo · qualquer grade",
+    "configure": "Configure sua sessão",
+    "grid_size": "TAMANHO",
+    "difficulty": "DIFICULDADE",
+    "timer": "CRONÔMETRO",
+    "move_limit": "LIMITE DE JOGADAS",
+    "off": "Desligado",
+    "on": "Ligado",
+    "easy": "Fácil",
+    "medium": "Médio",
+    "hard": "Difícil",
+    "hardest": "Especialista",
+    "start": "▶  INICIAR SESSÃO ZEN"
+  },
+  "licences": {
+    "title": "LICENÇAS OPEN SOURCE",
+    "subtitle": "Flow Lines usa estas bibliotecas open source. Toque para ver o repositório e a licença.",
+    "footer": "© Gazetica Studio · Voraky Retail LLP"
   }
 }

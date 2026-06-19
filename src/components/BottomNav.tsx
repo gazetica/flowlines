@@ -5,18 +5,20 @@
 // required props (legacy Numtap callers use <BottomNav />).
 
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { skin } from '../styles/skin';
 
-const TABS: Array<{ key: string; icon: string; label: string; route: string }> = [
-  { key: 'home', icon: '🏠', label: 'Home', route: '/home' },
-  { key: 'packs', icon: '🎁', label: 'Packs', route: '/packs' },
-  { key: 'leaderboard', icon: '🏆', label: 'Leaderboard', route: '/leaderboard' },
-  { key: 'settings', icon: '⚙️', label: 'Settings', route: '/settings' },
+const TABS: Array<{ key: string; icon: string; labelKey: string; route: string }> = [
+  { key: 'home', icon: '🏠', labelKey: 'nav.home', route: '/home' },
+  { key: 'packs', icon: '🎁', labelKey: 'nav.packs', route: '/packs' },
+  { key: 'leaderboard', icon: '🏆', labelKey: 'nav.leaderboard', route: '/leaderboard' },
+  { key: 'settings', icon: '⚙️', labelKey: 'nav.settings', route: '/settings' },
 ];
 
 export function BottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   return (
     <div
@@ -48,7 +50,7 @@ export function BottomNav() {
             }}
           >
             <span style={{ fontSize: 18, opacity: active ? 1 : 0.7 }}>{tab.icon}</span>
-            <span style={{ fontSize: 9, fontFamily: skin.fontBody, color: colour }}>{tab.label}</span>
+            <span style={{ fontSize: 9, fontFamily: skin.fontBody, color: colour }}>{t(tab.labelKey)}</span>
           </button>
         );
       })}

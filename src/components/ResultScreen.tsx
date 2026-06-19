@@ -10,6 +10,7 @@
 import type { ReactNode, CSSProperties } from 'react';
 import { useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { skin } from '../styles/skin';
 import { useFlowGameStore } from '../store/flowGameStore';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
@@ -29,11 +30,11 @@ import { GazeticaPromoCard } from './GazeticaPromoCard';
 import { BottomNav } from './BottomNav';
 
 const GOLD = '#FFD700';
-const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const mmss = (s: number): string => `${Math.floor(Math.max(0, s) / 60)}:${String(Math.max(0, s) % 60).padStart(2, '0')}`;
 
 export function ResultScreen() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const packId = parseInt(searchParams.get('pack') ?? '1', 10);
   const levelIdx = parseInt(searchParams.get('level') ?? '1', 10);
@@ -158,10 +159,10 @@ export function ResultScreen() {
   }, []);
 
   const breadcrumb = isZen
-    ? `Zen · ${gridSize}×${gridSize} · ${cap(String(difficulty))}`
+    ? t('game.breadcrumb_zen', { grid: gridSize, difficulty: t(`difficulty.${difficulty}`) })
     : isDaily
-      ? `Daily Challenge · ${isCampaign ? 'Campaign' : 'Classic'}`
-      : `Pack ${packId} · Level ${String(levelIdx).padStart(2, '0')} · ${cap(String(difficulty))}`;
+      ? t(isCampaign ? 'game.breadcrumb_daily_campaign' : 'game.breadcrumb_daily_classic')
+      : t('game.breadcrumb_pack', { pack: packId, level: String(levelIdx).padStart(2, '0'), difficulty: t(`difficulty.${difficulty}`) });
 
   const card: CSSProperties = {
     margin: '0 20px 12px', background: 'rgba(255,255,255,0.04)',
@@ -190,18 +191,18 @@ export function ResultScreen() {
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 56 }}>
           <div style={{ fontSize: 40 }}>{isClassic ? '♟' : '⏱'}</div>
           <div style={{ fontSize: 28, fontWeight: 700, color: '#E74C3C', letterSpacing: 2, textAlign: 'center', marginTop: 12, marginBottom: 6 }}>
-            LEVEL FAILED
+            {t('result.failed_title')}
           </div>
           <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', textAlign: 'center', marginBottom: 4 }}>
-            {isClassic ? 'No moves remaining' : 'Time ran out'}
+            {isClassic ? t('result.no_moves_remaining') : t('result.time_ran_out')}
           </div>
           <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', textAlign: 'center', marginBottom: 20 }}>{breadcrumb}</div>
 
           <div style={{ ...card, alignSelf: 'stretch' }}>
-            <div style={cardHeader}>HOW FAR YOU GOT</div>
-            <Row label="You reached" value={`${coverage}%`} />
-            <Row label="Tiles filled" value={`${filledTiles}/${totalTiles}`} />
-            <Row label={isClassic ? 'Moves used' : 'Cell moves'} value={isClassic ? `${gestureCount}/${classicMoveLimitTotal}` : `${moveCount}`} last />
+            <div style={cardHeader}>{t('result.how_far')}</div>
+            <Row label={t('result.you_reached')} value={`${coverage}%`} />
+            <Row label={t('result.tiles_filled')} value={`${filledTiles}/${totalTiles}`} />
+            <Row label={isClassic ? t('result.moves_used') : t('result.cell_moves')} value={isClassic ? `${gestureCount}/${classicMoveLimitTotal}` : `${moveCount}`} last />
           </div>
 
           <div style={{ alignSelf: 'stretch', margin: '4px 20px 0' }}>
@@ -210,13 +211,13 @@ export function ResultScreen() {
                 onPointerDown={tryAgain}
                 style={{ width: '100%', background: GOLD, color: '#0D0620', border: 'none', borderRadius: 12, padding: 16, fontSize: 16, fontWeight: 700, cursor: 'pointer', marginBottom: 10 }}
               >
-                ↩  TRY AGAIN
+                {t('result.try_again')}
               </button>
             ) : (
-              <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: 13, marginBottom: 10 }}>No more retries today</div>
+              <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: 13, marginBottom: 10 }}>{t('result.no_retries_today')}</div>
             )}
             <button onPointerDown={() => navigate(isDaily ? '/daily' : `/levels/${packId}?mode=${mode}`)} style={{ ...ghostBtn, width: '100%' }}>
-              {isDaily ? '‹ Back to Daily' : '‹ Back to Levels'}
+              {isDaily ? t('result.back_to_daily_link') : t('result.back_to_levels')}
             </button>
           </div>
 
@@ -245,27 +246,27 @@ export function ResultScreen() {
   return (
     <Frame>
       <div style={{ fontSize: 24, fontWeight: 700, color: GOLD, letterSpacing: 2, textAlign: 'center', marginTop: 24, marginBottom: 4 }}>
-        LEVEL COMPLETE!
+        {t('result.title')}
       </div>
       <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', textAlign: 'center', marginBottom: 16 }}>{breadcrumb}</div>
 
       <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 8 }}>{[1, 2, 3].map(starSpan)}</div>
       {perfectClear
-        ? <div style={{ fontSize: 13, color: GOLD, textAlign: 'center', marginBottom: 16 }}>✨ PERFECT CLEAR!</div>
+        ? <div style={{ fontSize: 13, color: GOLD, textAlign: 'center', marginBottom: 16 }}>{t('result.perfect_clear')}</div>
         : <div style={{ marginBottom: 16 }} />}
 
       {/* Single consolidated RESULT card (score rows + stats) */}
       <div style={{ ...card, animation: 'flFadeSlideUp 300ms ease-out 200ms both' }}>
-        <div style={cardHeader}>RESULT</div>
-        <Row label="Dots connected" value={`${b.dotsScore}`} />
-        <Row label="Board filled" value={`${b.coverageScore}`} />
-        <Row label={isClassic ? 'Move efficiency' : 'Time efficiency'} value={`${b.efficiencyScore}`} />
-        <Row label="Gesture bonus" value={`${b.bonusScore}`} />
-        {hintsUsed > 0 && <Row label={`Hints used (×${hintsUsed})`} value={`${b.hintPenalty}`} />}
-        {clueUsed && <Row label="Auto-complete used" value={`${cluePenalty}`} />}
+        <div style={cardHeader}>{t('result.result_label')}</div>
+        <Row label={t('result.dots_connected')} value={`${b.dotsScore}`} />
+        <Row label={t('result.board_filled')} value={`${b.coverageScore}`} />
+        <Row label={isClassic ? t('result.move_efficiency') : t('result.time_efficiency')} value={`${b.efficiencyScore}`} />
+        <Row label={t('result.gesture_bonus')} value={`${b.bonusScore}`} />
+        {hintsUsed > 0 && <Row label={t('result.hints_used', { count: hintsUsed })} value={`${b.hintPenalty}`} />}
+        {clueUsed && <Row label={t('result.auto_complete_used')} value={`${cluePenalty}`} />}
         <div style={{ borderTop: '1px solid rgba(127,119,221,0.2)', margin: '6px 0' }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-          <span style={{ fontSize: 15, fontWeight: 700, color: '#FFFFFF' }}>TOTAL</span>
+          <span style={{ fontSize: 15, fontWeight: 700, color: '#FFFFFF' }}>{t('result.total')}</span>
           <span style={{ fontSize: 18, fontWeight: 700, color: GOLD }}>{result.total}</span>
         </div>
 
@@ -273,14 +274,14 @@ export function ResultScreen() {
         <div style={{ borderTop: '1px solid rgba(127,119,221,0.15)', marginTop: 10, paddingTop: 10 }}>
           {isCampaign && (
             <>
-              <StatRow a={['Time taken', mmss(timeElapsed)]} b={['Timer limit', mmss(timeLimitSeconds)]} />
-              <StatRow a={['Gestures', `${gestureCount}`]} b={['Best time', bestTime != null ? mmss(bestTime) : 'First! 🎉']} last />
+              <StatRow a={[t('result.time_taken'), mmss(timeElapsed)]} b={[t('result.timer_limit'), mmss(timeLimitSeconds)]} />
+              <StatRow a={[t('result.gestures'), `${gestureCount}`]} b={[t('result.best_time'), bestTime != null ? mmss(bestTime) : t('result.first_time')]} last />
             </>
           )}
           {isClassic && (
             <>
-              <StatRow a={['Gestures', `${gestureCount}`]} b={['Budget', `${classicMoveLimitTotal}`]} />
-              <StatRow a={['Time taken', mmss(timeElapsed)]} b={['Best moves', bestMoves != null ? `${bestMoves}` : 'First! 🎉']} last />
+              <StatRow a={[t('result.gestures'), `${gestureCount}`]} b={[t('result.budget'), `${classicMoveLimitTotal}`]} />
+              <StatRow a={[t('result.time_taken'), mmss(timeElapsed)]} b={[t('result.best_moves'), bestMoves != null ? `${bestMoves}` : t('result.first_time')]} last />
             </>
           )}
           {!isCampaign && !isClassic && (
@@ -296,10 +297,10 @@ export function ResultScreen() {
             onPointerDown={() => navigate(`/game?mode=zen&grid=${zenGrid}&difficulty=${zenDifficulty}&timer=${zenTimer}&moves=${zenMoves}`)}
             style={{ width: 'calc(100% - 40px)', margin: '0 20px 10px', background: GOLD, color: '#0D0620', border: 'none', borderRadius: 12, padding: 16, fontSize: 16, fontWeight: 700, cursor: 'pointer' }}
           >
-            ▶  PLAY AGAIN
+            {t('result.play_again')}
           </button>
           <div style={{ margin: '0 20px 16px' }}>
-            <button onPointerDown={() => navigate('/packs?mode=zen')} style={{ ...ghostBtn, width: '100%' }}>⚙  CHANGE CONFIG</button>
+            <button onPointerDown={() => navigate('/packs?mode=zen')} style={{ ...ghostBtn, width: '100%' }}>{t('result.change_config')}</button>
           </div>
         </>
       ) : isDaily ? (
@@ -307,7 +308,7 @@ export function ResultScreen() {
           onPointerDown={() => navigate('/daily')}
           style={{ width: 'calc(100% - 40px)', margin: '0 20px 16px', background: GOLD, color: '#0D0620', border: 'none', borderRadius: 12, padding: 16, fontSize: 16, fontWeight: 700, cursor: 'pointer' }}
         >
-          ✓  BACK TO DAILY
+          {t('result.back_to_daily')}
         </button>
       ) : (
         <>
@@ -315,11 +316,11 @@ export function ResultScreen() {
             onPointerDown={() => hasNextLevel ? navigate(`/game?pack=${packId}&level=${nextLevelIdx}&mode=${mode}`) : navigate(`/packs?mode=${mode}`)}
             style={{ width: 'calc(100% - 40px)', margin: '0 20px 10px', background: GOLD, color: '#0D0620', border: 'none', borderRadius: 12, padding: 16, fontSize: 16, fontWeight: 700, cursor: 'pointer' }}
           >
-            {hasNextLevel ? `▶  NEXT LEVEL (Level ${String(nextLevelIdx).padStart(2, '0')})` : '▶  PACK COMPLETE!'}
+            {hasNextLevel ? t('result.next_level', { number: String(nextLevelIdx).padStart(2, '0') }) : t('result.pack_complete')}
           </button>
           <div style={{ margin: '0 20px 16px', display: 'flex', gap: 10 }}>
-            <button onPointerDown={() => navigate(`/game?pack=${packId}&level=${levelIdx}&mode=${mode}&replay=true`)} style={ghostBtn}>↩  Replay</button>
-            <button onPointerDown={() => navigate(`/levels/${packId}?mode=${mode}`)} style={ghostBtn}>☰  Levels</button>
+            <button onPointerDown={() => navigate(`/game?pack=${packId}&level=${levelIdx}&mode=${mode}&replay=true`)} style={ghostBtn}>{t('result.replay')}</button>
+            <button onPointerDown={() => navigate(`/levels/${packId}?mode=${mode}`)} style={ghostBtn}>{t('result.levels')}</button>
           </div>
         </>
       )}

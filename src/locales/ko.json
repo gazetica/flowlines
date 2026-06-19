@@ -4,14 +4,13 @@
     "tagline": "숫자 탭 퍼즐",
     "by": "Gazetica 제작"
   },
-
   "nav": {
     "home": "홈",
     "leaderboard": "순위표",
     "settings": "설정",
-    "about": "정보"
+    "about": "정보",
+    "packs": "팩"
   },
-
   "home": {
     "daily_pill_title": "매일 3 보석 받기",
     "daily_pill_sub": "매일 방문하여 무료 보석을 받으세요",
@@ -33,7 +32,7 @@
     "mode_endless": "엔드리스",
     "mode_endless_sub": "5×5 · 3분",
     "best_score": "최고 점수",
-    "day_streak": "연속 일수",
+    "day_streak": "🔥 {{count}}일 연속",
     "rank": "랭킹",
     "games": "게임 수",
     "avg": "평균",
@@ -44,9 +43,37 @@
     "win_pro_tag": "프로 태그 획득",
     "win_pro_sub": "캠페인 레벨 100 완료",
     "win_expert_tag": "전문가 태그 획득",
-    "win_expert_sub": "캠페인 레벨 200 완료"
+    "win_expert_sub": "캠페인 레벨 200 완료",
+    "title": "FLOW LINES",
+    "campaign": "캠페인",
+    "classic": "클래식",
+    "daily": "데일리",
+    "zen": "ZEN",
+    "pack_level": "팩 {{pack}} · 레벨 {{level}}",
+    "levels_progress": "{{done}}/{{total}} 레벨",
+    "level_next": "다음 레벨 {{level}}",
+    "play_campaign": "▶ 캠페인 플레이",
+    "play_classic": "▶ 클래식 플레이",
+    "play_daily": "데일리 플레이",
+    "explore_zen": "둘러보기",
+    "all_done_today": "오늘 모두 완료! ✓",
+    "streak_days": "🔥 {{count}}일",
+    "streak_days_plural": "🔥 {{count}}일",
+    "daily_streak": "데일리 연속",
+    "day_of_7": "7일 중 {{count}}일",
+    "zen_tagline": "당신의 격자",
+    "zen_tagline2": "당신의 속도",
+    "daily_gem_collected": "💎 데일리 젬 수령 ✓",
+    "daily_gem_available": "💎 오늘 방문 +1 젬",
+    "easy": "쉬움",
+    "medium": "보통",
+    "hard": "어려움",
+    "hardest": "최고난도",
+    "puzzles_waiting": "퍼즐 2개 대기 중",
+    "one_of_two": "2개 중 1개 완료 ✓",
+    "start_streak": "연속 기록을 시작하세요!",
+    "bonus_days": "🔥 +7 💎까지 {{count}}일 남음"
   },
-
   "game": {
     "clue_pill_title": "힌트 얻기",
     "clue_pill_sub_5": "광고 → 5칸 공개",
@@ -71,17 +98,49 @@
     "btn_home": "홈",
     "level_prefix": "레벨",
     "remove_ads": "광고 제거",
-    "remove_ads_sub": "중단 없이 플레이하세요",
+    "remove_ads_sub": "방해 없이 플레이",
     "watch_ad": "광고 보기",
-    "watch_ad_sub": "보석 3개 무료",
+    "watch_ad_sub": "+3 젬 무료",
     "use_hint": "힌트 사용",
     "hints_left": "×{{count}} 남음",
     "get_more_hints": "힌트 더 받기",
     "get_more_hints_sub": "탭하여 보석 팩 구매",
     "toast_no_hints": "이번 세션에는 힌트가 더 없습니다",
-    "toast_no_ad": "사용 가능한 광고가 없습니다"
+    "toast_no_ad": "사용 가능한 광고가 없습니다",
+    "moves_left": "남은 이동",
+    "tiles": "타일",
+    "time": "시간",
+    "moves": "이동",
+    "timer": "타이머",
+    "paused": "일시정지",
+    "resume": "재개",
+    "quit": "나가기",
+    "remove_ads_card": "광고 제거",
+    "buy_hints_card": "힌트 구매",
+    "buy_hints_sub": "20 힌트 $1.99",
+    "watch_ad_watched": "시청함",
+    "hint_left": "💎 ×{{count}} 남음",
+    "get_a_clue": "힌트",
+    "get_a_clue_desc": "광고 보기 · 경로 1개 자동 완성",
+    "low_on_time": "시간 부족",
+    "time_ext_desc": "광고 보기 — +30초",
+    "low_on_moves": "이동 부족",
+    "move_ext_desc": "광고 보기 — +5 이동",
+    "you": "나",
+    "leader": "1위",
+    "score": "점수",
+    "zen_label": "ZEN",
+    "abandon_title": "이 레벨을 포기할까요?",
+    "keep_playing": "계속 플레이",
+    "abandon": "포기",
+    "tutorial_hint": "점을 눌러 짝까지 드래그하세요",
+    "tutorial_dismiss": "아무 곳이나 눌러 닫기",
+    "breadcrumb_zen": "젠 · {{grid}}×{{grid}} · {{difficulty}}",
+    "breadcrumb_daily_campaign": "데일리 챌린지 · 캠페인",
+    "breadcrumb_daily_classic": "데일리 챌린지 · 클래식",
+    "ad_unavailable": "광고를 사용할 수 없습니다 — 다시 시도",
+    "breadcrumb_pack": "팩 {{pack}} · 레벨 {{level}} · {{difficulty}}"
   },
-
   "result": {
     "difficulty": "난이도",
     "level_complete": "레벨 완료!",
@@ -92,7 +151,7 @@
     "time_bonus": "시간 보너스",
     "speed_bonus": "스피드 보너스",
     "accuracy": "정확도",
-    "total": "합계",
+    "total": "총점",
     "btn_next_level": "다음 레벨",
     "btn_play_again": "다시 플레이",
     "btn_home": "홈",
@@ -102,9 +161,45 @@
     "time_out": "시간 초과",
     "grid_label": "{{size}}×{{size}} 격자",
     "time_label": "{{seconds}}s",
-    "best_config": "★ 최고 (이 설정):"
+    "best_config": "★ 최고 (이 설정):",
+    "title": "레벨 완료!",
+    "failed_title": "레벨 실패",
+    "perfect_clear": "✨ 퍼펙트!",
+    "result_label": "결과",
+    "dots_connected": "점 연결",
+    "board_filled": "보드 채움",
+    "time_efficiency": "시간 효율",
+    "move_efficiency": "이동 효율",
+    "gesture_bonus": "제스처 보너스",
+    "hints_used": "Hints used (×{{count}})",
+    "auto_complete_used": "Auto-complete used",
+    "moves_taken": "이동",
+    "time_taken": "걸린 시간",
+    "timer_limit": "제한",
+    "gestures": "Gestures",
+    "budget": "Budget",
+    "best_time": "최고 시간",
+    "best_moves": "최소 이동",
+    "first_time": "최초! 🎉",
+    "next_level": "▶  다음 레벨 (레벨 {{number}})",
+    "pack_complete": "▶  팩 완료!",
+    "replay": "↩  다시하기",
+    "levels": "☰  레벨",
+    "play_again": "▶  다시 플레이",
+    "change_config": "⚙  설정 변경",
+    "back_to_daily": "✓  데일리로 돌아가기",
+    "try_again": "↩  다시 시도",
+    "back_to_levels": "‹ Back to Levels",
+    "back_to_daily_link": "‹ Back to Daily",
+    "no_retries_today": "No more retries today",
+    "you_reached": "You reached",
+    "tiles_filled": "Tiles filled",
+    "cell_moves": "Cell moves",
+    "moves_used": "Moves used",
+    "how_far": "도달 지점",
+    "time_ran_out": "시간 초과",
+    "no_moves_remaining": "이동 없음"
   },
-
   "leader": {
     "you": "나",
     "leader": "리더",
@@ -121,14 +216,20 @@
     "loading": "불러오는 중...",
     "empty": "아직 점수가 없습니다. 첫 번째가 되어보세요!",
     "your_ranking": "내 순위",
-    "no_score": "아직 점수 없음"
+    "no_score": "아직 점수 없음",
+    "tab_campaign": "캠페인",
+    "tab_classic": "클래식",
+    "rank_unknown": "#--",
+    "leader": "1위",
+    "score": "점수",
+    "moves": "이동",
+    "player": "플레이어"
   },
-
   "settings": {
     "title": "설정",
     "player_identity_title": "플레이어 ID",
     "uid_label": "UID",
-    "uid_permanent": "영구적 · 변경 불가",
+    "uid_permanent": "영구 · 변경 불가",
     "section_audio": "오디오",
     "sound_effects": "효과음",
     "music": "음악",
@@ -138,15 +239,25 @@
     "section_profile": "프로필",
     "alias_label": "순위표 별명",
     "alias_sub": "전체 순위표에 표시됩니다",
-    "alias_placeholder": "별명 입력",
+    "alias_placeholder": "이름",
     "section_purchases": "구매",
-    "remove_ads": "광고 영구 제거",
+    "remove_ads": "🚫 광고 제거 · $2.99",
     "remove_ads_sub": "일회성 구매",
     "remove_ads_purchased": "구매 완료 ✓",
     "restore_purchases": "구매 복원",
-    "country": "국가"
+    "country": "국가",
+    "haptics": "햅틱",
+    "section_player": "플레이어",
+    "alias": "별명",
+    "uid": "UID",
+    "section_account": "계정",
+    "ad_preferences": "광고 설정 (GDPR)",
+    "section_support": "지원",
+    "how_to_play": "게임 방법",
+    "privacy_policy": "개인정보처리방침",
+    "terms_of_service": "이용약관",
+    "about": "Flow Lines 정보"
   },
-
   "iap": {
     "toast_purchase_complete": "구매 완료 ✓",
     "toast_purchase_failed": "구매 실패",
@@ -170,7 +281,6 @@
     "expert_campaign_title": "전문가 캠페인 — 얼리 액세스",
     "expert_campaign_desc": "지금 100개의 전문가 레벨을 잠금 해제하세요. 영구 소장."
   },
-
   "consent": {
     "title": "회원님의 개인정보는 소중합니다",
     "body": "Numtap은 무료로 유지하기 위해 광고를 사용합니다. 당사와 파트너는 회원님의 데이터를 사용하여 맞춤형 광고를 표시할 수 있습니다. 동의하거나 제한된 광고만 사용하도록 선택할 수 있습니다. 설정에서 언제든지 변경할 수 있습니다.",
@@ -179,7 +289,6 @@
     "privacy_link": "개인정보 처리방침",
     "terms_link": "이용약관"
   },
-
   "how_to_play": {
     "step5": "시간이 부족하신가요? 짧은 광고를 보세요 — 다음 목표를 주황색으로 표시해 드려 레벨을 완료할 수 있습니다.",
     "step1": "뒤섞인 숫자 격자가 나타납니다. 순서대로 탭하세요 — HUD가 다음 목표를 알려줍니다.",
@@ -207,58 +316,92 @@
     "mode_speed": "스피드",
     "mode_speed_sub": "4×4 · 절반 타이머 · 2배 점수"
   },
-
   "language": {
     "nameLabel": "어떻게 불러드릴까요?",
     "countryLabel": "어느 나라에서 오셨나요?",
-    "title": "언어를 선택하세요",
+    "title": "언어",
     "sub": "설정에서 언제든지 변경할 수 있습니다",
     "detected": "감지됨: {{language}}",
     "btn_continue": "계속",
-    "btn_later": "나중에 선택"
+    "btn_later": "나중에 선택",
+    "subtitle": "언어를 선택하세요",
+    "en_tagline": "Connect colours. Fill the board.",
+    "de_tagline": "Verbinde Farben und fülle das Feld",
+    "fr_tagline": "Reliez les couleurs, remplissez la grille",
+    "ko_tagline": "색깔을 연결하고 보드를 채우세요",
+    "pt_tagline": "Conecte as cores, preencha o tabuleiro",
+    "es_tagline": "Conecta los colores, llena el tablero",
+    "choose": "언어를 선택하세요",
+    "alias_prompt": "어떻게 불러드릴까요?",
+    "alias_placeholder": "플레이어",
+    "country_prompt": "어디 출신인가요?",
+    "choose_later": "나중에 선택",
+    "select_country": "국가를 선택하세요",
+    "search_countries": "국가 검색...",
+    "no_countries": "국가를 찾을 수 없습니다"
   },
-
   "about": {
     "title": "정보",
     "version": "버전 {{version}}",
     "bundle_id": "com.gazetica.numtap",
     "how_to_play": "게임 방법",
-    "privacy_policy": "개인정보 처리방침",
+    "privacy_policy": "개인정보처리방침",
     "terms": "이용약관",
     "ad_preferences": "광고 설정 (GDPR)",
-    "rate_app": "Numtap 평가하기 ★",
+    "rate_app": "앱 평가하기",
     "contact": "문의 / 지원",
     "more_games": "Gazetica의 다른 게임",
     "footer": "Gazetica Studio · Voraky Retail LLP",
-    "copyright": "© 2026 Voraky Retail LLP. 모든 권리 보유."
+    "copyright": "© 2026 Voraky Retail LLP. 모든 권리 보유.",
+    "app_title": "FLOW LINES",
+    "more_from": "Gazetica의 다른 게임",
+    "legal": "법적 고지",
+    "open_source": "오픈소스 라이선스",
+    "support": "지원",
+    "contact_us": "문의하기"
   },
-
   "splash": {
-    "loading": "불러오는 중..."
+    "loading": "퍼즐 불러오는 중…",
+    "by": "Gazetica 제작",
+    "tagline": "색 연결 퍼즐"
   },
-
   "common": {
     "ok": "확인",
     "cancel": "취소",
     "close": "닫기",
     "back": "뒤로",
     "save": "저장",
-    "loading": "불러오는 중...",
+    "loading": "로딩 중…",
     "error": "문제가 발생했습니다.",
-    "retry": "다시 시도",
+    "retry": "다시",
     "pack_locked": "{{pack}}번 팩을 완료하면 잠금 해제됩니다",
     "pack_coming_soon": "곧 출시",
     "level": "레벨 {{id}}",
-    "pack": "{{pack}}번 팩"
+    "pack": "{{pack}}번 팩",
+    "next": "다음",
+    "skip": "건너뛰기",
+    "skip_tutorial": "튜토리얼 건너뛰기",
+    "play_now": "지금 플레이",
+    "continue": "계속",
+    "confirm": "확인",
+    "error_load": "점수를 불러올 수 없습니다. 연결을 확인하세요.",
+    "retry_btn": "다시",
+    "no_scores": "아직 점수가 없습니다 — 첫 주자가 되세요!",
+    "gems": "젬",
+    "gem_symbol": "💎",
+    "locked": "잠김",
+    "done": "✓ 완료",
+    "failed": "✕ 실패",
+    "pending": "대기 중",
+    "claimed": "✓ 수령함",
+    "version": "버전 {{version}} · Gazetica Studio"
   },
-
   "modes": {
     "campaign": "캠페인",
     "daily": "데일리 챌린지",
     "endless": "엔드리스",
     "speed": "스피드"
   },
-
   "modifiers": {
     "none": "",
     "shuffle": "셔플",
@@ -266,7 +409,6 @@
     "mirror": "미러",
     "countdown": "카운트다운"
   },
-
   "daily": {
     "gems_awarded": "+3 보석!",
     "weekly_bonus": "+7 주간 보너스!",
@@ -286,9 +428,24 @@
     "gem_reward_sub": "데일리 챌린지 보상",
     "claim_daily": "오늘의 보상 받기",
     "claim_weekly": "주간 보상 7개 받기",
-    "streak_label": "연속:"
+    "streak_label": "연속:",
+    "challenge1": "챌린지 1 · 캠페인",
+    "challenge2": "챌린지 2 · 클래식",
+    "time_mode": "⏱ 시간 모드",
+    "move_mode": "🎯 이동 모드",
+    "retries": "재시도",
+    "no_retries": "재시도 없음",
+    "play_now": "▶  지금 플레이",
+    "retry": "↺  다시",
+    "locked_hint": "챌린지 1을 시도하면 잠금 해제됩니다.",
+    "todays_reward": "오늘의 보상",
+    "hint_gems": "💎 힌트 젬 {{count}}개",
+    "both_complete": "두 챌린지 모두 완료!",
+    "complete_both": "두 챌린지를 완료하면 수령",
+    "claim_reward": "보상 받기",
+    "reward_collected": "보상 수령 — 내일 또 오세요!",
+    "streak_progress": "7일 연속 진행"
   },
-
   "difficulty": {
     "easy": "쉬움",
     "easy_sub": "오름차순 1 → N²",
@@ -297,9 +454,11 @@
     "expert": "전문가",
     "expert_sub": "무작위 순서",
     "select_title": "난이도 선택",
-    "start": "시작"
+    "start": "시작",
+    "medium": "보통",
+    "hard": "어려움",
+    "hardest": "최고난도"
   },
-
   "freeplay": {
     "title": "자유 플레이",
     "grid_size": "격자 크기",
@@ -308,7 +467,6 @@
     "off": "끄기",
     "toggle_on": "켜짐"
   },
-
   "campaign": {
     "title": "캠페인",
     "coming_soon": "출시 예정",
@@ -326,19 +484,135 @@
     "expert_gate_sub": "1,000명의 플레이어가 캠페인 200을 완료하면 전문가 캠페인이 열립니다",
     "gate_counter": "{{count}} / {{total}}"
   },
-
   "hints": {
     "no_ads": "지금은 사용 가능한 광고가 없습니다. 보석을 구매해 보세요."
   },
-
   "country": {
     "prefer_not": "밝히지 않음"
   },
-
   "tier": {
     "pro": "프로",
     "expert": "전문가",
     "pro_tag": "(PRO)",
     "expert_tag": "(EXPERT)"
+  },
+  "packs": {
+    "title_campaign": "캠페인 팩",
+    "title_classic": "클래식 팩",
+    "tab_campaign": "캠페인",
+    "tab_classic": "클래식",
+    "campaign_desc": "시간 압박 · 4가지 변수 · 시간 초과 시 실패",
+    "classic_desc": "이동 예산 · 경로를 계획 · 적을수록 좋은 순위",
+    "pack_title": "팩 {{number}} · {{grid}} 격자",
+    "pack_progress": "{{done}}/{{total}} 레벨",
+    "level_next": "다음 레벨 {{level}}",
+    "continue_campaign": "▶ 캠페인 계속",
+    "continue_classic": "▶ 클래식 계속",
+    "unlock_pack2": "팩 1의 25레벨을 풀어 잠금 해제",
+    "unlock_pack3": "팩 1을 완료해 잠금 해제",
+    "unlock_pack4": "팩 2를 완료해 잠금 해제",
+    "all_complete": "{{count}}개 레벨 모두 완료",
+    "hint_pack": "힌트 팩",
+    "hint_pack_price": "$1.99",
+    "remove_ads": "광고 제거",
+    "remove_ads_price": "$2.99"
+  },
+  "levels": {
+    "title": "팩 {{number}} 레벨",
+    "level": "레벨 {{number}}",
+    "locked_level": "잠김",
+    "header": "팩 {{number}} · {{grid}}"
+  },
+  "store": {
+    "title": "상점",
+    "your_gems": "💎 보유 젬: {{count}}",
+    "remove_ads_title": "광고 제거",
+    "remove_ads_b1": "전면 광고 영구 제거",
+    "remove_ads_b2": "1회 구매",
+    "remove_ads_b3": "힌트는 항상 무료",
+    "remove_ads_price": "$2.99",
+    "hint_pack_title": "힌트 팩",
+    "hint_pack_b1": "20 힌트 지급",
+    "hint_pack_b2": "막힐 때 사용하세요",
+    "hint_pack_b3": "모든 격자에서 작동",
+    "hint_pack_price": "$1.99",
+    "buy_btn": "구매",
+    "purchased": "✓ 구매함",
+    "gems_added": "+{{count}} 젬 추가됨!",
+    "ads_removed": "광고 제거됨 — 감사합니다!",
+    "purchase_failed": "구매 실패",
+    "restore": "구매 복원",
+    "restored": "Purchases restored",
+    "nothing_restore": "No purchases to restore",
+    "managed_by": "구매는 Google Play로 관리됩니다. 구매를 눌러 결제하세요."
+  },
+  "buyhint": {
+    "title": "💡 힌트 더 받기",
+    "subtitle": "힌트 팩을 구매하거나 광고를 보세요.",
+    "hint_pack": "💎 힌트 팩",
+    "hint_pack_sub": "20 젬 · $1.99",
+    "watch_ad": "📺 광고 보고 +3 젬",
+    "maybe_later": "나중에",
+    "you_have": "보유 젬 {{count}} 💎",
+    "buy_now": "지금 구매",
+    "watch_ad_instead": "대신 광고 보기"
+  },
+  "howtoplay": {
+    "title": "게임 방법",
+    "skip": "건너뛰기 ›",
+    "page1_title": "색을 연결하세요",
+    "page1_sub": "보드의 모든 칸을 채우세요",
+    "page1_rule1": "Press on a coloured dot and drag to its matching partner",
+    "page1_rule2": "Every cell must be filled — connecting the dots alone is not enough",
+    "page2_title": "퍼즐 마스터하기",
+    "page2_sub": "규칙을 배우고 계획하세요",
+    "page2_caption": "A solved board (Pack 1 · Level 01) — draw each colour end to end ✓",
+    "page2_rule1": "Paths move up, down, left, right only — no diagonal moves allowed",
+    "page2_rule2": "Paths cannot cross each other — if you draw over another colour, it erases from that point",
+    "page2_rule3": "You can retract your own path — drag backward over your own line to undo cells",
+    "page2_rule4": "Stuck? Use the in-game help below — hints, clues and extensions can get you moving again",
+    "page2_rule5": "Grids grow from 6×6 (Pack 1) up to 9×9 (Pack 4) — more cells, more planning required",
+    "page2_help_title": "게임 내 도움말",
+    "page2_hint_title": "USE HINT",
+    "page2_hint_desc": "Spend 1 gem — a ghost path briefly reveals the full solution for one colour.",
+    "page2_clue_title": "GET A CLUE  ·  at 33% used",
+    "page2_clue_desc": "Watch a short ad — the hardest colour is auto-completed for you.",
+    "page2_timeext_title": "TIME EXT +30s  ·  Campaign, at 66% used",
+    "page2_timeext_desc": "Watch a short ad — 30 seconds added to your timer.",
+    "page2_moveext_title": "MOVE EXT +5  ·  Classic, at 66% used",
+    "page2_moveext_desc": "Watch a short ad — 5 extra moves added to your budget.",
+    "page3_title": "도전을 선택하세요",
+    "page3_sub": "Flow Lines를 즐기는 네 가지 방법",
+    "page3_campaign_title": "캠페인",
+    "page3_campaign_desc": "Race the clock · 200 levels · 4 packs · 6×6 to 9×9 grids · up to 3 stars per level",
+    "page3_classic_title": "클래식",
+    "page3_classic_desc": "Solve within a move budget · 200 levels · 4 packs · up to 3 stars per level",
+    "page3_daily_title": "데일리 챌린지",
+    "page3_daily_desc": "Two fresh puzzles every day · global leaderboard · build your streak",
+    "page3_zen_title": "젠",
+    "page3_zen_desc": "No limits · choose your grid · relax at your own pace",
+    "lets_play": "플레이!",
+    "next_btn": "다음 →"
+  },
+  "zen": {
+    "title": "젠 모드",
+    "tagline": "제한 없음 · 당신의 속도 · 원하는 격자",
+    "configure": "세션 구성",
+    "grid_size": "격자 크기",
+    "difficulty": "난이도",
+    "timer": "타이머",
+    "move_limit": "이동 제한",
+    "off": "끄기",
+    "on": "켜기",
+    "easy": "쉬움",
+    "medium": "보통",
+    "hard": "어려움",
+    "hardest": "최고난도",
+    "start": "▶  젠 세션 시작"
+  },
+  "licences": {
+    "title": "오픈소스 라이선스",
+    "subtitle": "Flow Lines는 이 오픈소스 라이브러리로 만들어졌습니다. 저장소와 라이선스를 보려면 누르세요.",
+    "footer": "© Gazetica Studio · Voraky Retail LLP"
   }
 }

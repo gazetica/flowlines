@@ -11,6 +11,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { App } from '@capacitor/app';
 import Phaser from 'phaser';
 import { GameScene, type LevelConfig } from '../game/scenes/GameScene';
@@ -63,7 +64,6 @@ function formatTime(seconds: number): string {
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
-const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 // FL-UX-D-008j: synthesised timer tick (no audio file). Normal = subtle high
 // click; intense (last 10s) = louder, lower, slightly longer for urgency.
@@ -88,6 +88,7 @@ export function GameScreen() {
   const adInFlightRef = useRef(false); // FL-UX-D-008L: freeze the timer during a rewarded ad
 
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
 
   // Store-driven dynamic values
@@ -440,7 +441,7 @@ export function GameScreen() {
         trackAdImpression({ ad_type: 'rewarded' });
         return true;
       }
-      if (outcome === 'unavailable') flashToast('Ad unavailable — try again');
+      if (outcome === 'unavailable') flashToast(t('game.ad_unavailable'));
       return false;
     } finally {
       adInFlightRef.current = false;
@@ -518,10 +519,10 @@ export function GameScreen() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
             <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', letterSpacing: 0.5 }}>
               {isZen
-                ? `Zen · ${zenGrid}×${zenGrid} · ${cap(String(difficulty))}`
+                ? t('game.breadcrumb_zen', { grid: zenGrid, difficulty: t(`difficulty.${difficulty}`) })
                 : isDailyMode
-                  ? `Daily Challenge · ${isCampaign ? 'Campaign' : 'Classic'}`
-                  : `Pack ${levelData.pack} · Level ${String(levelIndex).padStart(2, '0')} · ${cap(String(difficulty))}`}
+                  ? t(isCampaign ? 'game.breadcrumb_daily_campaign' : 'game.breadcrumb_daily_classic')
+                  : t('game.breadcrumb_pack', { pack: levelData.pack, level: String(levelIndex).padStart(2, '0'), difficulty: t(`difficulty.${difficulty}`) })}
             </span>
             {isZen ? (
               <span style={{ background: 'rgba(26,188,156,0.15)', border: '1px solid rgba(26,188,156,0.35)', borderRadius: 8, padding: '3px 8px', fontSize: 10, fontWeight: 700, color: ZEN_TEAL }}>
@@ -545,7 +546,7 @@ export function GameScreen() {
           {(isCampaign || isClassic) && (
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '4px 0 2px' }}>
               <div style={{ textAlign: 'left', minWidth: 60 }}>
-                <div style={statLabel}>{isCampaign ? 'TIMER' : 'MOVES LEFT'}</div>
+                <div style={statLabel}>{isCampaign ? t('game.timer') : t('game.moves_left')}</div>
                 <div style={{
                   ...statValue, fontSize: 22,
                   color: (isCampaign ? timerDanger : movesDanger) ? DANGER : '#FFFFFF',
@@ -555,11 +556,11 @@ export function GameScreen() {
                 </div>
               </div>
               <div style={{ textAlign: 'center', flex: 1 }}>
-                <div style={statLabel}>TILES</div>
+                <div style={statLabel}>{t('game.tiles')}</div>
                 <div style={{ ...statValue, fontSize: 36, color: tilesRemaining === 0 ? '#2ECC71' : skin.gold }}>{tilesRemaining}</div>
               </div>
               <div style={{ textAlign: 'right', minWidth: 60 }}>
-                <div style={statLabel}>{isCampaign ? 'MOVES' : 'TIME'}</div>
+                <div style={statLabel}>{isCampaign ? t('game.moves') : t('game.time')}</div>
                 <div style={{ ...statValue, fontSize: 22, color: '#FFFFFF' }}>
                   {isCampaign ? moveCount : formatTime(timeElapsed)}
                 </div>
@@ -574,16 +575,16 @@ export function GameScreen() {
             <div style={{ display: 'flex', justifyContent: 'center', gap: 32, alignItems: 'baseline', padding: '4px 0 2px' }}>
               {zenHasTimer && (
                 <div style={{ textAlign: 'center' }}>
-                  <div style={statLabel}>TIMER</div>
+                  <div style={statLabel}>{t('game.timer')}</div>
                   <div style={{ ...statValue, fontSize: 36, color: timerDanger ? DANGER : ZEN_TEAL }}>{formatTime(timeRemaining)}</div>
                 </div>
               )}
               <div style={{ textAlign: 'center' }}>
-                <div style={statLabel}>{zenHasMoves ? 'MOVES LEFT' : 'MOVES'}</div>
+                <div style={statLabel}>{zenHasMoves ? t('game.moves_left') : t('game.moves')}</div>
                 <div style={{ ...statValue, fontSize: 36, color: zenHasMoves && movesDanger ? DANGER : ZEN_TEAL }}>{zenHasMoves ? movesRemaining : moveCount}</div>
               </div>
               <div style={{ textAlign: 'center' }}>
-                <div style={statLabel}>TILES</div>
+                <div style={statLabel}>{t('game.tiles')}</div>
                 <div style={{ ...statValue, fontSize: 36, color: tilesRemaining === 0 ? '#2ECC71' : skin.gold }}>{tilesRemaining}</div>
               </div>
             </div>
@@ -648,8 +649,8 @@ export function GameScreen() {
               disabled={adBusy}
               style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, background: 'rgba(26,188,156,0.08)', border: '1.5px dashed rgba(26,188,156,0.5)', borderRadius: 20, padding: '8px 12px', cursor: adBusy ? 'default' : 'pointer' }}
             >
-              <div style={{ fontSize: 11, fontWeight: 700, color: ZEN_TEAL }}>💡 GET A CLUE</div>
-              <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)' }}>Watch ad · auto-complete 1 path</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: ZEN_TEAL }}>💡 {t('game.get_a_clue')}</div>
+              <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)' }}>{t('game.get_a_clue_desc')}</div>
             </button>
           )}
           {showExtension && isCampaign && (
@@ -658,8 +659,8 @@ export function GameScreen() {
               disabled={adBusy}
               style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, background: 'rgba(230,126,34,0.08)', border: '1.5px dashed rgba(230,126,34,0.55)', borderRadius: 20, padding: '8px 12px', cursor: adBusy ? 'default' : 'pointer' }}
             >
-              <div style={{ fontSize: 11, fontWeight: 700, color: ORANGE }}>⏱ LOW ON TIME</div>
-              <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)' }}>Watch ad — Add +30s</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: ORANGE }}>⏱ {t('game.low_on_time')}</div>
+              <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)' }}>{t('game.time_ext_desc')}</div>
             </button>
           )}
           {showExtension && isClassic && (
@@ -668,8 +669,8 @@ export function GameScreen() {
               disabled={adBusy}
               style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, background: 'rgba(127,119,221,0.08)', border: '1.5px dashed rgba(127,119,221,0.55)', borderRadius: 20, padding: '8px 12px', cursor: adBusy ? 'default' : 'pointer' }}
             >
-              <div style={{ fontSize: 11, fontWeight: 700, color: PURPLE }}>➕ LOW ON MOVES</div>
-              <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)' }}>Watch ad — Add +5 moves</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: PURPLE }}>➕ {t('game.low_on_moves')}</div>
+              <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)' }}>{t('game.move_ext_desc')}</div>
             </button>
           )}
         </div>
@@ -686,14 +687,14 @@ export function GameScreen() {
             {adCardState === 'remove_ads' ? (
               <>
                 <span style={{ fontSize: 20 }}>🚫</span>
-                <span style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.7)', letterSpacing: 0.5 }}>REMOVE ADS</span>
-                <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.35)' }}>Play without interruptions</span>
+                <span style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.7)', letterSpacing: 0.5 }}>{t('game.remove_ads_card')}</span>
+                <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.35)' }}>{t('game.remove_ads_sub')}</span>
               </>
             ) : (
               <>
                 <span style={{ fontSize: 20 }}>💡</span>
-                <span style={{ fontSize: 9, fontWeight: 700, color: skin.gold, letterSpacing: 0.5 }}>BUY HINTS</span>
-                <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.35)' }}>Get 20 hints for $1.99</span>
+                <span style={{ fontSize: 9, fontWeight: 700, color: skin.gold, letterSpacing: 0.5 }}>{t('game.buy_hints_card')}</span>
+                <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.35)' }}>{t('game.buy_hints_sub')}</span>
               </>
             )}
           </div>
@@ -704,8 +705,8 @@ export function GameScreen() {
           style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, background: watchAdAvailable ? 'rgba(52,152,219,0.08)' : 'rgba(255,255,255,0.03)', border: `1px solid ${watchAdAvailable ? 'rgba(52,152,219,0.3)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 12, padding: '10px 6px', opacity: watchAdAvailable ? 1 : 0.4, pointerEvents: watchAdAvailable ? 'auto' : 'none', cursor: watchAdAvailable ? 'pointer' : 'default' }}
         >
           <span style={{ fontSize: 20 }}>📺</span>
-          <span style={{ fontSize: 9, fontWeight: 700, color: watchAdAvailable ? '#3498DB' : 'rgba(255,255,255,0.3)', letterSpacing: 0.5 }}>WATCH AD</span>
-          <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.35)' }}>{watchAdAvailable ? '+3 gems free' : 'Watched'}</span>
+          <span style={{ fontSize: 9, fontWeight: 700, color: watchAdAvailable ? '#3498DB' : 'rgba(255,255,255,0.3)', letterSpacing: 0.5 }}>{t('game.watch_ad')}</span>
+          <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.35)' }}>{watchAdAvailable ? t('game.watch_ad_sub') : t('game.watch_ad_watched')}</span>
         </button>
         <button
           onPointerDown={hintAvailable ? handleHint : undefined}
@@ -713,8 +714,8 @@ export function GameScreen() {
           style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, background: hintAvailable ? 'rgba(255,215,0,0.08)' : 'rgba(255,255,255,0.03)', border: `1px solid ${hintAvailable ? 'rgba(255,215,0,0.3)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 12, padding: '10px 6px', opacity: hintAvailable ? 1 : 0.4, pointerEvents: hintAvailable ? 'auto' : 'none', cursor: hintAvailable ? 'pointer' : 'default' }}
         >
           <span style={{ fontSize: 20 }}>💡</span>
-          <span style={{ fontSize: 9, fontWeight: 700, color: hintAvailable ? skin.gold : 'rgba(255,255,255,0.3)', letterSpacing: 0.5 }}>USE HINT</span>
-          <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.35)' }}>💎 ×{gemBalance} left</span>
+          <span style={{ fontSize: 9, fontWeight: 700, color: hintAvailable ? skin.gold : 'rgba(255,255,255,0.3)', letterSpacing: 0.5 }}>{t('game.use_hint')}</span>
+          <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.35)' }}>{t('game.hint_left', { count: gemBalance })}</span>
         </button>
       </div>
 
@@ -730,7 +731,7 @@ export function GameScreen() {
             </div>
             {/* Row 2: A = YOU label, B = Time/Moves */}
             <div style={{ display: 'flex', alignItems: 'center' }}>
-              <span style={{ flex: 1, fontSize: 8, fontWeight: 700, color: 'rgba(127,119,221,0.7)', letterSpacing: 1.5 }}>YOU</span>
+              <span style={{ flex: 1, fontSize: 8, fontWeight: 700, color: 'rgba(127,119,221,0.7)', letterSpacing: 1.5 }}>{t('game.you')}</span>
               <span style={{ flex: 1, fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>{isCampaign ? 'Time' : 'Moves'} <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>{isCampaign ? formatTime(timeElapsed) : gestureCount}</span></span>
             </div>
           </div>
@@ -741,7 +742,7 @@ export function GameScreen() {
               <span style={{ flex: 1, fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>Score <span style={{ fontSize: 11, fontWeight: 700, color: skin.gold }}>{leaderScore !== null ? leaderScore : '—'}</span></span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center' }}>
-              <span style={{ flex: 1, fontSize: 8, fontWeight: 700, color: 'rgba(255,215,0,0.6)', letterSpacing: 1.5 }}>LEADER</span>
+              <span style={{ flex: 1, fontSize: 8, fontWeight: 700, color: 'rgba(255,215,0,0.6)', letterSpacing: 1.5 }}>{t('game.leader')}</span>
               <span style={{ flex: 1, fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>{isCampaign ? 'Time' : 'Moves'} <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,215,0,0.7)' }}>{isCampaign ? (leaderTime !== null ? formatTime(leaderTime) : '—') : (leaderMoves !== null ? leaderMoves : '—')}</span></span>
             </div>
           </div>
@@ -758,9 +759,9 @@ export function GameScreen() {
         >
           <div style={{ fontSize: 40, animation: 'bounceDown 1s ease-in-out infinite', marginBottom: 12 }}>👇</div>
           <div style={{ background: 'rgba(127,119,221,0.9)', borderRadius: 12, padding: '10px 20px', fontSize: 15, color: 'white', fontFamily: skin.fontBody, textAlign: 'center' }}>
-            Tap a dot and drag to its match
+            {t('game.tutorial_hint')}
           </div>
-          <div style={{ marginTop: 8, fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>Tap anywhere to dismiss</div>
+          <div style={{ marginTop: 8, fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>{t('game.tutorial_dismiss')}</div>
         </div>
       )}
 
@@ -778,20 +779,20 @@ export function GameScreen() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
           <div style={{ background: skin.bgCard, border: '1px solid rgba(127,119,221,0.25)', borderRadius: 16, padding: 24, width: 280, textAlign: 'center', fontFamily: skin.fontBody }}>
             <div style={{ color: skin.white, fontSize: 16, marginBottom: 20, fontFamily: skin.fontDisplay }}>
-              Abandon this level?
+              {t('game.abandon_title')}
             </div>
             <div style={{ display: 'flex', gap: 12 }}>
               <button
                 onClick={() => setShowAbandonDialog(false)}
                 style={{ flex: 1, padding: '10px', background: skin.bgRaised, color: skin.white, border: 'none', borderRadius: 10, fontSize: 13, cursor: 'pointer' }}
               >
-                Keep Playing
+                {t('game.keep_playing')}
               </button>
               <button
                 onClick={confirmAbandon}
                 style={{ flex: 1, padding: '10px', background: skin.danger, color: skin.white, border: 'none', borderRadius: 10, fontSize: 13, cursor: 'pointer' }}
               >
-                Abandon
+                {t('game.abandon')}
               </button>
             </div>
           </div>

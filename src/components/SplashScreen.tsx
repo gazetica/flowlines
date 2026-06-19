@@ -6,11 +6,13 @@
 
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { skin } from '../styles/skin';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
 
 export function SplashScreen() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [barWidth, setBarWidth] = useState(0);
 
   useEffect(() => {
@@ -80,7 +82,7 @@ export function SplashScreen() {
       >
         FLOW LINES
       </div>
-      <div style={{ marginTop: 6, fontSize: 12, color: skin.muted }}>Colour Connection Puzzle</div>
+      <div style={{ marginTop: 6, fontSize: 12, color: skin.muted }}>{t('splash.tagline')}</div>
 
       {/* Loading bar */}
       <div
@@ -103,9 +105,9 @@ export function SplashScreen() {
           }}
         />
       </div>
-      <div style={{ marginTop: 8, fontSize: 11, color: skin.muted }}>Loading puzzles…</div>
+      <div style={{ marginTop: 8, fontSize: 11, color: skin.muted }}>{t('splash.loading')}</div>
 
-      <div style={{ position: 'absolute', bottom: 24, fontSize: 10, color: skin.muted }}>by Gazetica</div>
+      <div style={{ position: 'absolute', bottom: 24, fontSize: 10, color: skin.muted }}>{t('splash.by')}</div>
     </div>
   );
 }
