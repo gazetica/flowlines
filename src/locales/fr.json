@@ -201,7 +201,8 @@
     "time_ran_out": "Temps écoulé",
     "no_moves_remaining": "Plus de coups",
     "also_by_gazetica": "Aussi par Gazetica",
-    "try_free": "▶ ESSAI GRATUIT"
+    "try_free": "▶ ESSAI GRATUIT",
+    "rescue_penalty": "Pénalité de secours"
   },
   "leader": {
     "you": "VOUS",

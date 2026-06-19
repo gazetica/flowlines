@@ -190,3 +190,14 @@ export async function onLevelComplete(
   levelCompletionCount = 0;
   lastInterstitialTime = now;
 }
+
+/**
+ * FL-UX-D-019: reset the FL interstitial gate after a rewarded ad is watched —
+ * completion count → 0 and the 3-minute clock → now. Mirrors the reset a confirmed
+ * interstitial show performs, so watching a rewarded ad buys the player a fresh
+ * window and avoids back-to-back rewarded → interstitial exposure on the next result.
+ */
+export function resetInterstitialGate(): void {
+  levelCompletionCount = 0;
+  lastInterstitialTime = Date.now();
+}

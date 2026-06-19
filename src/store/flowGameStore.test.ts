@@ -107,3 +107,40 @@ describe('flowGameStore mode layer (FL-UX-D-004)', () => {
     expect(game().retryCount).toBe(2);
   });
 });
+
+// FL-UX-D-019: each rescue bumps its own counter + the rescuesUsed total.
+describe('flowGameStore rescue counters (FL-UX-D-019)', () => {
+  it('markClueUsed increments cluesUsed and rescuesUsed', () => {
+    game().initLevel({ levelId: 'p1_001', mode: 'campaign', timeLimit: 90, classicMoveLimit: 0 });
+    game().markClueUsed();
+    expect(game().cluesUsed).toBe(1);
+    expect(game().rescuesUsed).toBe(1);
+    expect(game().clueUsed).toBe(true);
+  });
+
+  it('applyTimeExtension increments timeExtsUsed and rescuesUsed', () => {
+    game().initLevel({ levelId: 'p1_001', mode: 'campaign', timeLimit: 90, classicMoveLimit: 0 });
+    game().applyTimeExtension();
+    expect(game().timeExtsUsed).toBe(1);
+    expect(game().rescuesUsed).toBe(1);
+  });
+
+  it('applyMoveExtension increments moveExtsUsed and rescuesUsed (and +5 budget)', () => {
+    game().initLevel({ levelId: 'p1_001', mode: 'classic', timeLimit: 0, classicMoveLimit: 10 });
+    game().applyMoveExtension();
+    expect(game().moveExtsUsed).toBe(1);
+    expect(game().rescuesUsed).toBe(1);
+    expect(game().movesRemaining).toBe(15);
+  });
+
+  it('initLevel resets all rescue counters to 0', () => {
+    useFlowGameStore.setState({ cluesUsed: 3, timeExtsUsed: 2, moveExtsUsed: 1, rescuesUsed: 6, hintsUsed: 4 });
+    game().initLevel({ levelId: 'p1_002', mode: 'campaign', timeLimit: 90, classicMoveLimit: 0 });
+    const s = game();
+    expect(s.cluesUsed).toBe(0);
+    expect(s.timeExtsUsed).toBe(0);
+    expect(s.moveExtsUsed).toBe(0);
+    expect(s.rescuesUsed).toBe(0);
+    expect(s.hintsUsed).toBe(0);
+  });
+});

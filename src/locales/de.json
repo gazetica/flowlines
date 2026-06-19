@@ -201,7 +201,8 @@
     "time_ran_out": "Zeit abgelaufen",
     "no_moves_remaining": "Keine Züge übrig",
     "also_by_gazetica": "Auch von Gazetica",
-    "try_free": "▶ KOSTENLOS TESTEN"
+    "try_free": "▶ KOSTENLOS TESTEN",
+    "rescue_penalty": "Rettungsstrafe"
   },
   "leader": {
     "you": "DU",

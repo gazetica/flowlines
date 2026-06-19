@@ -31,8 +31,12 @@ export interface ScoreBreakdown {
 
 const PERFECT_CLEAR_BONUS = 200;
 const MOVE_POINTS = 5;        // per move under/over optimal
-const HINT_PENALTY = 30;      // per hint used
+const HINT_PENALTY = 30;      // per hint used (LEGACY getScoreBreakdown only)
 const TIME_BONUS_PER_SEC = 15;
+
+// FL-UX-D-019: per-mode ScoreEngine.calc() deducts a flat −100 for EVERY rescue
+// used (hint gem, GET A CLUE, TIME EXT, MOVE EXT), cumulative.
+const RESCUE_PENALTY = 100;
 
 /**
  * Final score for a completed level. Components are summed then floored at 0
@@ -92,10 +96,11 @@ export interface ScoreInput {
   // Shared efficiency
   optimalMoves: number;   // path-cell count from level JSON
   cellMoveCount: number;  // total cells traversed (gameStore.moveCount)
-  hintsUsed: number;
+  hintsUsed: number;      // hint gems spent (kept for analytics; folded into rescuesUsed)
   difficulty: Difficulty;
-  clueUsed?: boolean;     // FL-UX-D-008L: GET A CLUE auto-complete used → −100
+  clueUsed?: boolean;     // FL-UX-D-008L: GET A CLUE auto-complete used (folded into rescuesUsed)
   colourCount: number;    // FL-UX-D-009b: dot-pair count = minimum possible gestures
+  rescuesUsed?: number;   // FL-UX-D-019: total rescues used (hint+clue+time ext+move ext) → −100 each
 }
 
 export interface ScoreResult {
@@ -105,7 +110,7 @@ export interface ScoreResult {
     coverageScore: number;   // max 250
     efficiencyScore: number; // max 300
     bonusScore: number;      // max 200
-    hintPenalty: number;     // negative
+    rescuePenalty: number;   // negative — −100 per rescue (FL-UX-D-019; was hintPenalty)
   };
   stars: 0 | 1 | 2 | 3;
   passed: boolean;
@@ -133,7 +138,7 @@ function starsFor(result: ScoreResult, input: ScoreInput): 0 | 1 | 2 | 3 {
     input.dotsConnected &&
     input.coveragePct === 100 &&
     result.breakdown.efficiencyScore >= 240 && // 80% of 300
-    input.hintsUsed === 0
+    (input.rescuesUsed ?? 0) === 0             // FL-UX-D-019: any rescue forfeits 3★
   ) return 3;
   if (result.breakdown.efficiencyScore >= 150) return 2; // 50% of 300
   return 1;
@@ -145,8 +150,9 @@ function calc(input: ScoreInput): ScoreResult {
 
   const dotsScore = input.dotsConnected ? 250 : 0;
   const coverageScore = Math.round((input.coveragePct / 100) * 250);
-  const hintPenalty = input.hintsUsed > 0 ? input.hintsUsed * -40 : 0; // avoid -0
-  const cluePenalty = input.clueUsed ? -100 : 0; // FL-UX-D-008L
+  // FL-UX-D-019: flat −100 per rescue (hint + clue + time ext + move ext), cumulative.
+  const rescues = input.rescuesUsed ?? 0;
+  const rescuePenalty = rescues > 0 ? rescues * -RESCUE_PENALTY : 0; // avoid -0
 
   let efficiencyScore = 0;
   let bonusScore = 0;
@@ -177,8 +183,8 @@ function calc(input: ScoreInput): ScoreResult {
     maxTotal = 1000;
   }
 
-  const breakdown = { dotsScore, coverageScore, efficiencyScore, bonusScore, hintPenalty };
-  const total = clamp(Math.round(dotsScore + coverageScore + efficiencyScore + bonusScore + hintPenalty + cluePenalty), 0, maxTotal);
+  const breakdown = { dotsScore, coverageScore, efficiencyScore, bonusScore, rescuePenalty };
+  const total = clamp(Math.round(dotsScore + coverageScore + efficiencyScore + bonusScore + rescuePenalty), 0, maxTotal);
 
   const result: ScoreResult = { total, breakdown, stars: 0, passed };
   result.stars = starsFor(result, input);

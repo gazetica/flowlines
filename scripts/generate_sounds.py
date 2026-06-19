@@ -135,6 +135,26 @@ def gen_hint(rate=44100):
     return write_wav("hint.wav", out, rate)
 
 
+# ── fail: descending two-tone 440→220, short + definitive (~0.6s) ────────────
+# FL-UX-D-019: plays on Campaign timeout / Classic out-of-moves. Continuous phase
+# across the tone switch (no click); exponential decay for a falling, final feel.
+def gen_fail(rate=44100):
+    dur = 0.6
+    n = int(rate * dur)
+    mid = int(n * 0.4)
+    out = []
+    phase = 0.0
+    for i in range(n):
+        t = i / rate
+        f = 440.0 if i < mid else 220.0
+        phase += 2 * math.pi * f / rate
+        env = math.exp(-3.0 * t / dur)
+        atk = 1.0 if t > 0.004 else t / 0.004  # soft attack (anti-click)
+        out.append(math.sin(phase) * 0.5 * env * atk)
+    edge_fade(out, rate, 5)
+    return write_wav("fail.wav", out, rate)
+
+
 # ── ambient-drops: water-drop soundscape over a soft flow (30s, seamless) ────
 def gen_ambient_drops(duration=30, sr=22050):
     """Gentle water drops over a low filtered-noise flow. Drops are scheduled
@@ -186,5 +206,6 @@ gen_lock_in()
 gen_undo()
 gen_win()
 gen_hint()
+gen_fail()
 gen_ambient_drops()
 print("Done.")

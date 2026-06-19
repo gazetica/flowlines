@@ -144,10 +144,10 @@ describe('ScoreEngine.calc — Campaign', () => {
     expect(r.stars).toBe(0);
     expect(r.breakdown.efficiencyScore).toBe(0);
   });
-  it('solved with 2 hints → hintPenalty -80, total 920', () => {
-    const r = ScoreEngine.calc(sin({ hintsUsed: 2 }));
-    expect(r.breakdown.hintPenalty).toBe(-80);
-    expect(r.total).toBe(920);
+  it('solved with 2 rescues → rescuePenalty -200, total 800 (FL-UX-D-019)', () => {
+    const r = ScoreEngine.calc(sin({ rescuesUsed: 2 }));
+    expect(r.breakdown.rescuePenalty).toBe(-200);
+    expect(r.total).toBe(800);
   });
   it('50% coverage → coverageScore 125', () => {
     expect(ScoreEngine.calc(sin({ coveragePct: 50 })).breakdown.coverageScore).toBe(125);
@@ -191,8 +191,8 @@ describe('ScoreEngine.calc — Classic', () => {
     expect(r.breakdown.efficiencyScore).toBe(0);
     expect(r.passed).toBe(true);
   });
-  it('3 hints → hintPenalty -120', () => {
-    expect(ScoreEngine.calc(cls({ hintsUsed: 3 })).breakdown.hintPenalty).toBe(-120);
+  it('3 rescues → rescuePenalty -300 (FL-UX-D-019)', () => {
+    expect(ScoreEngine.calc(cls({ rescuesUsed: 3 })).breakdown.rescuePenalty).toBe(-300);
   });
   it('total never exceeds 1100 (clamp)', () => {
     expect(ScoreEngine.calc(cls()).total).toBeLessThanOrEqual(1100);
@@ -249,7 +249,26 @@ describe('ScoreEngine.calc — Daily + edge cases', () => {
   it('coveragePct 0 → coverageScore 0', () => {
     expect(ScoreEngine.calc(sin({ coveragePct: 0 })).breakdown.coverageScore).toBe(0);
   });
-  it('hintsUsed 0 → hintPenalty 0', () => {
-    expect(ScoreEngine.calc(sin()).breakdown.hintPenalty).toBe(0);
+  it('rescuesUsed 0 → rescuePenalty 0', () => {
+    expect(ScoreEngine.calc(sin()).breakdown.rescuePenalty).toBe(0);
+  });
+});
+
+// FL-UX-D-019: flat −100 per rescue (hint + clue + time ext + move ext), cumulative.
+describe('ScoreEngine.calc — rescue penalty (FL-UX-D-019)', () => {
+  it('0 rescues: no penalty (perfect campaign → 1000)', () => {
+    expect(ScoreEngine.calc(sin({ rescuesUsed: 0 })).total).toBe(1000);
+  });
+  it('1 rescue: −100 → 900', () => {
+    expect(ScoreEngine.calc(sin({ rescuesUsed: 1 })).total).toBe(900);
+  });
+  it('3 rescues: −300 → 700', () => {
+    expect(ScoreEngine.calc(sin({ rescuesUsed: 3 })).total).toBe(700);
+  });
+  it('score never goes below 0 (20 rescues)', () => {
+    expect(ScoreEngine.calc(sin({ rescuesUsed: 20 })).total).toBeGreaterThanOrEqual(0);
+  });
+  it('any rescue forfeits 3★ (1 rescue on an otherwise-perfect solve)', () => {
+    expect(ScoreEngine.calc(sin({ rescuesUsed: 1 })).stars).toBeLessThan(3);
   });
 });

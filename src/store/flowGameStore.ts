@@ -49,7 +49,14 @@ export interface FlowGameState {
   // FL-UX-D-008L per-level assist flags (reset in initLevel)
   clueUsed: boolean;             // GET A CLUE used this level
   extensionUsed: boolean;        // TIME/MOVE extension used this level
-  watchAdUsed: boolean;          // WATCH AD (+3 gems) used this level
+  watchAdUsed: boolean;          // WATCH AD (+1 gem) used this level
+
+  // FL-UX-D-019 per-level rescue counters (reset in initLevel). `rescuesUsed` is
+  // the total across all four rescue types → ScoreEngine deducts −100 each.
+  cluesUsed: number;             // GET A CLUE
+  timeExtsUsed: number;          // TIME EXT +30s
+  moveExtsUsed: number;          // MOVE EXT +5
+  rescuesUsed: number;           // hintsUsed + cluesUsed + timeExtsUsed + moveExtsUsed
 
   // Status / result
   status: GameStatus;
@@ -111,6 +118,10 @@ export const useFlowGameStore = create<FlowGameState>((set, get) => ({
   clueUsed: false,
   extensionUsed: false,
   watchAdUsed: false,
+  cluesUsed: 0,
+  timeExtsUsed: 0,
+  moveExtsUsed: 0,
+  rescuesUsed: 0,
   status: 'idle',
   score: 0,
   stars: 0,
@@ -132,7 +143,7 @@ export const useFlowGameStore = create<FlowGameState>((set, get) => ({
       delete paths[colour];
       return { paths };
     }),
-  useHint: () => set((state) => ({ hintsUsed: Math.min(3, state.hintsUsed + 1) })),
+  useHint: () => set((state) => ({ hintsUsed: state.hintsUsed + 1, rescuesUsed: state.rescuesUsed + 1 })),
 
   // Win: set status complete and compute score/stars/breakdown via ScoreEngine.
   // (ScoreEngine takes a ScoreParams object — Flow Lines is not Timed Mode here.)
@@ -172,6 +183,10 @@ export const useFlowGameStore = create<FlowGameState>((set, get) => ({
       score: 0,
       stars: 0,
       scoreBreakdown: null,
+      cluesUsed: 0,
+      timeExtsUsed: 0,
+      moveExtsUsed: 0,
+      rescuesUsed: 0,
       isPaused: false,
     }),
 
@@ -204,6 +219,10 @@ export const useFlowGameStore = create<FlowGameState>((set, get) => ({
       clueUsed: false,
       extensionUsed: false,
       watchAdUsed: false,
+      cluesUsed: 0,
+      timeExtsUsed: 0,
+      moveExtsUsed: 0,
+      rescuesUsed: 0,
       isPaused: false,
     }),
 
@@ -226,12 +245,19 @@ export const useFlowGameStore = create<FlowGameState>((set, get) => ({
   resetRetry: () => set({ retryCount: 0 }),
 
   // ─── FL-UX-D-008L assist actions ───────────────────────────────────────────
-  markClueUsed: () => set({ clueUsed: true }),
+  // FL-UX-D-019: each rescue also bumps its own counter + the rescuesUsed total
+  // (ScoreEngine deducts −100 per rescue).
+  markClueUsed: () => set((state) => ({ clueUsed: true, cluesUsed: state.cluesUsed + 1, rescuesUsed: state.rescuesUsed + 1 })),
   markWatchAdUsed: () => set({ watchAdUsed: true }),
 
   // Time extension — subtract 30s from elapsed (adds 30s to the countdown).
   applyTimeExtension: () =>
-    set((state) => ({ timeElapsed: Math.max(0, state.timeElapsed - 30), extensionUsed: true })),
+    set((state) => ({
+      timeElapsed: Math.max(0, state.timeElapsed - 30),
+      extensionUsed: true,
+      timeExtsUsed: state.timeExtsUsed + 1,
+      rescuesUsed: state.rescuesUsed + 1,
+    })),
 
   // Move extension — +5 to the Classic budget and remaining.
   applyMoveExtension: () =>
@@ -239,5 +265,7 @@ export const useFlowGameStore = create<FlowGameState>((set, get) => ({
       classicMoveLimitTotal: state.classicMoveLimitTotal + 5,
       movesRemaining: state.movesRemaining + 5,
       extensionUsed: true,
+      moveExtsUsed: state.moveExtsUsed + 1,
+      rescuesUsed: state.rescuesUsed + 1,
     })),
 }));

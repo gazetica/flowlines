@@ -55,6 +55,7 @@ export function ResultScreen() {
 
   const hintsUsed = useFlowGameStore((s) => s.hintsUsed);
   const clueUsed = useFlowGameStore((s) => s.clueUsed);
+  const rescuesUsed = useFlowGameStore((s) => s.rescuesUsed); // FL-UX-D-019
   const timeElapsed = useFlowGameStore((s) => s.timeElapsed);
   const timeLimitSeconds = useFlowGameStore((s) => s.timeLimitSeconds);
   const gestureCount = useFlowGameStore((s) => s.gestureCount);
@@ -101,12 +102,13 @@ export function ResultScreen() {
       clueUsed,
       difficulty,
       colourCount: levelData?.colours ?? 5,
+      rescuesUsed, // FL-UX-D-019: −100 per rescue (hint + clue + time ext + move ext)
     };
     return ScoreEngine.calc(input);
-  }, [mode, isFail, coverage, timeElapsed, timeLimitSeconds, gestureCount, classicMoveLimitTotal, levelData, moveCount, hintsUsed, clueUsed, difficulty]);
+  }, [mode, isFail, coverage, timeElapsed, timeLimitSeconds, gestureCount, classicMoveLimitTotal, levelData, moveCount, hintsUsed, clueUsed, rescuesUsed, difficulty]);
 
   const stars = result.stars;
-  const perfectClear = stars >= 3 && hintsUsed === 0 && !clueUsed;
+  const perfectClear = stars >= 3 && rescuesUsed === 0; // FL-UX-D-019: any rescue forfeits a perfect clear
 
   const modeProgress = isClassic ? classicProgress : campaignProgress;
   const packProg = modeProgress[packId];
@@ -234,7 +236,6 @@ export function ResultScreen() {
 
   // ─── PASS STATE ───────────────────────────────────────────────────────────
   const b = result.breakdown;
-  const cluePenalty = clueUsed ? -100 : 0;
   const nextLevelIdx = levelIdx + 1;
   const hasNextLevel = nextLevelIdx <= 50;
 
@@ -266,8 +267,8 @@ export function ResultScreen() {
         <Row label={t('result.board_filled')} value={`${b.coverageScore}`} />
         <Row label={isClassic ? t('result.move_efficiency') : t('result.time_efficiency')} value={`${b.efficiencyScore}`} />
         <Row label={t('result.gesture_bonus')} value={`${b.bonusScore}`} />
-        {hintsUsed > 0 && <Row label={t('result.hints_used', { count: hintsUsed })} value={`${b.hintPenalty}`} />}
-        {clueUsed && <Row label={t('result.auto_complete_used')} value={`${cluePenalty}`} />}
+        {/* FL-UX-D-019: single rescue-penalty row (−100 per hint/clue/time ext/move ext). */}
+        {rescuesUsed > 0 && <Row label={t('result.rescue_penalty')} value={`${b.rescuePenalty}`} valueColor="#ff6b6b" />}
         <div style={{ borderTop: '1px solid rgba(127,119,221,0.2)', margin: '6px 0' }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
           <span style={{ fontSize: 15, fontWeight: 700, color: '#FFFFFF' }}>{t('result.total')}</span>
@@ -347,11 +348,11 @@ function Frame({ children }: { children: ReactNode }) {
   );
 }
 
-function Row({ label, value, last }: { label: string; value: string; last?: boolean }) {
+function Row({ label, value, last, valueColor }: { label: string; value: string; last?: boolean; valueColor?: string }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', fontSize: 13, borderBottom: last ? 'none' : '1px solid rgba(127,119,221,0.08)' }}>
       <span style={{ color: 'rgba(255,255,255,0.55)' }}>{label}</span>
-      <span style={{ color: '#FFFFFF', fontWeight: 600 }}>{value}</span>
+      <span style={{ color: valueColor ?? '#FFFFFF', fontWeight: 600 }}>{value}</span>
     </div>
   );
 }

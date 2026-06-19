@@ -27,9 +27,10 @@ import { useFlowGameStore } from '../store/flowGameStore';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
 import { flagOf } from '../data/countries';
 import { showHintAd, loadHintAd } from '../services/rewardedAdService';
+import { resetInterstitialGate } from '../services/interstitialAdService';
 import { trackLevelStart, trackLevelAbandon, trackAdImpression } from '../services/analytics';
 import {
-  playPathDraw, stopPathDraw, playLockIn, playUndo, playWinFl, playHint,
+  playPathDraw, stopPathDraw, playLockIn, playUndo, playWinFl, playHint, playFailFl,
 } from '../services/soundService';
 import { hapticLockIn, hapticWin, hapticUndo } from '../services/hapticService';
 
@@ -383,8 +384,10 @@ export function GameScreen() {
   }, [timeRemaining, status, isCampaign, timeLimitSeconds]);
 
   // FL-UX-D-009: on fail (timeout / out of moves), go to the ResultScreen fail state.
+  // FL-UX-D-019: play the failure sound (Sound-toggle gated inside playFailFl).
   useEffect(() => {
     if (status === 'failed') {
+      playFailFl();
       const retryQ = retryParam ? '&retry=true' : '';
       navigate(`/result?pack=${packId}&level=${levelIndex}&mode=${rawMode}&fail=true${retryQ}`);
     }
@@ -465,6 +468,7 @@ export function GameScreen() {
     if (await watchRewarded()) {
       void addGems(1);
       markWatchAdUsed();
+      resetInterstitialGate(); // FL-UX-D-019: avoid rewarded→interstitial back-to-back
       pauseGame();
       setShowResumeOverlay(true);
     }
@@ -495,7 +499,8 @@ export function GameScreen() {
     void addGems(-1);
     playHint();
     window.dispatchEvent(new CustomEvent('fl:showHintGhost'));
-    useFlowGameStore.setState((s) => ({ hintsUsed: s.hintsUsed + 1 }));
+    // FL-UX-D-019: hint counts as a rescue (−100 to final score).
+    useFlowGameStore.setState((s) => ({ hintsUsed: s.hintsUsed + 1, rescuesUsed: s.rescuesUsed + 1 }));
   };
 
   // ─── Visibility (FL-UX-D-008L) — clue at 1/3 resource used, extension at 2/3 ──

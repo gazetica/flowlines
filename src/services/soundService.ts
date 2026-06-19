@@ -110,6 +110,7 @@ const FL_SFX: Record<string, Sfx> = {
   undo:     { src: '/sounds/undo.wav',      volume: 0.7, howl: null },
   win:      { src: '/sounds/win.wav',       volume: 0.7, howl: null },
   hint:     { src: '/sounds/hint.wav',      volume: 0.7, howl: null },
+  fail:     { src: '/sounds/fail.wav',      volume: 0.7, howl: null }, // FL-UX-D-019
 };
 
 /** FL Sound toggle gate (read live from flowSettingsStore). */
@@ -161,6 +162,13 @@ export function playWinFl(): void {
 export function playHint(): void {
   if (!flCanPlay()) return;
   flHowl('hint').play();
+}
+
+/** Descending two-tone — level failed (Campaign timeout / Classic out of moves).
+ *  FL-UX-D-019. Respects the FL Sound toggle (flCanPlay). */
+export function playFailFl(): void {
+  if (!flCanPlay()) return;
+  flHowl('fail').play();
 }
 
 /** Free FL buffers (call on GameScreen unmount). */

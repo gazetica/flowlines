@@ -201,7 +201,8 @@
     "time_ran_out": "시간 초과",
     "no_moves_remaining": "이동 없음",
     "also_by_gazetica": "Gazetica의 다른 게임",
-    "try_free": "▶ 무료 체험"
+    "try_free": "▶ 무료 체험",
+    "rescue_penalty": "구조 페널티"
   },
   "leader": {
     "you": "나",

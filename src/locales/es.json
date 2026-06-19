@@ -201,7 +201,8 @@
     "time_ran_out": "Se acabó el tiempo",
     "no_moves_remaining": "Sin movimientos",
     "also_by_gazetica": "También de Gazetica",
-    "try_free": "▶ PRUEBA GRATIS"
+    "try_free": "▶ PRUEBA GRATIS",
+    "rescue_penalty": "Penalización de rescate"
   },
   "leader": {
     "you": "TÚ",
