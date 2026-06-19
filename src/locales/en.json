@@ -198,13 +198,16 @@
     "moves_used": "Moves used",
     "how_far": "HOW FAR YOU GOT",
     "time_ran_out": "Time ran out",
-    "no_moves_remaining": "No moves remaining"
+    "no_moves_remaining": "No moves remaining",
+    "also_by_gazetica": "Also by Gazetica",
+    "try_free": "▶ TRY FREE"
   },
   "leader": {
     "you": "YOU",
     "leader": "LEADER",
     "score": "Score",
-    "time": "Time"
+    "time": "Time",
+    "moves": "Moves"
   },
   "leaderboard": {
     "title": "LEADERBOARD",
@@ -394,7 +397,8 @@
     "failed": "✕ FAILED",
     "pending": "PENDING",
     "claimed": "✓ CLAIMED",
-    "version": "Version {{version}} · Gazetica Studio"
+    "version": "Version {{version}} · Gazetica Studio",
+    "player_fallback": "Player"
   },
   "modes": {
     "campaign": "Campaign",

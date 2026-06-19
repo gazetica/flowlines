@@ -61,6 +61,14 @@ describe('i18n setup (FL-5A-027)', () => {
     expect(i18n.t('common.next')).toBe('NEXT');
   });
 
+  it('howtoplay.page2_rule1 is actually translated in Korean (FL-5A-027b)', async () => {
+    await i18n.changeLanguage('ko');
+    const ko = i18n.t('howtoplay.page2_rule1');
+    expect(ko).toContain('위'); // Korean for "up"
+    expect(ko).not.toBe(i18n.getResourceBundle('en', 'translation').howtoplay.page2_rule1);
+    await i18n.changeLanguage('en');
+  });
+
   it('product name "Flow Lines" is never translated (home.title)', () => {
     LANGS.forEach((lng) => {
       const bundle = i18n.getResourceBundle(lng, 'translation');

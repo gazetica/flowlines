@@ -11,12 +11,14 @@
 
 import type { CSSProperties } from 'react';
 import { Browser } from '@capacitor/browser';
+import { useTranslation } from 'react-i18next';
 import { skin } from '../styles/skin';
 
 const GOLD = '#FFD700';
 const NUMTAP_URL = 'https://play.google.com/store/apps/details?id=com.gazetica.numtap';
 
 export function GazeticaPromoCard() {
+  const { t } = useTranslation();
   const openListing = () => {
     void Browser.open({ url: NUMTAP_URL });
   };
@@ -33,7 +35,7 @@ export function GazeticaPromoCard() {
   return (
     <div style={glass}>
       <div style={{ fontSize: 11, color: skin.muted, letterSpacing: 1, marginBottom: 10 }}>
-        🎮 Also by Gazetica
+        🎮 {t('result.also_by_gazetica')}
       </div>
 
       <div
@@ -89,7 +91,7 @@ export function GazeticaPromoCard() {
             cursor: 'pointer',
           }}
         >
-          ▶ TRY FREE
+          {t('result.try_free')}
         </button>
       </div>
     </div>

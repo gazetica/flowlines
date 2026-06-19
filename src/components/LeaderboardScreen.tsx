@@ -175,7 +175,7 @@ export default function LeaderboardScreen() {
       <div style={{ flexShrink: 0, padding: '6px 16px 8px', position: 'relative', zIndex: 1 }}>
         <LeaderRow
           rank={playerRank}
-          row={{ player_uid: playerUid || 'NT------', alias: alias || 'Player', country: country || 'IN', value: playerValue }}
+          row={{ player_uid: playerUid || 'NT------', alias: alias || t('common.player_fallback'), country: country || 'IN', value: playerValue }}
           isPlayer
           pinned
         />
@@ -189,10 +189,11 @@ export default function LeaderboardScreen() {
 function LeaderRow({ rank, row, isPlayer, pinned }: {
   rank: number; row: Row; isPlayer?: boolean; pinned?: boolean;
 }) {
+  const { t } = useTranslation();
   const topThree = rank >= 1 && rank <= 3;
   const rankColour = topThree ? GOLD : 'rgba(255,255,255,0.5)';
   const rankLabel = rank < 0 ? '#--' : `#${rank}`;
-  const aliasText = (row.alias || 'Player').slice(0, 12);
+  const aliasText = (row.alias || t('common.player_fallback')).slice(0, 12);
 
   const wrap: CSSProperties = {
     display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px',

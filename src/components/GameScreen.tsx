@@ -184,7 +184,7 @@ export function GameScreen() {
   const leaderScore = modeProg?.bestScores?.[levelData.id] ?? null;
   const leaderTime = modeProg?.bestTimes?.[levelData.id] ?? null;
   const leaderMoves = modeProg?.bestMoves?.[levelData.id] ?? null;
-  const leaderAlias = alias || 'Player';
+  const leaderAlias = alias || t('common.player_fallback');
   const leaderFlag = flagOf(country || 'IN');
 
   // ─── Phaser mount (UNCHANGED from prior implementation) ──────────────────────
@@ -726,24 +726,24 @@ export function GameScreen() {
           <div style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(127,119,221,0.2)', borderRadius: 10, padding: '8px 10px' }}>
             {/* Row 1: A = flag+name, B = Score */}
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 6 }}>
-              <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.85)' }}>{leaderFlag} {alias || 'Player'}</span>
-              <span style={{ flex: 1, fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>Score <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>—</span></span>
+              <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.85)' }}>{leaderFlag} {alias || t('common.player_fallback')}</span>
+              <span style={{ flex: 1, fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>{t('leader.score')} <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>—</span></span>
             </div>
             {/* Row 2: A = YOU label, B = Time/Moves */}
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <span style={{ flex: 1, fontSize: 8, fontWeight: 700, color: 'rgba(127,119,221,0.7)', letterSpacing: 1.5 }}>{t('game.you')}</span>
-              <span style={{ flex: 1, fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>{isCampaign ? 'Time' : 'Moves'} <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>{isCampaign ? formatTime(timeElapsed) : gestureCount}</span></span>
+              <span style={{ flex: 1, fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>{isCampaign ? t('leader.time') : t('leader.moves')} <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>{isCampaign ? formatTime(timeElapsed) : gestureCount}</span></span>
             </div>
           </div>
           {/* LEADER card */}
           <div style={{ flex: 1, background: 'rgba(255,215,0,0.03)', border: '1px solid rgba(255,215,0,0.18)', borderRadius: 10, padding: '8px 10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 6 }}>
               <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: skin.gold }}>{leaderFlag} {leaderAlias}</span>
-              <span style={{ flex: 1, fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>Score <span style={{ fontSize: 11, fontWeight: 700, color: skin.gold }}>{leaderScore !== null ? leaderScore : '—'}</span></span>
+              <span style={{ flex: 1, fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>{t('leader.score')} <span style={{ fontSize: 11, fontWeight: 700, color: skin.gold }}>{leaderScore !== null ? leaderScore : '—'}</span></span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <span style={{ flex: 1, fontSize: 8, fontWeight: 700, color: 'rgba(255,215,0,0.6)', letterSpacing: 1.5 }}>{t('game.leader')}</span>
-              <span style={{ flex: 1, fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>{isCampaign ? 'Time' : 'Moves'} <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,215,0,0.7)' }}>{isCampaign ? (leaderTime !== null ? formatTime(leaderTime) : '—') : (leaderMoves !== null ? leaderMoves : '—')}</span></span>
+              <span style={{ flex: 1, fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>{isCampaign ? t('leader.time') : t('leader.moves')} <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,215,0,0.7)' }}>{isCampaign ? (leaderTime !== null ? formatTime(leaderTime) : '—') : (leaderMoves !== null ? leaderMoves : '—')}</span></span>
             </div>
           </div>
         </div>

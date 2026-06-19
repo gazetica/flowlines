@@ -8,6 +8,7 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { skin } from '../styles/skin';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
 import { COUNTRIES, flagOf, filterCountries, type Country } from '../data/countries';
@@ -19,6 +20,7 @@ const GOLD = '#FFD700';
 
 export default function CountrySelector() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const country = useFlowSettingsStore((s) => s.country);
   const setCountry = useFlowSettingsStore((s) => s.setCountry);
   const [query, setQuery] = useState('');
@@ -34,14 +36,14 @@ export default function CountrySelector() {
     <div style={{ width: '100%', height: '100vh', background: skin.bgDeep, display: 'flex', flexDirection: 'column', fontFamily: skin.fontBody }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px' }}>
         <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', color: skin.white, fontSize: 18, cursor: 'pointer' }}>‹</button>
-        <span style={{ fontFamily: skin.fontDisplay, fontSize: 16, color: GOLD, letterSpacing: 2 }}>SELECT COUNTRY</span>
+        <span style={{ fontFamily: skin.fontDisplay, fontSize: 16, color: GOLD, letterSpacing: 2 }}>{t('language.select_country')}</span>
       </div>
 
       <div style={{ padding: '0 16px 8px' }}>
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search…"
+          placeholder={t('language.search_countries')}
           style={{
             width: '100%',
             background: 'rgba(255,255,255,0.05)',
