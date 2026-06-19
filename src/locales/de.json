@@ -100,7 +100,7 @@
     "remove_ads": "WERBUNG ENTFERNEN",
     "remove_ads_sub": "Ohne Unterbrechungen spielen",
     "watch_ad": "WERBUNG ANSEHEN",
-    "watch_ad_sub": "+3 Edelsteine gratis",
+    "watch_ad_sub": "+1 Edelstein gratis",
     "use_hint": "TIPP NUTZEN",
     "hints_left": "×{{count}} übrig",
     "get_more_hints": "MEHR TIPPS HOLEN",
@@ -139,7 +139,8 @@
     "breadcrumb_daily_campaign": "Tägliche Herausforderung · Kampagne",
     "breadcrumb_daily_classic": "Tägliche Herausforderung · Klassisch",
     "ad_unavailable": "Werbung nicht verfügbar — erneut versuchen",
-    "breadcrumb_pack": "Paket {{pack}} · Level {{level}} · {{difficulty}}"
+    "breadcrumb_pack": "Paket {{pack}} · Level {{level}} · {{difficulty}}",
+    "tap_to_resume": "ZUM FORTSETZEN TIPPEN"
   },
   "result": {
     "difficulty": "Schwierigkeit",

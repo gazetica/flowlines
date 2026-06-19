@@ -100,7 +100,7 @@
     "remove_ads": "SUPPRIMER LES PUBS",
     "remove_ads_sub": "Jouer sans interruption",
     "watch_ad": "VOIR UNE PUB",
-    "watch_ad_sub": "+3 gemmes gratuites",
+    "watch_ad_sub": "+1 gemme gratuite",
     "use_hint": "UTILISER INDICE",
     "hints_left": "×{{count}} restants",
     "get_more_hints": "PLUS D'INDICES",
@@ -139,7 +139,8 @@
     "breadcrumb_daily_campaign": "Défi quotidien · Campagne",
     "breadcrumb_daily_classic": "Défi quotidien · Classique",
     "ad_unavailable": "Pub indisponible — réessayez",
-    "breadcrumb_pack": "Pack {{pack}} · Niveau {{level}} · {{difficulty}}"
+    "breadcrumb_pack": "Pack {{pack}} · Niveau {{level}} · {{difficulty}}",
+    "tap_to_resume": "TOUCHEZ POUR REPRENDRE"
   },
   "result": {
     "difficulty": "Difficulté",

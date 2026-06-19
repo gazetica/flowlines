@@ -57,12 +57,19 @@ export interface FlowGameState {
   stars: 0 | 1 | 2 | 3;
   scoreBreakdown: ScoreBreakdown | null;
 
+  // FL-UX-D-018: hard pause (timer frozen, board non-interactive) used by the
+  // WATCH AD rewarded flow — game stays paused after the ad until the player taps
+  // TAP TO RESUME. Distinct from the transient during-ad freeze (adInFlightRef).
+  isPaused: boolean;
+
   // Actions
   setLevelId: (id: string) => void;
   setCoverage: (pct: number) => void;
   setMoveCount: (n: number) => void;
   setStatus: (s: GameStatus) => void;
   setScore: (n: number) => void;
+  pauseGame: () => void;    // FL-UX-D-018
+  resumeGame: () => void;   // FL-UX-D-018
   setPath: (colour: Colour, cells: Cell[]) => void;
   clearPath: (colour: Colour) => void;
   useHint: () => void;
@@ -108,8 +115,11 @@ export const useFlowGameStore = create<FlowGameState>((set, get) => ({
   score: 0,
   stars: 0,
   scoreBreakdown: null,
+  isPaused: false,
 
   setLevelId: (id) => set({ levelId: id }),
+  pauseGame: () => set({ isPaused: true }),
+  resumeGame: () => set({ isPaused: false }),
   setCoverage: (pct) => set({ coverage: pct }),
   setMoveCount: (n) => set({ moveCount: n }),
   setStatus: (s) => set({ status: s }),
@@ -162,6 +172,7 @@ export const useFlowGameStore = create<FlowGameState>((set, get) => ({
       score: 0,
       stars: 0,
       scoreBreakdown: null,
+      isPaused: false,
     }),
 
   // ─── FL-UX-D-004 mode layer ────────────────────────────────────────────────
@@ -193,6 +204,7 @@ export const useFlowGameStore = create<FlowGameState>((set, get) => ({
       clueUsed: false,
       extensionUsed: false,
       watchAdUsed: false,
+      isPaused: false,
     }),
 
   // Called on pointerup when a colour path changed since pointerdown. gestureCount

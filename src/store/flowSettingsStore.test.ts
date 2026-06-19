@@ -80,6 +80,35 @@ describe('recordLevelComplete', () => {
   });
 });
 
+// FL-UX-D-018 Fix 4: the GameScreen YOU row reads these stored personal bests for
+// the current level. Verifies bestScore is written on first play and only improves.
+describe('recordLevelComplete — personal best (FL-UX-D-018)', () => {
+  const base = { mode: 'campaign' as const, packId: 1, levelId: 'p1_002', levelIndex: 2, stars: 3 as const };
+
+  it('stores bestScore on first completion', () => {
+    set().recordLevelComplete({ ...base, score: 640, timeElapsed: 50, gestureCount: 6 });
+    expect(set().campaignProgress[1].bestScores['p1_002']).toBe(640);
+  });
+
+  it('updates bestScore only if the new score is higher', () => {
+    set().recordLevelComplete({ ...base, score: 640, timeElapsed: 50, gestureCount: 6 });
+    set().recordLevelComplete({ ...base, score: 880, timeElapsed: 40, gestureCount: 5 });
+    expect(set().campaignProgress[1].bestScores['p1_002']).toBe(880);
+  });
+
+  it('does not downgrade bestScore on a worse run', () => {
+    set().recordLevelComplete({ ...base, score: 880, timeElapsed: 40, gestureCount: 5 });
+    set().recordLevelComplete({ ...base, score: 300, timeElapsed: 70, gestureCount: 9 });
+    expect(set().campaignProgress[1].bestScores['p1_002']).toBe(880);
+  });
+
+  it('stores bestTime as the minimum (lower = better)', () => {
+    set().recordLevelComplete({ ...base, score: 640, timeElapsed: 50, gestureCount: 6 });
+    set().recordLevelComplete({ ...base, score: 600, timeElapsed: 32, gestureCount: 6 });
+    expect(set().campaignProgress[1].bestTimes['p1_002']).toBe(32);
+  });
+});
+
 describe('isPackUnlocked', () => {
   it('Pack 2 locked when Pack 1 solved < 25', () => {
     expect(set().isPackUnlocked(2, 'campaign')).toBe(false);

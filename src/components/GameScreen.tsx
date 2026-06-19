@@ -109,6 +109,9 @@ export function GameScreen() {
   const markWatchAdUsed = useFlowGameStore((s) => s.markWatchAdUsed);
   const applyTimeExtension = useFlowGameStore((s) => s.applyTimeExtension);
   const applyMoveExtension = useFlowGameStore((s) => s.applyMoveExtension);
+  // FL-UX-D-018: hard pause/resume around the WATCH AD rewarded flow.
+  const pauseGame = useFlowGameStore((s) => s.pauseGame);
+  const resumeGame = useFlowGameStore((s) => s.resumeGame);
 
   const gemBalance = useFlowSettingsStore((s) => s.gemBalance);
   const addGems = useFlowSettingsStore((s) => s.addGems);
@@ -122,6 +125,7 @@ export function GameScreen() {
   const [showAbandonDialog, setShowAbandonDialog] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [adBusy, setAdBusy] = useState(false); // a rewarded ad is in flight
+  const [showResumeOverlay, setShowResumeOverlay] = useState(false); // FL-UX-D-018: TAP TO RESUME after WATCH AD
   // FL-UX-D-015: left action card alternates REMOVE ADS ↔ BUY HINTS every 5s.
   const [adCardState, setAdCardState] = useState<'remove_ads' | 'buy_hints'>('remove_ads');
 
@@ -178,8 +182,10 @@ export function GameScreen() {
   const filledTiles = Math.round((coverage / 100) * totalTiles);
   const tilesRemaining = Math.max(0, totalTiles - filledTiles);
 
-  // FL-UX-D-008b: YOU vs LEADER panel — personal best stands in as "leader"
-  // (self-competition) until the Supabase leaderboard fetch is wired separately.
+  // FL-UX-D-008b / 018: YOU vs LEADER panel. Both columns read the player's stored
+  // personal best for this level — YOU = your best (FL-UX-D-018 Fix 4), LEADER =
+  // global best placeholder (self-competition) until the Supabase leaderboard fetch
+  // is wired separately. null → blank (—) when the level was never completed.
   const modeProg = isClassic ? classicProgress[packId] : campaignProgress[packId];
   const leaderScore = modeProg?.bestScores?.[levelData.id] ?? null;
   const leaderTime = modeProg?.bestTimes?.[levelData.id] ?? null;
@@ -284,8 +290,10 @@ export function GameScreen() {
     if (!(isCampaign || isClassic || zenHasTimer)) return;
     if (status !== 'playing') return;
     const interval = setInterval(() => {
-      if (adInFlightRef.current) return; // FL-UX-D-008L: paused while a rewarded ad is up
       const s = useFlowGameStore.getState();
+      // FL-UX-D-008L: frozen while a rewarded ad is up.
+      // FL-UX-D-018: frozen while hard-paused (awaiting TAP TO RESUME after WATCH AD).
+      if (adInFlightRef.current || s.isPaused) return;
       // Zen has no fail — freeze the countdown at 0 instead of letting it overrun.
       if (s.gameMode === 'zen' && s.timeLimitSeconds > 0 && s.timeElapsed >= s.timeLimitSeconds) return;
       s.setTimeElapsed(s.timeElapsed + 1);
@@ -449,10 +457,17 @@ export function GameScreen() {
     }
   };
 
-  // WATCH AD → +3 gems, once per level.
+  // WATCH AD → +1 gem, once per level (FL-UX-D-018 Fix 2: was +3).
+  // FL-UX-D-018 Fix 1: after the rewarded ad completes, keep the game hard-paused
+  // and show TAP TO RESUME — the timer resumes only when the player taps.
   const handleWatchAd = async () => {
     if (watchAdUsed) return;
-    if (await watchRewarded()) { void addGems(3); markWatchAdUsed(); }
+    if (await watchRewarded()) {
+      void addGems(1);
+      markWatchAdUsed();
+      pauseGame();
+      setShowResumeOverlay(true);
+    }
   };
 
   // GET A CLUE → auto-complete the most-constrained colour, once per level.
@@ -722,17 +737,19 @@ export function GameScreen() {
       {/* Layer 3 — YOU vs LEADER, 2 rows × 2 equal columns each (FL-UX-D-008k) */}
       {(isCampaign || isClassic) && (
         <div style={{ display: 'flex', gap: 8, padding: '4px 10px 8px' }}>
-          {/* YOU card — left col = identity (name / YOU), right col = stats (Score / Time) */}
+          {/* YOU card — left col = identity (name / YOU), right col = the player's
+              personal best for THIS level (FL-UX-D-018 Fix 4: was hardcoded — /
+              live current attempt). Blank (—) until the level is completed once. */}
           <div style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(127,119,221,0.2)', borderRadius: 10, padding: '8px 10px' }}>
-            {/* Row 1: A = flag+name, B = Score */}
+            {/* Row 1: A = flag+name, B = best Score */}
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 6 }}>
               <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.85)' }}>{leaderFlag} {alias || t('common.player_fallback')}</span>
-              <span style={{ flex: 1, fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>{t('leader.score')} <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>—</span></span>
+              <span style={{ flex: 1, fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>{t('leader.score')} <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>{leaderScore !== null ? leaderScore : '—'}</span></span>
             </div>
-            {/* Row 2: A = YOU label, B = Time/Moves */}
+            {/* Row 2: A = YOU label, B = best Time (Campaign) / best Moves (Classic) */}
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <span style={{ flex: 1, fontSize: 8, fontWeight: 700, color: 'rgba(127,119,221,0.7)', letterSpacing: 1.5 }}>{t('game.you')}</span>
-              <span style={{ flex: 1, fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>{isCampaign ? t('leader.time') : t('leader.moves')} <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>{isCampaign ? formatTime(timeElapsed) : gestureCount}</span></span>
+              <span style={{ flex: 1, fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>{isCampaign ? t('leader.time') : t('leader.moves')} <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>{isCampaign ? (leaderTime !== null ? formatTime(leaderTime) : '—') : (leaderMoves !== null ? leaderMoves : '—')}</span></span>
             </div>
           </div>
           {/* LEADER card */}
@@ -750,6 +767,20 @@ export function GameScreen() {
       )}
 
       {/* Failed state now navigates to the ResultScreen fail layout (FL-UX-D-009). */}
+
+      {/* FL-UX-D-018 Fix 1: TAP TO RESUME — shown after the WATCH AD rewarded ad
+          completes. Covers the whole screen (board non-interactive) and keeps the
+          game hard-paused until the player taps, so no time is lost during the ad. */}
+      {showResumeOverlay && (
+        <div
+          onPointerDown={() => { setShowResumeOverlay(false); resumeGame(); }}
+          style={{ position: 'absolute', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.6)' }}
+        >
+          <div style={{ fontFamily: skin.fontDisplay, fontSize: 18, color: ORANGE, letterSpacing: 2, textAlign: 'center' }}>
+            {t('game.tap_to_resume')}
+          </div>
+        </div>
+      )}
 
       {/* B.2: Level 1 contextual tutorial overlay (first-time players only) */}
       {showTutorialHint && (

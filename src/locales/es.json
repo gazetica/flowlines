@@ -100,7 +100,7 @@
     "remove_ads": "QUITAR ANUNCIOS",
     "remove_ads_sub": "Juega sin interrupciones",
     "watch_ad": "VER ANUNCIO",
-    "watch_ad_sub": "+3 gemas gratis",
+    "watch_ad_sub": "+1 gema gratis",
     "use_hint": "USAR PISTA",
     "hints_left": "×{{count}} restantes",
     "get_more_hints": "CONSEGUIR MÁS PISTAS",
@@ -139,7 +139,8 @@
     "breadcrumb_daily_campaign": "Desafío diario · Campaña",
     "breadcrumb_daily_classic": "Desafío diario · Clásico",
     "ad_unavailable": "Anuncio no disponible — reintenta",
-    "breadcrumb_pack": "Pack {{pack}} · Nivel {{level}} · {{difficulty}}"
+    "breadcrumb_pack": "Pack {{pack}} · Nivel {{level}} · {{difficulty}}",
+    "tap_to_resume": "TOCA PARA CONTINUAR"
   },
   "result": {
     "difficulty": "Dificultad",

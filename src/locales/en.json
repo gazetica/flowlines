@@ -100,7 +100,7 @@
     "remove_ads": "REMOVE ADS",
     "remove_ads_sub": "Play without interruptions",
     "watch_ad": "WATCH AD",
-    "watch_ad_sub": "+3 gems free",
+    "watch_ad_sub": "+1 gem free",
     "use_hint": "USE HINT",
     "hints_left": "×{{count}} left",
     "get_more_hints": "GET MORE HINTS",
@@ -139,7 +139,8 @@
     "breadcrumb_daily_campaign": "Daily Challenge · Campaign",
     "breadcrumb_daily_classic": "Daily Challenge · Classic",
     "ad_unavailable": "Ad unavailable — try again",
-    "breadcrumb_pack": "Pack {{pack}} · Level {{level}} · {{difficulty}}"
+    "breadcrumb_pack": "Pack {{pack}} · Level {{level}} · {{difficulty}}",
+    "tap_to_resume": "TAP TO RESUME"
   },
   "result": {
     "difficulty": "Difficulty",

@@ -100,7 +100,7 @@
     "remove_ads": "광고 제거",
     "remove_ads_sub": "방해 없이 플레이",
     "watch_ad": "광고 보기",
-    "watch_ad_sub": "+3 젬 무료",
+    "watch_ad_sub": "+1 젬 무료",
     "use_hint": "힌트 사용",
     "hints_left": "×{{count}} 남음",
     "get_more_hints": "힌트 더 받기",
@@ -139,7 +139,8 @@
     "breadcrumb_daily_campaign": "데일리 챌린지 · 캠페인",
     "breadcrumb_daily_classic": "데일리 챌린지 · 클래식",
     "ad_unavailable": "광고를 사용할 수 없습니다 — 다시 시도",
-    "breadcrumb_pack": "팩 {{pack}} · 레벨 {{level}} · {{difficulty}}"
+    "breadcrumb_pack": "팩 {{pack}} · 레벨 {{level}} · {{difficulty}}",
+    "tap_to_resume": "탭하여 계속하기"
   },
   "result": {
     "difficulty": "난이도",

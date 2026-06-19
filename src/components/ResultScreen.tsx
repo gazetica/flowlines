@@ -20,7 +20,7 @@ import { COLOUR_COUNT } from '../utils/zenLevelGenerator';
 import type { Difficulty } from '../types/level';
 import { ScoreEngine, type ScoreInput, type GameMode } from '../game/engine/ScoreEngine';
 import { onLevelComplete } from '../services/interstitialAdService';
-import { submitCampaignScore } from '../services/flCampaignScores';
+import { submitCampaignScore, type CampaignScoreMode } from '../services/flCampaignScores';
 import { submitDailyScore } from '../services/flDailyScores';
 import { trackLevelComplete } from '../services/analytics';
 import { requestAndResolve } from '../services/consentService';
@@ -139,8 +139,12 @@ export function ResultScreen() {
 
     const m = /^p(\d+)_(\d+)/.exec(levelId);
     if (m) {
-      void submitCampaignScore(levelId, Number(m[1]), result.total, moveCount);
-      trackLevelComplete({ level_id: levelId, pack_id: Number(m[1]), moves: moveCount, stars, score: result.total });
+      // FL-UX-D-018 Fix 3: pass `mode` so Classic completions are written as
+      // mode='classic' (was defaulting to 'campaign' → the Classic board query
+      // never matched them → the player's pinned row fell back to score 0).
+      // `score` is the freshly-computed ScoreEngine total (never a stale store read).
+      void submitCampaignScore(levelId, Number(m[1]), result.total, gestureCount, mode as CampaignScoreMode);
+      trackLevelComplete({ level_id: levelId, pack_id: Number(m[1]), moves: gestureCount, stars, score: result.total });
     }
 
     const settings = useFlowSettingsStore.getState();
