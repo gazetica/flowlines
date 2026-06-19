@@ -4,14 +4,15 @@
 // 3-page paginated tutorial (eyebrow pill → title → content → dot pagination →
 // fixed NEXT button), FL purple theme. Page 1 has a PURE-REACT 6×6 teaching grid
 // (NOT Phaser — GameScene is permanently locked; this is a visual aid only).
-// Onboarding already calls completeFirstLaunch() in LanguageScreen before this
-// screen, so here we only navigate.
+// FL-UX-D-020: this screen is the END of onboarding — LET'S PLAY! and Skip both
+// call completeFirstLaunch() (persisted) so quitting mid-tutorial resumes onboarding.
 
 import type { CSSProperties, ReactNode, PointerEvent as ReactPointerEvent } from 'react';
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { skin } from '../styles/skin';
+import { useFlowSettingsStore } from '../store/flowSettingsStore';
 import { FloatingPathCanvas } from './FloatingPathCanvas';
 
 const GOLD = '#FFD700';
@@ -402,11 +403,15 @@ function Page3() {
 export function HowToPlayScreen() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const completeFirstLaunch = useFlowSettingsStore((s) => s.completeFirstLaunch);
   const [page, setPage] = useState(0); // 0,1,2
 
-  const goNext = () => { if (page < 2) setPage((p) => p + 1); else navigate('/home'); };
+  // FL-UX-D-020: finishing the tutorial (LET'S PLAY! on page 3 or Skip on any page)
+  // marks onboarding complete (persisted) and lands on Home.
+  const finishOnboarding = () => { completeFirstLaunch(); navigate('/home'); };
+  const goNext = () => { if (page < 2) setPage((p) => p + 1); else finishOnboarding(); };
   const goBack = () => { if (page > 0) setPage((p) => p - 1); else navigate(-1); };
-  const skip = () => navigate('/home');
+  const skip = finishOnboarding;
 
   return (
     <div

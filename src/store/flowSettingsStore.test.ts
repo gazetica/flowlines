@@ -32,6 +32,7 @@ function reset() {
     dailyProgress: { lastDailyDate: '', campaignChallengeComplete: false, classicChallengeComplete: false, campaignRetryCount: 0, classicRetryCount: 0, streakCount: 0, lastStreakDate: '', gemRewardClaimed: false },
     gemBalance: 0,
     lastDailyVisitDate: '',
+    firstLaunchComplete: false,
   });
 }
 
@@ -51,6 +52,24 @@ describe('claimDailyVisitGem (FL-UX-D-015)', () => {
     useFlowSettingsStore.setState({ lastDailyVisitDate: today(), gemBalance: 5 });
     set().claimDailyVisitGem();
     expect(set().gemBalance).toBe(5);
+  });
+});
+
+// FL-UX-D-020: onboarding gate — Splash routes to /language until this is true.
+describe('firstLaunchComplete', () => {
+  it('defaults to false on a fresh store', () => {
+    expect(set().firstLaunchComplete).toBe(false);
+  });
+
+  it('completeFirstLaunch sets it to true', () => {
+    set().completeFirstLaunch();
+    expect(set().firstLaunchComplete).toBe(true);
+  });
+
+  it('once true, stays true (idempotent)', () => {
+    set().completeFirstLaunch();
+    set().completeFirstLaunch();
+    expect(set().firstLaunchComplete).toBe(true);
   });
 });
 

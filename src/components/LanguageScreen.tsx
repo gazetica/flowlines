@@ -67,10 +67,12 @@ export function LanguageScreen() {
 
   const finish = () => {
     if (isFirstLaunch) {
-      useFlowSettingsStore.getState().completeFirstLaunch();
+      // FL-UX-D-020: onboarding is NOT complete yet — the flag is set only when the
+      // player finishes (or skips) the tutorial, so force-quitting mid-tutorial
+      // resumes onboarding on the next launch rather than skipping it.
       navigate('/tutorial');
     } else {
-      navigate(-1);
+      navigate(-1); // Settings → Language → back to Settings
     }
   };
 
