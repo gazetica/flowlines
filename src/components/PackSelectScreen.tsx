@@ -56,9 +56,10 @@ const MODE_CFG: Record<Mode, {
 };
 
 function difficultyForLevel(levelIndex: number): Difficulty {
+  // FL-5A-030: Registry v1.1 distribution 15/10/15/10 (medium 16-25, hard 26-40, hardest 41-50).
   if (levelIndex <= 15) return 'easy';
-  if (levelIndex <= 30) return 'medium';
-  if (levelIndex <= 42) return 'hard';
+  if (levelIndex <= 25) return 'medium';
+  if (levelIndex <= 40) return 'hard';
   return 'hardest';
 }
 

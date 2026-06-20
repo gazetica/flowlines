@@ -21,7 +21,7 @@ const PACK_SIZE = 50;
 type Mode = 'campaign' | 'classic' | 'zen';
 
 // Difficulty tier dividers injected before these 1-based level indices.
-const DIVIDERS: Record<number, string> = { 16: 'home.medium', 31: 'home.hard', 43: 'home.hardest' };
+const DIVIDERS: Record<number, string> = { 16: 'home.medium', 26: 'home.hard', 41: 'home.hardest' };
 
 function starString(stars: number): string {
   if (stars >= 3) return '★★★';
