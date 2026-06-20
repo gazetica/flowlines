@@ -550,7 +550,12 @@
     "restore": "Restaurar compras",
     "restored": "Compras restauradas",
     "nothing_restore": "Sin compras para restaurar",
-    "managed_by": "Compras gestionadas por Google Play. Toca COMPRAR para pagar."
+    "managed_by": "Compras gestionadas por Google Play. Toca COMPRAR para pagar.",
+    "unlock_all_title": "DESBLOQUEAR TODOS LOS NIVELES",
+    "unlock_all_desc": "200 Campaña + 200 Clásico",
+    "unlock_all_price": "$4.99",
+    "unlock_all_sub": "Juega cualquier nivel · compra única",
+    "unlock_all_done": "¡Todos los niveles desbloqueados!"
   },
   "buyhint": {
     "title": "💡 MÁS PISTAS",

@@ -50,8 +50,8 @@
       }
     ],
     "difficulty": "easy",
-    "timeLimit": 120,
-    "classicMoveLimit": 18
+    "timeLimit": 90,
+    "classicMoveLimit": 15
   },
   {
     "id": "p2_002",
@@ -104,8 +104,8 @@
       }
     ],
     "difficulty": "easy",
-    "timeLimit": 120,
-    "classicMoveLimit": 18
+    "timeLimit": 90,
+    "classicMoveLimit": 15
   },
   {
     "id": "p2_003",
@@ -158,8 +158,8 @@
       }
     ],
     "difficulty": "easy",
-    "timeLimit": 120,
-    "classicMoveLimit": 18
+    "timeLimit": 90,
+    "classicMoveLimit": 15
   },
   {
     "id": "p2_004",
@@ -212,8 +212,8 @@
       }
     ],
     "difficulty": "easy",
-    "timeLimit": 120,
-    "classicMoveLimit": 18
+    "timeLimit": 90,
+    "classicMoveLimit": 15
   },
   {
     "id": "p2_005",
@@ -266,8 +266,8 @@
       }
     ],
     "difficulty": "easy",
-    "timeLimit": 120,
-    "classicMoveLimit": 18
+    "timeLimit": 90,
+    "classicMoveLimit": 15
   },
   {
     "id": "p2_006",
@@ -320,8 +320,8 @@
       }
     ],
     "difficulty": "easy",
-    "timeLimit": 120,
-    "classicMoveLimit": 18
+    "timeLimit": 90,
+    "classicMoveLimit": 15
   },
   {
     "id": "p2_007",
@@ -374,8 +374,8 @@
       }
     ],
     "difficulty": "easy",
-    "timeLimit": 120,
-    "classicMoveLimit": 18
+    "timeLimit": 90,
+    "classicMoveLimit": 15
   },
   {
     "id": "p2_008",
@@ -428,8 +428,8 @@
       }
     ],
     "difficulty": "easy",
-    "timeLimit": 120,
-    "classicMoveLimit": 18
+    "timeLimit": 90,
+    "classicMoveLimit": 15
   },
   {
     "id": "p2_009",
@@ -482,8 +482,8 @@
       }
     ],
     "difficulty": "easy",
-    "timeLimit": 120,
-    "classicMoveLimit": 18
+    "timeLimit": 90,
+    "classicMoveLimit": 15
   },
   {
     "id": "p2_010",
@@ -536,8 +536,8 @@
       }
     ],
     "difficulty": "easy",
-    "timeLimit": 120,
-    "classicMoveLimit": 18
+    "timeLimit": 90,
+    "classicMoveLimit": 15
   },
   {
     "id": "p2_011",
@@ -590,8 +590,8 @@
       }
     ],
     "difficulty": "easy",
-    "timeLimit": 120,
-    "classicMoveLimit": 18
+    "timeLimit": 90,
+    "classicMoveLimit": 15
   },
   {
     "id": "p2_012",
@@ -644,8 +644,8 @@
       }
     ],
     "difficulty": "easy",
-    "timeLimit": 120,
-    "classicMoveLimit": 18
+    "timeLimit": 90,
+    "classicMoveLimit": 15
   },
   {
     "id": "p2_013",
@@ -698,8 +698,8 @@
       }
     ],
     "difficulty": "easy",
-    "timeLimit": 120,
-    "classicMoveLimit": 18
+    "timeLimit": 90,
+    "classicMoveLimit": 15
   },
   {
     "id": "p2_014",
@@ -752,8 +752,8 @@
       }
     ],
     "difficulty": "easy",
-    "timeLimit": 120,
-    "classicMoveLimit": 18
+    "timeLimit": 90,
+    "classicMoveLimit": 15
   },
   {
     "id": "p2_015",
@@ -806,8 +806,8 @@
       }
     ],
     "difficulty": "easy",
-    "timeLimit": 120,
-    "classicMoveLimit": 18
+    "timeLimit": 90,
+    "classicMoveLimit": 15
   },
   {
     "id": "p2_016",
@@ -860,7 +860,7 @@
       }
     ],
     "difficulty": "medium",
-    "timeLimit": 80,
+    "timeLimit": 75,
     "classicMoveLimit": 12
   },
   {
@@ -914,7 +914,7 @@
       }
     ],
     "difficulty": "medium",
-    "timeLimit": 80,
+    "timeLimit": 75,
     "classicMoveLimit": 12
   },
   {
@@ -968,7 +968,7 @@
       }
     ],
     "difficulty": "medium",
-    "timeLimit": 80,
+    "timeLimit": 75,
     "classicMoveLimit": 12
   },
   {
@@ -1022,7 +1022,7 @@
       }
     ],
     "difficulty": "medium",
-    "timeLimit": 80,
+    "timeLimit": 75,
     "classicMoveLimit": 12
   },
   {
@@ -1076,7 +1076,7 @@
       }
     ],
     "difficulty": "medium",
-    "timeLimit": 80,
+    "timeLimit": 75,
     "classicMoveLimit": 12
   },
   {
@@ -1130,7 +1130,7 @@
       }
     ],
     "difficulty": "medium",
-    "timeLimit": 80,
+    "timeLimit": 75,
     "classicMoveLimit": 12
   },
   {
@@ -1184,7 +1184,7 @@
       }
     ],
     "difficulty": "medium",
-    "timeLimit": 80,
+    "timeLimit": 75,
     "classicMoveLimit": 12
   },
   {
@@ -1238,7 +1238,7 @@
       }
     ],
     "difficulty": "medium",
-    "timeLimit": 80,
+    "timeLimit": 75,
     "classicMoveLimit": 12
   },
   {
@@ -1292,7 +1292,7 @@
       }
     ],
     "difficulty": "medium",
-    "timeLimit": 80,
+    "timeLimit": 75,
     "classicMoveLimit": 12
   },
   {
@@ -1346,7 +1346,7 @@
       }
     ],
     "difficulty": "medium",
-    "timeLimit": 80,
+    "timeLimit": 75,
     "classicMoveLimit": 12
   },
   {
@@ -1399,9 +1399,9 @@
         "c2": 4
       }
     ],
-    "difficulty": "medium",
-    "timeLimit": 80,
-    "classicMoveLimit": 12
+    "difficulty": "hard",
+    "timeLimit": 60,
+    "classicMoveLimit": 9
   },
   {
     "id": "p2_027",
@@ -1453,9 +1453,9 @@
         "c2": 5
       }
     ],
-    "difficulty": "medium",
-    "timeLimit": 80,
-    "classicMoveLimit": 12
+    "difficulty": "hard",
+    "timeLimit": 60,
+    "classicMoveLimit": 9
   },
   {
     "id": "p2_028",
@@ -1507,9 +1507,9 @@
         "c2": 4
       }
     ],
-    "difficulty": "medium",
-    "timeLimit": 80,
-    "classicMoveLimit": 12
+    "difficulty": "hard",
+    "timeLimit": 60,
+    "classicMoveLimit": 9
   },
   {
     "id": "p2_029",
@@ -1561,9 +1561,9 @@
         "c2": 0
       }
     ],
-    "difficulty": "medium",
-    "timeLimit": 80,
-    "classicMoveLimit": 12
+    "difficulty": "hard",
+    "timeLimit": 60,
+    "classicMoveLimit": 9
   },
   {
     "id": "p2_030",
@@ -1615,9 +1615,9 @@
         "c2": 0
       }
     ],
-    "difficulty": "medium",
-    "timeLimit": 80,
-    "classicMoveLimit": 12
+    "difficulty": "hard",
+    "timeLimit": 60,
+    "classicMoveLimit": 9
   },
   {
     "id": "p2_031",
@@ -1670,8 +1670,8 @@
       }
     ],
     "difficulty": "hard",
-    "timeLimit": 55,
-    "classicMoveLimit": 8
+    "timeLimit": 60,
+    "classicMoveLimit": 9
   },
   {
     "id": "p2_032",
@@ -1724,8 +1724,8 @@
       }
     ],
     "difficulty": "hard",
-    "timeLimit": 55,
-    "classicMoveLimit": 8
+    "timeLimit": 60,
+    "classicMoveLimit": 9
   },
   {
     "id": "p2_033",
@@ -1778,8 +1778,8 @@
       }
     ],
     "difficulty": "hard",
-    "timeLimit": 55,
-    "classicMoveLimit": 8
+    "timeLimit": 60,
+    "classicMoveLimit": 9
   },
   {
     "id": "p2_034",
@@ -1832,8 +1832,8 @@
       }
     ],
     "difficulty": "hard",
-    "timeLimit": 55,
-    "classicMoveLimit": 8
+    "timeLimit": 60,
+    "classicMoveLimit": 9
   },
   {
     "id": "p2_035",
@@ -1886,8 +1886,8 @@
       }
     ],
     "difficulty": "hard",
-    "timeLimit": 55,
-    "classicMoveLimit": 8
+    "timeLimit": 60,
+    "classicMoveLimit": 9
   },
   {
     "id": "p2_036",
@@ -1940,8 +1940,8 @@
       }
     ],
     "difficulty": "hard",
-    "timeLimit": 55,
-    "classicMoveLimit": 8
+    "timeLimit": 60,
+    "classicMoveLimit": 9
   },
   {
     "id": "p2_037",
@@ -1994,8 +1994,8 @@
       }
     ],
     "difficulty": "hard",
-    "timeLimit": 55,
-    "classicMoveLimit": 8
+    "timeLimit": 60,
+    "classicMoveLimit": 9
   },
   {
     "id": "p2_038",
@@ -2048,8 +2048,8 @@
       }
     ],
     "difficulty": "hard",
-    "timeLimit": 55,
-    "classicMoveLimit": 8
+    "timeLimit": 60,
+    "classicMoveLimit": 9
   },
   {
     "id": "p2_039",
@@ -2102,8 +2102,8 @@
       }
     ],
     "difficulty": "hard",
-    "timeLimit": 55,
-    "classicMoveLimit": 8
+    "timeLimit": 60,
+    "classicMoveLimit": 9
   },
   {
     "id": "p2_040",
@@ -2156,8 +2156,8 @@
       }
     ],
     "difficulty": "hard",
-    "timeLimit": 55,
-    "classicMoveLimit": 8
+    "timeLimit": 60,
+    "classicMoveLimit": 9
   },
   {
     "id": "p2_041",
@@ -2209,9 +2209,9 @@
         "c2": 0
       }
     ],
-    "difficulty": "hard",
-    "timeLimit": 55,
-    "classicMoveLimit": 8
+    "difficulty": "hardest",
+    "timeLimit": 45,
+    "classicMoveLimit": 6
   },
   {
     "id": "p2_042",
@@ -2263,9 +2263,9 @@
         "c2": 1
       }
     ],
-    "difficulty": "hard",
-    "timeLimit": 55,
-    "classicMoveLimit": 8
+    "difficulty": "hardest",
+    "timeLimit": 45,
+    "classicMoveLimit": 6
   },
   {
     "id": "p2_043",
@@ -2318,7 +2318,7 @@
       }
     ],
     "difficulty": "hardest",
-    "timeLimit": 55,
+    "timeLimit": 45,
     "classicMoveLimit": 6
   },
   {
@@ -2372,7 +2372,7 @@
       }
     ],
     "difficulty": "hardest",
-    "timeLimit": 55,
+    "timeLimit": 45,
     "classicMoveLimit": 6
   },
   {
@@ -2426,7 +2426,7 @@
       }
     ],
     "difficulty": "hardest",
-    "timeLimit": 55,
+    "timeLimit": 45,
     "classicMoveLimit": 6
   },
   {
@@ -2480,7 +2480,7 @@
       }
     ],
     "difficulty": "hardest",
-    "timeLimit": 55,
+    "timeLimit": 45,
     "classicMoveLimit": 6
   },
   {
@@ -2534,7 +2534,7 @@
       }
     ],
     "difficulty": "hardest",
-    "timeLimit": 55,
+    "timeLimit": 45,
     "classicMoveLimit": 6
   },
   {
@@ -2588,7 +2588,7 @@
       }
     ],
     "difficulty": "hardest",
-    "timeLimit": 55,
+    "timeLimit": 45,
     "classicMoveLimit": 6
   },
   {
@@ -2642,7 +2642,7 @@
       }
     ],
     "difficulty": "hardest",
-    "timeLimit": 55,
+    "timeLimit": 45,
     "classicMoveLimit": 6
   },
   {
@@ -2696,7 +2696,7 @@
       }
     ],
     "difficulty": "hardest",
-    "timeLimit": 55,
+    "timeLimit": 45,
     "classicMoveLimit": 6
   }
 ]

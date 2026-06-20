@@ -18,6 +18,7 @@ const KEYS = {
   PLAYER_UID:      'FL_PLAYER_UID',
   GEM_BALANCE:     'FL_GEM_BALANCE',
   REMOVE_ADS:      'FL_REMOVE_ADS',
+  UNLOCK_ALL:      'FL_UNLOCK_ALL',   // FL-5A-029: Unlock All Levels IAP
   SOUND_ENABLED:   'FL_SOUND_ENABLED',
   MUSIC_ENABLED:   'FL_MUSIC_ENABLED',
   HAPTICS_ENABLED: 'FL_HAPTICS_ENABLED',
@@ -95,6 +96,7 @@ interface FlowSettingsState {
   // Economy
   gemBalance: number;
   removeAdsPurchased: boolean;
+  unlockAllPurchased: boolean; // FL-5A-029: bypasses all sequential + pack unlock gates
 
   // Preferences
   soundEnabled: boolean;
@@ -134,6 +136,7 @@ interface FlowSettingsState {
   addGems: (n: number) => Promise<void>;
   claimDailyVisitGem: () => void;
   setRemoveAds: (v: boolean) => Promise<void>;
+  setUnlockAll: () => void; // FL-5A-029
   markLevelSolved: (packId: number, levelId: string, stars: 1 | 2 | 3) => Promise<void>;
   saveStars: (levelId: string, packId: number, stars: 0 | 1 | 2 | 3) => void;
   incrementDailyStreak: () => Promise<void>;
@@ -169,6 +172,7 @@ export const useFlowSettingsStore = create<FlowSettingsState>((set, get) => ({
   playerUid: '',
   gemBalance: 0,
   removeAdsPurchased: false,
+  unlockAllPurchased: false,
   soundEnabled: true,
   musicEnabled: true,
   hapticsEnabled: true,
@@ -239,6 +243,13 @@ export const useFlowSettingsStore = create<FlowSettingsState>((set, get) => ({
   setRemoveAds: async (v) => {
     await Preferences.set({ key: KEYS.REMOVE_ADS, value: String(v) });
     set({ removeAdsPurchased: v });
+  },
+
+  // FL-5A-029: Unlock All Levels IAP — non-consumable, permanent. Persisted so the
+  // entitlement survives restarts (same pattern as removeAdsPurchased).
+  setUnlockAll: () => {
+    set({ unlockAllPurchased: true });
+    void Preferences.set({ key: KEYS.UNLOCK_ALL, value: 'true' });
   },
 
   markLevelSolved: async (packId, levelId, stars) => {
@@ -343,15 +354,18 @@ export const useFlowSettingsStore = create<FlowSettingsState>((set, get) => ({
     }
   },
 
-  // Unlock thresholds (per mode, independent): P2 ≥25 in P1; P3 ≥50 in P1; P4 ≥50 in P2.
+  // Unlock thresholds (per mode, independent). FL-5A-029 / Registry v1.1 §12:
+  // each pack now requires ALL 50 levels of the PREVIOUS pack (P2←P1, P3←P2, P4←P3).
+  // The Unlock All Levels IAP bypasses every gate.
   isPackUnlocked: (packId, mode) => {
+    if (get().unlockAllPurchased) return true; // FL-5A-029 IAP bypass
     const prog = mode === 'classic' ? get().classicProgress : get().campaignProgress;
     const solved = (pk: number) => prog[pk]?.solved ?? 0;
     switch (packId) {
       case 1: return true;
-      case 2: return solved(1) >= 25;
-      case 3: return solved(1) >= 50;
-      case 4: return solved(2) >= 50;
+      case 2: return solved(1) >= 50;
+      case 3: return solved(2) >= 50;
+      case 4: return solved(3) >= 50;
       default: return false;
     }
   },
@@ -443,6 +457,7 @@ export const useFlowSettingsStore = create<FlowSettingsState>((set, get) => ({
     const haptics = (await read(KEYS.HAPTICS_ENABLED)) !== 'false';
     const gems = parseInt((await read(KEYS.GEM_BALANCE)) || '0', 10);
     const removeAds = (await read(KEYS.REMOVE_ADS)) === 'true';
+    const unlockAll = (await read(KEYS.UNLOCK_ALL)) === 'true';
     const streak = parseInt((await read(KEYS.DAILY_STREAK)) || '0', 10);
     const lastDaily = (await read(KEYS.LAST_DAILY)) || '';
     const lastDailyVisit = (await read(KEYS.LAST_DAILY_VISIT)) || '';
@@ -507,6 +522,7 @@ export const useFlowSettingsStore = create<FlowSettingsState>((set, get) => ({
       hapticsEnabled: haptics,
       gemBalance: gems,
       removeAdsPurchased: removeAds,
+      unlockAllPurchased: unlockAll,
       dailyStreakFL: streak,
       lastDailyDateFL: lastDaily,
       lastDailyVisitDate: lastDailyVisit,

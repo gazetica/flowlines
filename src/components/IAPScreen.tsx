@@ -28,6 +28,8 @@ export function IAPScreen() {
   const gemBalance = useFlowSettingsStore((s) => s.gemBalance);
   const removeAdsPurchased = useFlowSettingsStore((s) => s.removeAdsPurchased);
   const setRemoveAds = useFlowSettingsStore((s) => s.setRemoveAds);
+  const unlockAllPurchased = useFlowSettingsStore((s) => s.unlockAllPurchased);
+  const setUnlockAll = useFlowSettingsStore((s) => s.setUnlockAll);
   const addGems = useFlowSettingsStore((s) => s.addGems);
 
   const [toast, setToast] = useState<string | null>(null);
@@ -70,12 +72,31 @@ export function IAPScreen() {
     setPurchasing(false);
   };
 
+  // Unlock All Levels — non-consumable. FL-5A-029: bypasses all sequential + pack
+  // unlock gates for both Campaign and Classic.
+  const handleUnlockAllBuy = async () => {
+    if (purchasing) return;
+    setPurchasing(true);
+    const result = await purchaseProduct(FL_PRODUCTS.UNLOCK_ALL);
+    if (result.success) {
+      setUnlockAll();
+      trackIapPurchase({ product_id: FL_PRODUCTS.UNLOCK_ALL, value: 4.99 });
+      flashToast(t('store.unlock_all_done'));
+    } else if (result.error !== 'USER_CANCELED') {
+      flashToast(result.error ?? t('store.purchase_failed'));
+    }
+    setPurchasing(false);
+  };
+
   const handleRestore = async () => {
     if (purchasing) return;
     setPurchasing(true);
     const restored = await restorePurchases();
     if (restored.some((p) => p.productId === FL_PRODUCTS.REMOVE_ADS)) {
       await setRemoveAds(true);
+    }
+    if (restored.some((p) => p.productId === FL_PRODUCTS.UNLOCK_ALL)) {
+      setUnlockAll();
     }
     flashToast(restored.length ? t('store.restored') : t('store.nothing_restore'));
     setPurchasing(false);
@@ -181,6 +202,20 @@ export function IAPScreen() {
           price="$1.99"
         >
           <button onClick={() => void handleHintPackBuy()} disabled={purchasing} style={{ ...buyBtn, opacity: purchasing ? 0.5 : 1 }}>{t('store.buy_btn')}</button>
+        </ProductCard>
+
+        {/* Unlock All Levels — non-consumable (FL-5A-029) */}
+        <ProductCard
+          icon="🔓"
+          title={t('store.unlock_all_title')}
+          bullets={[t('store.unlock_all_desc'), t('store.unlock_all_sub')]}
+          price="$4.99"
+        >
+          {unlockAllPurchased ? (
+            <span style={{ fontFamily: skin.fontDisplay, fontSize: 13, color: GOLD }}>{t('store.purchased')}</span>
+          ) : (
+            <button onClick={() => void handleUnlockAllBuy()} disabled={purchasing} style={{ ...buyBtn, opacity: purchasing ? 0.5 : 1 }}>{t('store.buy_btn')}</button>
+          )}
         </ProductCard>
 
         {/* Footer note + restore */}

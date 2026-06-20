@@ -550,7 +550,12 @@
     "restore": "Restaurer les achats",
     "restored": "Achats restaurés",
     "nothing_restore": "Aucun achat à restaurer",
-    "managed_by": "Achats gérés par Google Play. Touchez ACHETER pour payer."
+    "managed_by": "Achats gérés par Google Play. Touchez ACHETER pour payer.",
+    "unlock_all_title": "DÉBLOQUER TOUS LES NIVEAUX",
+    "unlock_all_desc": "200 Campagne + 200 Classique",
+    "unlock_all_price": "$4.99",
+    "unlock_all_sub": "Jouer immédiatement · achat unique",
+    "unlock_all_done": "Tous les niveaux débloqués !"
   },
   "buyhint": {
     "title": "💡 PLUS D'INDICES",

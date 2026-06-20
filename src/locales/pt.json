@@ -550,7 +550,12 @@
     "restore": "Restaurar compras",
     "restored": "Compras restauradas",
     "nothing_restore": "Nenhuma compra para restaurar",
-    "managed_by": "Compras gerenciadas pelo Google Play. Toque COMPRAR para pagar."
+    "managed_by": "Compras gerenciadas pelo Google Play. Toque COMPRAR para pagar.",
+    "unlock_all_title": "DESBLOQUEAR TODOS OS NÍVEIS",
+    "unlock_all_desc": "200 Campanha + 200 Clássico",
+    "unlock_all_price": "$4.99",
+    "unlock_all_sub": "Jogar qualquer nível · compra única",
+    "unlock_all_done": "Todos os níveis desbloqueados!"
   },
   "buyhint": {
     "title": "💡 MAIS DICAS",

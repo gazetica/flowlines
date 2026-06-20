@@ -550,7 +550,12 @@
     "restore": "Käufe wiederherstellen",
     "restored": "Käufe wiederhergestellt",
     "nothing_restore": "Keine Käufe zum Wiederherstellen",
-    "managed_by": "Käufe werden von Google Play verwaltet. Tippe KAUFEN für den Bezahlvorgang."
+    "managed_by": "Käufe werden von Google Play verwaltet. Tippe KAUFEN für den Bezahlvorgang.",
+    "unlock_all_title": "ALLE LEVEL FREISCHALTEN",
+    "unlock_all_desc": "200 Kampagne + 200 Klassisch",
+    "unlock_all_price": "$4.99",
+    "unlock_all_sub": "Sofort spielen · Einmaliger Kauf",
+    "unlock_all_done": "Alle Level freigeschaltet!"
   },
   "buyhint": {
     "title": "💡 MEHR TIPPS",

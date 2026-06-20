@@ -41,6 +41,7 @@ export default function LevelSelectScreen() {
 
   const campaignProgress = useFlowSettingsStore((s) => s.campaignProgress);
   const classicProgress = useFlowSettingsStore((s) => s.classicProgress);
+  const unlockAllPurchased = useFlowSettingsStore((s) => s.unlockAllPurchased); // FL-5A-029
   const modeProgress = mode === 'classic' ? classicProgress : campaignProgress;
   const packProgress = modeProgress[packId];
 
@@ -100,8 +101,13 @@ export default function LevelSelectScreen() {
               const levelIndex = i + 1; // 1-based
               const divider = DIVIDERS[levelIndex];
               const stars = getStars(levelIndex);
-              const state: 'completed' | 'current' | 'locked' =
-                levelIndex < highest ? 'completed' : levelIndex === highest ? 'current' : 'locked';
+              // FL-5A-029: the Unlock All Levels IAP makes every level playable —
+              // levels beyond the sequential frontier render as 'unlocked' (tappable)
+              // instead of 'locked'.
+              const state: 'completed' | 'current' | 'unlocked' | 'locked' =
+                levelIndex < highest ? 'completed'
+                  : levelIndex === highest ? 'current'
+                    : unlockAllPurchased ? 'unlocked' : 'locked';
 
               const tile = (() => {
                 if (state === 'locked') {
@@ -116,6 +122,24 @@ export default function LevelSelectScreen() {
                       }}
                     >
                       🔒
+                    </button>
+                  );
+                }
+
+                if (state === 'unlocked') {
+                  // FL-5A-029: IAP-unlocked, not yet reached — playable, no pulse/ref.
+                  return (
+                    <button
+                      key={levelIndex}
+                      onPointerDown={() => navigate(`/game?pack=${packId}&level=${levelIndex}&mode=${mode}`)}
+                      style={{
+                        aspectRatio: '1', borderRadius: 10,
+                        background: 'rgba(127,119,221,0.10)', border: '1px solid rgba(127,119,221,0.3)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        cursor: 'pointer', fontFamily: skin.fontDisplay,
+                      }}
+                    >
+                      <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.85)' }}>{levelIndex}</span>
                     </button>
                   );
                 }

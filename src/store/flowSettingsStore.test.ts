@@ -33,6 +33,7 @@ function reset() {
     gemBalance: 0,
     lastDailyVisitDate: '',
     firstLaunchComplete: false,
+    unlockAllPurchased: false,
   });
 }
 
@@ -128,16 +129,59 @@ describe('recordLevelComplete — personal best (FL-UX-D-018)', () => {
   });
 });
 
+// FL-5A-029 / Registry v1.1 §12: each pack requires ALL 50 of the previous pack.
 describe('isPackUnlocked', () => {
-  it('Pack 2 locked when Pack 1 solved < 25', () => {
-    expect(set().isPackUnlocked(2, 'campaign')).toBe(false);
-  });
-  it('Pack 2 unlocked when Pack 1 solved >= 25', () => {
-    useFlowSettingsStore.setState((s) => ({ campaignProgress: { ...s.campaignProgress, 1: { ...s.campaignProgress[1], solved: 25 } } }));
-    expect(set().isPackUnlocked(2, 'campaign')).toBe(true);
-  });
+  const setSolved = (mode: 'campaign' | 'classic', pk: number, n: number) =>
+    useFlowSettingsStore.setState((s) => {
+      const key = mode === 'classic' ? 'classicProgress' : 'campaignProgress';
+      return { [key]: { ...s[key], [pk]: { ...s[key][pk], solved: n } } } as never;
+    });
+
   it('Pack 1 is always unlocked', () => {
     expect(set().isPackUnlocked(1, 'classic')).toBe(true);
+  });
+
+  it('Pack 2 locked at 49 Pack 1 completions, unlocked at 50', () => {
+    setSolved('campaign', 1, 49);
+    expect(set().isPackUnlocked(2, 'campaign')).toBe(false);
+    setSolved('campaign', 1, 50);
+    expect(set().isPackUnlocked(2, 'campaign')).toBe(true);
+  });
+
+  it('Pack 3 requires 50 Pack 2 completions (not Pack 1)', () => {
+    setSolved('campaign', 1, 50); // all Pack 1 done
+    expect(set().isPackUnlocked(3, 'campaign')).toBe(false); // Pack 2 still 0
+    setSolved('campaign', 2, 50);
+    expect(set().isPackUnlocked(3, 'campaign')).toBe(true);
+  });
+
+  it('Pack 4 requires 50 Pack 3 completions', () => {
+    setSolved('classic', 2, 50);
+    expect(set().isPackUnlocked(4, 'classic')).toBe(false); // Pack 3 still 0
+    setSolved('classic', 3, 50);
+    expect(set().isPackUnlocked(4, 'classic')).toBe(true);
+  });
+
+  it('Unlock All IAP bypasses every pack gate', () => {
+    useFlowSettingsStore.setState({ unlockAllPurchased: true });
+    expect(set().isPackUnlocked(2, 'campaign')).toBe(true);
+    expect(set().isPackUnlocked(3, 'campaign')).toBe(true);
+    expect(set().isPackUnlocked(4, 'classic')).toBe(true);
+  });
+});
+
+// FL-5A-029: Unlock All Levels IAP entitlement.
+describe('unlockAllPurchased', () => {
+  it('defaults to false', () => {
+    expect(set().unlockAllPurchased).toBe(false);
+  });
+  it('setUnlockAll sets it to true', () => {
+    set().setUnlockAll();
+    expect(set().unlockAllPurchased).toBe(true);
+  });
+  it('persists to FL_UNLOCK_ALL', () => {
+    set().setUnlockAll();
+    expect(mem.get('FL_UNLOCK_ALL')).toBe('true');
   });
 });
 

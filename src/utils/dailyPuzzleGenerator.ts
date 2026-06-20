@@ -35,7 +35,8 @@ export function generateDailyDots(seed: number, gridSize: number, numColours: nu
 
 /**
  * Build a runtime LevelData for today's daily puzzle. pack=0 marks it as daily
- * (not from any pack). Campaign = 120s timer; Classic = 12-move budget.
+ * (not from any pack). Daily is 7×7 → matches Pack 2 limits (FL-5A-028):
+ * Campaign = 90s timer; Classic = 15-move budget.
  */
 export function buildDailyLevelConfig(mode: DailyMode): LevelData {
   const seed = getDailySeed(mode === 'daily_campaign' ? 'campaign' : 'classic');
@@ -49,8 +50,8 @@ export function buildDailyLevelConfig(mode: DailyMode): LevelData {
     colours,
     optimalMoves: grid * grid, // full-coverage solution length
     difficulty: 'medium',
-    timeLimit: 120,
-    classicMoveLimit: 12,
+    timeLimit: 90,
+    classicMoveLimit: 15,
     dots,
   };
 }

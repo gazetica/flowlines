@@ -15,28 +15,29 @@ import { resolve } from 'path';
 
 type Difficulty = 'easy' | 'medium' | 'hard' | 'hardest';
 
-/** Difficulty by 1-indexed level number within a pack (15/15/12/8). */
+/** Difficulty by 1-indexed level number within a pack. FL-5A-029 / Game Registry
+ *  v1.1 §2-3: 15/10/15/10 (easy 1-15, medium 16-25, hard 26-40, hardest 41-50). */
 function getDifficulty(levelIndex: number): Difficulty {
   if (levelIndex <= 15) return 'easy';
-  if (levelIndex <= 30) return 'medium';
-  if (levelIndex <= 42) return 'hard';
+  if (levelIndex <= 25) return 'medium';
+  if (levelIndex <= 40) return 'hard';
   return 'hardest';
 }
 
-// Campaign countdown seconds. (hardest == hard — complexity, not a time squeeze.)
+// Campaign countdown seconds, per pack × difficulty. FL-5A-029 / Registry §4.
 const TIME_LIMITS: Record<number, Record<Difficulty, number>> = {
-  1: { easy: 90, medium: 60, hard: 40, hardest: 40 },
-  2: { easy: 120, medium: 80, hard: 55, hardest: 55 },
-  3: { easy: 150, medium: 100, hard: 70, hardest: 70 },
-  4: { easy: 180, medium: 130, hard: 90, hardest: 90 },
+  1: { easy: 90, medium: 75, hard: 60, hardest: 45 },
+  2: { easy: 90, medium: 75, hard: 60, hardest: 45 },
+  3: { easy: 120, medium: 115, hard: 90, hardest: 75 },
+  4: { easy: 120, medium: 115, hard: 90, hardest: 75 },
 };
 
-// Classic move budget (one complete colour path = one move).
+// Classic move budget (one complete colour path = one move). FL-5A-029 / Registry §5.
 const MOVE_LIMITS: Record<number, Record<Difficulty, number>> = {
-  1: { easy: 15, medium: 10, hard: 7, hardest: 5 },
-  2: { easy: 18, medium: 12, hard: 8, hardest: 6 },
-  3: { easy: 21, medium: 14, hard: 9, hardest: 7 },
-  4: { easy: 24, medium: 16, hard: 10, hardest: 8 },
+  1: { easy: 15, medium: 12, hard: 9, hardest: 6 },
+  2: { easy: 15, medium: 12, hard: 9, hardest: 6 },
+  3: { easy: 18, medium: 15, hard: 12, hardest: 9 },
+  4: { easy: 18, medium: 15, hard: 12, hardest: 9 },
 };
 
 interface RawLevel {

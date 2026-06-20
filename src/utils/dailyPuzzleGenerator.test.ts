@@ -69,8 +69,8 @@ describe('dailyPuzzleGenerator', () => {
     expect(cfg.grid).toBe(7);
     expect(cfg.colours).toBe(6);
     expect(cfg.dots).toHaveLength(6);
-    expect(cfg.timeLimit).toBe(120);
-    expect(cfg.classicMoveLimit).toBe(12);
+    expect(cfg.timeLimit).toBe(90);      // FL-5A-028: daily matches Pack 2 (7×7) limits
+    expect(cfg.classicMoveLimit).toBe(15);
     expect(cfg.id).toContain('daily_campaign');
   });
 

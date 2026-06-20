@@ -550,7 +550,12 @@
     "restore": "Restore Purchases",
     "restored": "Purchases restored",
     "nothing_restore": "No purchases to restore",
-    "managed_by": "Purchases managed by Google Play. Tap BUY to start the checkout flow."
+    "managed_by": "Purchases managed by Google Play. Tap BUY to start the checkout flow.",
+    "unlock_all_title": "UNLOCK ALL LEVELS",
+    "unlock_all_desc": "200 Campaign + 200 Classic levels",
+    "unlock_all_price": "$4.99",
+    "unlock_all_sub": "Play any level instantly · one-time purchase",
+    "unlock_all_done": "All levels unlocked!"
   },
   "buyhint": {
     "title": "💡 GET MORE HINTS",

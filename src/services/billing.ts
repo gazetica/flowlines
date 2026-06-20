@@ -44,6 +44,7 @@ export const PRODUCT_IDS = {
 export const FL_PRODUCTS = {
   REMOVE_ADS: 'flowlines_remove_ads', // non-consumable, $2.99
   HINT_PACK: 'flowlines_hint_pack',   // consumable, $1.99 → +20 gems
+  UNLOCK_ALL: 'flowlines_unlock_all', // FL-5A-029: non-consumable, $4.99 → bypass all level/pack gates
 } as const;
 
 // Native plugin surface (implemented by BillingPlugin.java).

@@ -20,18 +20,19 @@ const PACKS = [
 
 const VALID_DIFFICULTIES = ['easy', 'medium', 'hard', 'hardest'];
 
+// FL-5A-029 / Game Registry v1.1 §4-5: per-difficulty limits per pack.
 const TIME_LIMITS = {
-  1: { easy: 90, medium: 60, hard: 40, hardest: 40 },
-  2: { easy: 120, medium: 80, hard: 55, hardest: 55 },
-  3: { easy: 150, medium: 100, hard: 70, hardest: 70 },
-  4: { easy: 180, medium: 130, hard: 90, hardest: 90 },
+  1: { easy: 90, medium: 75, hard: 60, hardest: 45 },
+  2: { easy: 90, medium: 75, hard: 60, hardest: 45 },
+  3: { easy: 120, medium: 115, hard: 90, hardest: 75 },
+  4: { easy: 120, medium: 115, hard: 90, hardest: 75 },
 } as const;
 
 const MOVE_LIMITS = {
-  1: { easy: 15, medium: 10, hard: 7, hardest: 5 },
-  2: { easy: 18, medium: 12, hard: 8, hardest: 6 },
-  3: { easy: 21, medium: 14, hard: 9, hardest: 7 },
-  4: { easy: 24, medium: 16, hard: 10, hardest: 8 },
+  1: { easy: 15, medium: 12, hard: 9, hardest: 6 },
+  2: { easy: 15, medium: 12, hard: 9, hardest: 6 },
+  3: { easy: 18, medium: 15, hard: 12, hardest: 9 },
+  4: { easy: 18, medium: 15, hard: 12, hardest: 9 },
 } as const;
 
 describe('Level JSON migration', () => {
@@ -62,13 +63,13 @@ describe('Level JSON migration', () => {
         });
       });
 
-      it('difficulty distribution is correct (15/15/12/8)', () => {
+      it('difficulty distribution is correct (15/10/15/10)', () => {
         const dist = { easy: 0, medium: 0, hard: 0, hardest: 0 };
         (data as any[]).forEach((l) => dist[l.difficulty as keyof typeof dist]++);
         expect(dist.easy).toBe(15);
-        expect(dist.medium).toBe(15);
-        expect(dist.hard).toBe(12);
-        expect(dist.hardest).toBe(8);
+        expect(dist.medium).toBe(10);
+        expect(dist.hard).toBe(15);
+        expect(dist.hardest).toBe(10);
       });
 
       it('every level has correct timeLimit for its difficulty', () => {
