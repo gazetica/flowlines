@@ -37,9 +37,10 @@ import java.util.Map;
 public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
 
     // FL-S4-020: Flow Lines SKUs (must match Play Console + billing.ts FL_PRODUCTS).
+    // FL-5A-029: added flowlines_unlock_all (non-consumable, $4.99 — acknowledged, not consumed).
     private static final String HINT_PACK = "flowlines_hint_pack"; // the only consumable
     private static final List<String> PRODUCT_IDS = Arrays.asList(
-        "flowlines_remove_ads", HINT_PACK
+        "flowlines_remove_ads", HINT_PACK, "flowlines_unlock_all"
     );
 
     private BillingClient billingClient;
