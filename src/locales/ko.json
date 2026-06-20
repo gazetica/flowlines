@@ -228,7 +228,8 @@
     "leader": "1위",
     "score": "점수",
     "moves": "이동",
-    "player": "플레이어"
+    "player": "플레이어",
+    "total_score": "총 점수"
   },
   "settings": {
     "title": "설정",

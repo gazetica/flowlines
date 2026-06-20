@@ -228,7 +228,8 @@
     "leader": "LEADER",
     "score": "Score",
     "moves": "Moves",
-    "player": "Player"
+    "player": "Player",
+    "total_score": "Total Score"
   },
   "settings": {
     "title": "SETTINGS",

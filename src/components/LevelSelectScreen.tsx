@@ -11,6 +11,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { skin } from '../styles/skin';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
+import { globalLevelNum } from '../utils/levelUtils';
 import { FloatingPathCanvas } from './FloatingPathCanvas';
 import { BottomNav } from './BottomNav';
 
@@ -100,6 +101,7 @@ export default function LevelSelectScreen() {
             {Array.from({ length: PACK_SIZE }, (_, i) => {
               const levelIndex = i + 1; // 1-based
               const divider = DIVIDERS[levelIndex];
+              const globalNum = globalLevelNum(packId, levelIndex); // FL-UX-D-022 Fix 4: display 1-200
               const stars = getStars(levelIndex);
               // FL-5A-029: the Unlock All Levels IAP makes every level playable —
               // levels beyond the sequential frontier render as 'unlocked' (tappable)
@@ -139,7 +141,7 @@ export default function LevelSelectScreen() {
                         cursor: 'pointer', fontFamily: skin.fontDisplay,
                       }}
                     >
-                      <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.85)' }}>{levelIndex}</span>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.85)' }}>{globalNum}</span>
                     </button>
                   );
                 }
@@ -161,7 +163,7 @@ export default function LevelSelectScreen() {
                       }}
                     >
                       <span style={{ fontSize: 16, color: GOLD }}>▶</span>
-                      <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>{levelIndex}</span>
+                      <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>{globalNum}</span>
                     </button>
                   );
                 }
@@ -181,7 +183,7 @@ export default function LevelSelectScreen() {
                       cursor: 'pointer', fontFamily: skin.fontDisplay,
                     }}
                   >
-                    <span style={{ fontSize: 13, fontWeight: 700, color: '#FFFFFF' }}>{levelIndex}</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: '#FFFFFF' }}>{globalNum}</span>
                     {stars > 0 && <span style={{ fontSize: 8, color: starColour }}>{starString(stars)}</span>}
                   </button>
                 );

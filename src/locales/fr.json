@@ -228,7 +228,8 @@
     "leader": "LEADER",
     "score": "Score",
     "moves": "Coups",
-    "player": "Joueur"
+    "player": "Joueur",
+    "total_score": "Score total"
   },
   "settings": {
     "title": "RÉGLAGES",

@@ -228,7 +228,8 @@
     "leader": "ERSTER",
     "score": "Punkte",
     "moves": "Züge",
-    "player": "Spieler"
+    "player": "Spieler",
+    "total_score": "Gesamtpunktzahl"
   },
   "settings": {
     "title": "EINSTELLUNGEN",

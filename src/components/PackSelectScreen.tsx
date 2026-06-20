@@ -19,6 +19,7 @@ import type { ZenConfig } from '../store/flowSettingsStore';
 import type { Difficulty } from '../types/level';
 import { FloatingPathCanvas } from './FloatingPathCanvas';
 import { BottomNav } from './BottomNav';
+import { globalLevelNum } from '../utils/levelUtils';
 
 const GOLD = '#FFD700';
 
@@ -301,7 +302,7 @@ export default function PackSelectScreen() {
                       </span>
                     </div>
                     <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', margin: '6px 0 8px' }}>
-                      {t('packs.pack_progress', { done: solved, total: 50 })} · {t('packs.level_next', { level: highest })}
+                      {t('packs.pack_progress', { done: solved, total: 50 })} · {t('packs.level_next', { level: globalLevelNum(meta.packId, highest) })}
                     </div>
                     <div style={{ height: 4, background: 'rgba(255,255,255,0.08)', borderRadius: 2, overflow: 'hidden', marginBottom: 14 }}>
                       <div style={{ height: '100%', width: `${pct}%`, background: cfg.barGradient }} />

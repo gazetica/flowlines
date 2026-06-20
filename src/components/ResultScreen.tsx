@@ -19,6 +19,7 @@ import { buildDailyLevelConfig, type DailyMode } from '../utils/dailyPuzzleGener
 import { COLOUR_COUNT } from '../utils/zenLevelGenerator';
 import type { Difficulty } from '../types/level';
 import { ScoreEngine, type ScoreInput, type GameMode } from '../game/engine/ScoreEngine';
+import { globalLevelStr } from '../utils/levelUtils';
 import { onLevelComplete } from '../services/interstitialAdService';
 import { submitCampaignScore, type CampaignScoreMode } from '../services/flCampaignScores';
 import { submitDailyScore } from '../services/flDailyScores';
@@ -168,7 +169,7 @@ export function ResultScreen() {
     ? t('game.breadcrumb_zen', { grid: gridSize, difficulty: t(`difficulty.${difficulty}`) })
     : isDaily
       ? t(isCampaign ? 'game.breadcrumb_daily_campaign' : 'game.breadcrumb_daily_classic')
-      : t('game.breadcrumb_pack', { pack: packId, level: String(levelIdx).padStart(2, '0'), difficulty: t(`difficulty.${difficulty}`) });
+      : t('game.breadcrumb_pack', { pack: packId, level: globalLevelStr(packId, levelIdx), difficulty: t(`difficulty.${difficulty}`) });
 
   const card: CSSProperties = {
     margin: '0 20px 12px', background: 'rgba(255,255,255,0.04)',
@@ -321,7 +322,7 @@ export function ResultScreen() {
             onPointerDown={() => hasNextLevel ? navigate(`/game?pack=${packId}&level=${nextLevelIdx}&mode=${mode}`) : navigate(`/packs?mode=${mode}`)}
             style={{ width: 'calc(100% - 40px)', margin: '0 20px 10px', background: GOLD, color: '#0D0620', border: 'none', borderRadius: 12, padding: 16, fontSize: 16, fontWeight: 700, cursor: 'pointer' }}
           >
-            {hasNextLevel ? t('result.next_level', { number: String(nextLevelIdx).padStart(2, '0') }) : t('result.pack_complete')}
+            {hasNextLevel ? t('result.next_level', { number: globalLevelStr(packId, nextLevelIdx) }) : t('result.pack_complete')}
           </button>
           <div style={{ margin: '0 20px 16px', display: 'flex', gap: 10 }}>
             <button onPointerDown={() => navigate(`/game?pack=${packId}&level=${levelIdx}&mode=${mode}&replay=true`)} style={ghostBtn}>{t('result.replay')}</button>

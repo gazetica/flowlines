@@ -111,28 +111,40 @@ export interface FlLeaderboardRow {
   level_id: string;
 }
 
-const LB_COLUMNS = 'player_uid, alias, country, score, moves, pack_id, level_id';
-
-/** Top 50 campaign scores across all packs (highest first). */
-export async function fetchCampaignLeaderboard(): Promise<FlLeaderboardRow[]> {
-  const { data, error } = await supabase
-    .from(TABLE)
-    .select(LB_COLUMNS)
-    .eq('mode', 'campaign')
-    .order('score', { ascending: false })
-    .limit(50);
-  if (error) throw error;
-  return (data ?? []) as FlLeaderboardRow[];
+// FL-UX-D-022 Fix 5: each level completion is its own row in flowlines_scores, so a
+// raw SELECT showed one player up to 50 times. These RPCs aggregate SUM(score) per
+// player (GROUP BY player_uid) so the board shows ONE cumulative row per player.
+// SQL defined in Supabase: get_campaign_leaderboard / get_classic_leaderboard.
+interface RpcLeaderboardRow {
+  player_uid: string;
+  alias: string;
+  country: string;
+  total_score: number | string; // bigint → may arrive as string
 }
 
-/** Top 50 classic scores across all packs (highest score first). */
-export async function fetchClassicLeaderboard(): Promise<FlLeaderboardRow[]> {
-  const { data, error } = await supabase
-    .from(TABLE)
-    .select(LB_COLUMNS)
-    .eq('mode', 'classic')
-    .order('score', { ascending: false })
-    .limit(50);
+/** Map an aggregated RPC row to the shape the LeaderboardScreen renders (value = total). */
+function fromRpc(rows: RpcLeaderboardRow[] | null): FlLeaderboardRow[] {
+  return (rows ?? []).map((r) => ({
+    player_uid: r.player_uid,
+    alias: r.alias,
+    country: r.country,
+    score: Number(r.total_score) || 0, // cumulative total across all of the player's levels
+    moves: 0,
+    pack_id: 0,
+    level_id: '',
+  }));
+}
+
+/** Top 50 campaign players by cumulative total score (SUM across their levels). */
+export async function fetchCampaignLeaderboard(): Promise<FlLeaderboardRow[]> {
+  const { data, error } = await supabase.rpc('get_campaign_leaderboard', { limit_count: 50 });
   if (error) throw error;
-  return (data ?? []) as FlLeaderboardRow[];
+  return fromRpc(data as RpcLeaderboardRow[] | null);
+}
+
+/** Top 50 classic players by cumulative total score (SUM across their levels). */
+export async function fetchClassicLeaderboard(): Promise<FlLeaderboardRow[]> {
+  const { data, error } = await supabase.rpc('get_classic_leaderboard', { limit_count: 50 });
+  if (error) throw error;
+  return fromRpc(data as RpcLeaderboardRow[] | null);
 }

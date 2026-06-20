@@ -26,6 +26,7 @@ import { skin } from '../styles/skin';
 import { useFlowGameStore } from '../store/flowGameStore';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
 import { flagOf } from '../data/countries';
+import { globalLevelStr } from '../utils/levelUtils';
 import { showHintAd, loadHintAd } from '../services/rewardedAdService';
 import { resetInterstitialGate } from '../services/interstitialAdService';
 import { trackLevelStart, trackLevelAbandon, trackAdImpression } from '../services/analytics';
@@ -87,6 +88,7 @@ export function GameScreen() {
   const gameRef = useRef<Phaser.Game | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null); // FL-UX-D-008j tick sound
   const adInFlightRef = useRef(false); // FL-UX-D-008L: freeze the timer during a rewarded ad
+  const pendingWinRef = useRef(false); // FL-UX-D-022 Fix 3: win arrived while paused → fire on resume
 
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -239,6 +241,10 @@ export function GameScreen() {
     }, 150);
 
     const handleWin = () => {
+      // FL-UX-D-022 Fix 3: if a rescue ad (e.g. GET A CLUE auto-complete) finished the
+      // board while the game is hard-paused, defer the win until the player taps TAP TO
+      // RESUME — otherwise Level Complete fires behind the ad.
+      if (useFlowGameStore.getState().isPaused) { pendingWinRef.current = true; return; }
       useFlowGameStore.getState().triggerWin(levelData.optimalMoves);
       if (isDaily) { navigate('/daily?completed=true'); return; }
       if (isZen) {
@@ -386,11 +392,15 @@ export function GameScreen() {
   // FL-UX-D-009: on fail (timeout / out of moves), go to the ResultScreen fail state.
   // FL-UX-D-019: play the failure sound (Sound-toggle gated inside playFailFl).
   useEffect(() => {
-    if (status === 'failed') {
-      playFailFl();
-      const retryQ = retryParam ? '&retry=true' : '';
-      navigate(`/result?pack=${packId}&level=${levelIndex}&mode=${rawMode}&fail=true${retryQ}`);
-    }
+    if (status !== 'failed') return;
+    // FL-UX-D-022 Fix 1: on a Try Again remount the store can still hold the previous
+    // 'failed' status for one render before initLevel() resets it. initLevel runs in an
+    // earlier effect (synchronous getState set), so re-check the LIVE status here and
+    // ignore a stale 'failed' — otherwise the first tap bounces straight back to fail.
+    if (useFlowGameStore.getState().status !== 'failed') return;
+    playFailFl();
+    const retryQ = retryParam ? '&retry=true' : '';
+    navigate(`/result?pack=${packId}&level=${levelIndex}&mode=${rawMode}&fail=true${retryQ}`);
   }, [status, navigate, packId, levelIndex, rawMode, retryParam]);
 
   // Audio (path/colour/undo/win SFX) + haptics. FL-UX-D-015b: the gameplay ambient
@@ -401,7 +411,9 @@ export function GameScreen() {
     const onPathRelease = () => stopPathDraw();
     const onColourLocked = () => { playLockIn(); void hapticLockIn(); };
     const onUndoFx = () => { playUndo(); void hapticUndo(); };
-    const onWinFx = () => { playWinFl(); void hapticWin(); };
+    // FL-UX-D-022 Fix 3: if the win arrived while hard-paused (clue auto-complete behind
+    // an ad), defer the win SFX too — it plays once when the player resumes.
+    const onWinFx = () => { if (useFlowGameStore.getState().isPaused) return; playWinFl(); void hapticWin(); };
     window.addEventListener('fl:path-extend', onPathExtend);
     window.addEventListener('fl:path-release', onPathRelease);
     window.addEventListener('fl:colour-locked', onColourLocked);
@@ -475,20 +487,31 @@ export function GameScreen() {
   };
 
   // GET A CLUE → auto-complete the most-constrained colour, once per level.
+  // FL-UX-D-022 Fix 2/3: pause before the ad (so a board-completing auto-complete can't
+  // win behind it), then show TAP TO RESUME; the player resumes manually.
   const handleClue = async () => {
     if (clueUsed) return;
+    pauseGame();
     if (await watchRewarded()) {
       markClueUsed();
       window.dispatchEvent(new CustomEvent('fl:autoCompleteClue'));
+      setShowResumeOverlay(true);
+    } else {
+      resumeGame(); // ad not earned → unfreeze
     }
   };
 
   // TIME / MOVE EXTENSION → +30s (Campaign) / +5 moves (Classic), once per level.
+  // FL-UX-D-022 Fix 2: same pause → ad → TAP TO RESUME pattern as WATCH AD.
   const handleExtension = async () => {
     if (extensionUsed) return;
+    pauseGame();
     if (await watchRewarded()) {
       if (isCampaign) applyTimeExtension();
       else if (isClassic) applyMoveExtension();
+      setShowResumeOverlay(true);
+    } else {
+      resumeGame();
     }
   };
 
@@ -542,7 +565,7 @@ export function GameScreen() {
                 ? t('game.breadcrumb_zen', { grid: zenGrid, difficulty: t(`difficulty.${difficulty}`) })
                 : isDailyMode
                   ? t(isCampaign ? 'game.breadcrumb_daily_campaign' : 'game.breadcrumb_daily_classic')
-                  : t('game.breadcrumb_pack', { pack: levelData.pack, level: String(levelIndex).padStart(2, '0'), difficulty: t(`difficulty.${difficulty}`) })}
+                  : t('game.breadcrumb_pack', { pack: levelData.pack, level: globalLevelStr(levelData.pack, levelIndex), difficulty: t(`difficulty.${difficulty}`) })}
             </span>
             {isZen ? (
               <span style={{ background: 'rgba(26,188,156,0.15)', border: '1px solid rgba(26,188,156,0.35)', borderRadius: 8, padding: '3px 8px', fontSize: 10, fontWeight: 700, color: ZEN_TEAL }}>
@@ -778,7 +801,16 @@ export function GameScreen() {
           game hard-paused until the player taps, so no time is lost during the ad. */}
       {showResumeOverlay && (
         <div
-          onPointerDown={() => { setShowResumeOverlay(false); resumeGame(); }}
+          onPointerDown={() => {
+            setShowResumeOverlay(false);
+            resumeGame();
+            // FL-UX-D-022 Fix 3: a win that arrived during the pause (e.g. GET A CLUE
+            // finished the board) was deferred — resolve it now that we're unpaused.
+            if (pendingWinRef.current) {
+              pendingWinRef.current = false;
+              window.dispatchEvent(new Event('fl:win'));
+            }
+          }}
           style={{ position: 'absolute', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.6)' }}
         >
           <div style={{ fontFamily: skin.fontDisplay, fontSize: 18, color: ORANGE, letterSpacing: 2, textAlign: 'center' }}>

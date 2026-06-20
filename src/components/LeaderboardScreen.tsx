@@ -149,6 +149,14 @@ export default function LeaderboardScreen() {
         </div>
       )}
 
+      {/* FL-UX-D-022 Fix 5: Campaign/Classic now show one cumulative row per player —
+          label the value column "Total Score". */}
+      {tab !== 'daily' && (
+        <div style={{ flexShrink: 0, display: 'flex', justifyContent: 'flex-end', padding: '0 28px 4px', position: 'relative', zIndex: 1 }}>
+          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', letterSpacing: 0.5 }}>{t('leaderboard.total_score')}</span>
+        </div>
+      )}
+
       {/* List */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px', position: 'relative', zIndex: 1, touchAction: 'pan-y' }}>
         {loading ? (
