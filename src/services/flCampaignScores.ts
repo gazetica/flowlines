@@ -119,20 +119,29 @@ interface RpcLeaderboardRow {
   player_uid: string;
   alias: string;
   country: string;
-  total_score: number | string; // bigint → may arrive as string
+  // bigint → may arrive as string. Field name defensively resolved (see fromRpc):
+  // the RPC aliases it total_score, but tolerate score/sum/total in case the
+  // deployed SQL differs (FL-UX-D-022 Fix A — was showing 0 for every player).
+  total_score?: number | string;
+  score?: number | string;
+  sum?: number | string;
+  total?: number | string;
 }
 
 /** Map an aggregated RPC row to the shape the LeaderboardScreen renders (value = total). */
 function fromRpc(rows: RpcLeaderboardRow[] | null): FlLeaderboardRow[] {
-  return (rows ?? []).map((r) => ({
-    player_uid: r.player_uid,
-    alias: r.alias,
-    country: r.country,
-    score: Number(r.total_score) || 0, // cumulative total across all of the player's levels
-    moves: 0,
-    pack_id: 0,
-    level_id: '',
-  }));
+  return (rows ?? []).map((r) => {
+    const raw = r.total_score ?? r.score ?? r.sum ?? r.total ?? 0;
+    return {
+      player_uid: r.player_uid,
+      alias: r.alias,
+      country: r.country,
+      score: Number(raw) || 0, // cumulative total across all of the player's levels
+      moves: 0,
+      pack_id: 0,
+      level_id: '',
+    };
+  });
 }
 
 /** Top 50 campaign players by cumulative total score (SUM across their levels). */
