@@ -140,7 +140,8 @@
     "breadcrumb_daily_classic": "Tägliche Herausforderung · Klassisch",
     "ad_unavailable": "Werbung nicht verfügbar — erneut versuchen",
     "breadcrumb_pack": "Paket {{pack}} · Level {{level}} · {{difficulty}}",
-    "tap_to_resume": "ZUM FORTSETZEN TIPPEN"
+    "tap_to_resume": "ZUM FORTSETZEN TIPPEN",
+    "unlock_all_sub": "Alle Level spielen · $4.99"
   },
   "result": {
     "difficulty": "Schwierigkeit",
@@ -522,7 +523,8 @@
     "hint_pack": "Tipp-Paket",
     "hint_pack_price": "$1.99",
     "remove_ads": "Werbung entfernen",
-    "remove_ads_price": "$2.99"
+    "remove_ads_price": "$2.99",
+    "unlock_all": "Alle freischalten"
   },
   "levels": {
     "title": "PAKET {{number}} LEVEL",

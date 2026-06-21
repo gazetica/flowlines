@@ -27,6 +27,7 @@ import { useFlowGameStore } from '../store/flowGameStore';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
 import { flagOf } from '../data/countries';
 import { globalLevelStr } from '../utils/levelUtils';
+import { fetchLevelBest, type LevelBest } from '../services/flCampaignScores';
 import { showHintAd, loadHintAd } from '../services/rewardedAdService';
 import { resetInterstitialGate } from '../services/interstitialAdService';
 import { trackLevelStart, trackLevelAbandon, trackAdImpression } from '../services/analytics';
@@ -39,6 +40,10 @@ const ZEN_TEAL = '#1ABC9C';
 const PURPLE = '#9B8FFF';
 const ORANGE = '#E67E22';
 const DANGER = '#E74C3C';
+
+// FL-UX-D-023 Fix 4: left action card rotates REMOVE ADS → BUY HINTS → UNLOCK ALL.
+type AdCardState = 'remove_ads' | 'buy_hints' | 'unlock_all';
+const AD_CARD_CYCLE: AdCardState[] = ['remove_ads', 'buy_hints', 'unlock_all'];
 
 // Dev-harness fallback level (used at /game with no params). Real levels come
 // from the URL (?pack=N&level=N) via LevelManager. optimalMoves = grid².
@@ -129,8 +134,10 @@ export function GameScreen() {
   const [toast, setToast] = useState<string | null>(null);
   const [adBusy, setAdBusy] = useState(false); // a rewarded ad is in flight
   const [showResumeOverlay, setShowResumeOverlay] = useState(false); // FL-UX-D-018: TAP TO RESUME after WATCH AD
-  // FL-UX-D-015: left action card alternates REMOVE ADS ↔ BUY HINTS every 5s.
-  const [adCardState, setAdCardState] = useState<'remove_ads' | 'buy_hints'>('remove_ads');
+  const [leaderData, setLeaderData] = useState<LevelBest | null>(null); // FL-UX-D-023 Fix 7: global best for this level
+  // FL-UX-D-015 / 023 Fix 4: left action card rotates through AD_CARD_CYCLE every 5s.
+  const [adCardIndex, setAdCardIndex] = useState(0);
+  const adCardState = AD_CARD_CYCLE[adCardIndex];
 
   const flashToast = (msg: string) => {
     setToast(msg);
@@ -185,15 +192,13 @@ export function GameScreen() {
   const filledTiles = Math.round((coverage / 100) * totalTiles);
   const tilesRemaining = Math.max(0, totalTiles - filledTiles);
 
-  // FL-UX-D-008b / 018: YOU vs LEADER panel. Both columns read the player's stored
-  // personal best for this level — YOU = your best (FL-UX-D-018 Fix 4), LEADER =
-  // global best placeholder (self-competition) until the Supabase leaderboard fetch
-  // is wired separately. null → blank (—) when the level was never completed.
+  // FL-UX-D-008b / 018 / 023: YOU = the player's stored personal best for this level
+  // (null → blank '—' until completed once). LEADER = the GLOBAL best from Supabase
+  // (FL-UX-D-023 Fix 7, fetched into `leaderData`).
   const modeProg = isClassic ? classicProgress[packId] : campaignProgress[packId];
   const leaderScore = modeProg?.bestScores?.[levelData.id] ?? null;
   const leaderTime = modeProg?.bestTimes?.[levelData.id] ?? null;
   const leaderMoves = modeProg?.bestMoves?.[levelData.id] ?? null;
-  const leaderAlias = alias || t('common.player_fallback');
   const leaderFlag = flagOf(country || 'IN');
 
   // ─── Phaser mount (UNCHANGED from prior implementation) ──────────────────────
@@ -289,6 +294,19 @@ export function GameScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [levelData.id, mode]);
 
+  // ─── FL-UX-D-023 Fix 7: LEADER row = GLOBAL best for this level (highest score
+  // across ALL players), not the player's own. Campaign/Classic pack levels only.
+  useEffect(() => {
+    setLeaderData(null);
+    if (!(isCampaign || isClassic) || isDailyMode || !levelData.id) return;
+    let cancelled = false;
+    void fetchLevelBest(levelData.id, isClassic ? 'classic' : 'campaign')
+      .then((best) => { if (!cancelled) setLeaderData(best); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [levelData.id, mode]);
+
   // ─── FL-UX-D-008: timer tick (Campaign counts down via timeRemaining; Classic
   // counts up for the time bonus). Zen has no tick. Uses store.getState() so the
   // interval need not be recreated every second.
@@ -322,7 +340,7 @@ export function GameScreen() {
   // ─── FL-UX-D-015: alternate the left action card every 5 seconds ─────────────
   useEffect(() => {
     const interval = setInterval(() => {
-      setAdCardState((prev) => (prev === 'remove_ads' ? 'buy_hints' : 'remove_ads'));
+      setAdCardIndex((prev) => (prev + 1) % AD_CARD_CYCLE.length);
     }, 5000);
     return () => clearInterval(interval);
   }, []);
@@ -733,11 +751,18 @@ export function GameScreen() {
                 <span style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.7)', letterSpacing: 0.5 }}>{t('game.remove_ads_card')}</span>
                 <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.35)' }}>{t('game.remove_ads_sub')}</span>
               </>
-            ) : (
+            ) : adCardState === 'buy_hints' ? (
               <>
                 <span style={{ fontSize: 20 }}>💡</span>
                 <span style={{ fontSize: 9, fontWeight: 700, color: skin.gold, letterSpacing: 0.5 }}>{t('game.buy_hints_card')}</span>
                 <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.35)' }}>{t('game.buy_hints_sub')}</span>
+              </>
+            ) : (
+              // FL-UX-D-023 Fix 4: UNLOCK ALL
+              <>
+                <span style={{ fontSize: 20 }}>🔓</span>
+                <span style={{ fontSize: 9, fontWeight: 700, color: skin.gold, letterSpacing: 0.5 }}>{t('store.unlock_all_title')}</span>
+                <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.35)' }}>{t('game.unlock_all_sub')}</span>
               </>
             )}
           </div>
@@ -780,15 +805,18 @@ export function GameScreen() {
               <span style={{ flex: 1, fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>{isCampaign ? t('leader.time') : t('leader.moves')} <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>{isCampaign ? (leaderTime !== null ? formatTime(leaderTime) : '—') : (leaderMoves !== null ? leaderMoves : '—')}</span></span>
             </div>
           </div>
-          {/* LEADER card */}
+          {/* LEADER card — FL-UX-D-023 Fix 7: GLOBAL best for this level from Supabase
+              (highest score across all players). '—' until data loads / if none yet.
+              Note: the score table stores moves but not time, so the Campaign time
+              slot shows '—' (no global time recorded). */}
           <div style={{ flex: 1, background: 'rgba(255,215,0,0.03)', border: '1px solid rgba(255,215,0,0.18)', borderRadius: 10, padding: '8px 10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 6 }}>
-              <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: skin.gold }}>{leaderFlag} {leaderAlias}</span>
-              <span style={{ flex: 1, fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>{t('leader.score')} <span style={{ fontSize: 11, fontWeight: 700, color: skin.gold }}>{leaderScore !== null ? leaderScore : '—'}</span></span>
+              <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: skin.gold }}>{leaderData ? `${flagOf(leaderData.country || 'IN')} ${(leaderData.alias || t('common.player_fallback')).slice(0, 12)}` : '—'}</span>
+              <span style={{ flex: 1, fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>{t('leader.score')} <span style={{ fontSize: 11, fontWeight: 700, color: skin.gold }}>{leaderData ? leaderData.score : '—'}</span></span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <span style={{ flex: 1, fontSize: 8, fontWeight: 700, color: 'rgba(255,215,0,0.6)', letterSpacing: 1.5 }}>{t('game.leader')}</span>
-              <span style={{ flex: 1, fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>{isCampaign ? t('leader.time') : t('leader.moves')} <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,215,0,0.7)' }}>{isCampaign ? (leaderTime !== null ? formatTime(leaderTime) : '—') : (leaderMoves !== null ? leaderMoves : '—')}</span></span>
+              <span style={{ flex: 1, fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>{isCampaign ? t('leader.time') : t('leader.moves')} <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,215,0,0.7)' }}>{isClassic && leaderData ? leaderData.moves : '—'}</span></span>
             </div>
           </div>
         </div>

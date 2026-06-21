@@ -140,7 +140,8 @@
     "breadcrumb_daily_classic": "Desafio diário · Clássico",
     "ad_unavailable": "Anúncio indisponível — tente de novo",
     "breadcrumb_pack": "Pacote {{pack}} · Nível {{level}} · {{difficulty}}",
-    "tap_to_resume": "TOQUE PARA CONTINUAR"
+    "tap_to_resume": "TOQUE PARA CONTINUAR",
+    "unlock_all_sub": "Jogar qualquer nível · $4.99"
   },
   "result": {
     "difficulty": "Dificuldade",
@@ -522,7 +523,8 @@
     "hint_pack": "Pacote de dicas",
     "hint_pack_price": "$1.99",
     "remove_ads": "Remover anúncios",
-    "remove_ads_price": "$2.99"
+    "remove_ads_price": "$2.99",
+    "unlock_all": "Desbloquear tudo"
   },
   "levels": {
     "title": "NÍVEIS DO PACOTE {{number}}",

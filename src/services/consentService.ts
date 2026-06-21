@@ -75,6 +75,12 @@ export async function reopenForm(): Promise<void> {
     // the catch below swallows it (silent no-op, no alert) — the correct UMP pattern.
     await AdMob.showPrivacyOptionsForm();
   } catch (err) {
-    console.warn('[consentService] reopenForm failed:', err);
+    // FL-UX-D-023 Fix 6: showPrivacyOptionsForm throws on non-EEA / no-form-configured
+    // devices. Instead of a silent no-op, give the user feedback so the row never feels
+    // dead when tapped.
+    console.warn('[consentService] reopenForm failed (likely non-EEA device):', err);
+    if (typeof window !== 'undefined' && typeof window.alert === 'function') {
+      window.alert('Ad preferences are managed by Google and only appear in regions where consent is required (e.g. EEA/UK).');
+    }
   }
 }

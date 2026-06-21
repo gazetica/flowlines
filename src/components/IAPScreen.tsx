@@ -180,11 +180,12 @@ export function IAPScreen() {
           {t('store.your_gems', { count: gemBalance })}
         </div>
 
-        {/* Remove Ads — non-consumable */}
+        {/* Remove Ads — non-consumable. FL-UX-D-023 Fix 2: dropped "Hints always free"
+            bullet (inaccurate — hints still cost gems/ads with Remove Ads). */}
         <ProductCard
           icon="🚫"
           title={t('store.remove_ads_title')}
-          bullets={[t('store.remove_ads_b1'), t('store.remove_ads_b2'), t('store.remove_ads_b3')]}
+          bullets={[t('store.remove_ads_b1'), t('store.remove_ads_b2')]}
           price="$2.99"
         >
           {removeAdsPurchased ? (

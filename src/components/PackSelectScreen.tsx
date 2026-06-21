@@ -321,11 +321,12 @@ export default function PackSelectScreen() {
               })}
             </div>
 
-            {/* IAP row — campaign / classic only */}
-            <div style={{ margin: '0 20px 16px', display: 'flex', gap: 12 }}>
+            {/* IAP row — campaign / classic only. FL-UX-D-023 Fix 5: +Unlock All. */}
+            <div style={{ margin: '0 20px 16px', display: 'flex', gap: 10 }}>
               {[
                 { icon: '💡', label: t('packs.hint_pack'), price: '$1.99' },
                 { icon: '🚫', label: t('packs.remove_ads'), price: '$2.99' },
+                { icon: '🔓', label: t('packs.unlock_all'), price: '$4.99' },
               ].map((iap) => (
                 <button
                   key={iap.label}

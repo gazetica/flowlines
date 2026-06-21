@@ -140,7 +140,8 @@
     "breadcrumb_daily_classic": "데일리 챌린지 · 클래식",
     "ad_unavailable": "광고를 사용할 수 없습니다 — 다시 시도",
     "breadcrumb_pack": "팩 {{pack}} · 레벨 {{level}} · {{difficulty}}",
-    "tap_to_resume": "탭하여 계속하기"
+    "tap_to_resume": "탭하여 계속하기",
+    "unlock_all_sub": "모든 레벨 플레이 · $4.99"
   },
   "result": {
     "difficulty": "난이도",
@@ -522,7 +523,8 @@
     "hint_pack": "힌트 팩",
     "hint_pack_price": "$1.99",
     "remove_ads": "광고 제거",
-    "remove_ads_price": "$2.99"
+    "remove_ads_price": "$2.99",
+    "unlock_all": "모두 잠금 해제"
   },
   "levels": {
     "title": "팩 {{number}} 레벨",

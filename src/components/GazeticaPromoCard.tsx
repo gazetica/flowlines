@@ -49,24 +49,48 @@ export function GazeticaPromoCard() {
           padding: 12,
         }}
       >
-        {/* CSS-only Numtap icon — no image asset needed */}
+        {/* CSS-only Numtap icon (FL-UX-D-023 Fix 3) — matches the real app icon:
+            dark-navy grid background + a yellow ring around a bold yellow "N". */}
         <div
           style={{
             width: 44,
             height: 44,
             flexShrink: 0,
             borderRadius: 10,
-            background: 'linear-gradient(135deg, #EF9F27, #D85A30)',
+            backgroundColor: '#0D1B3E',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontFamily: skin.fontDisplay,
-            fontSize: 22,
-            fontWeight: 700,
-            color: '#1A0E08',
+            position: 'relative',
+            overflow: 'hidden',
           }}
         >
-          N
+          {/* grid dots */}
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              backgroundImage: 'radial-gradient(circle, #1a2d5a 1px, transparent 1px)',
+              backgroundSize: '8px 8px',
+              opacity: 0.6,
+            }}
+          />
+          {/* yellow ring + N */}
+          <div
+            style={{
+              width: 34,
+              height: 34,
+              borderRadius: '50%',
+              border: '3px solid #EAB800',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative',
+              zIndex: 1,
+            }}
+          >
+            <span style={{ fontFamily: skin.fontDisplay, fontWeight: 700, fontSize: 17, color: '#EAB800', lineHeight: 1 }}>N</span>
+          </div>
         </div>
 
         <div style={{ flex: 1, minWidth: 0 }}>

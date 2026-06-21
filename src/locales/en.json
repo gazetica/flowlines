@@ -140,7 +140,8 @@
     "breadcrumb_daily_classic": "Daily Challenge · Classic",
     "ad_unavailable": "Ad unavailable — try again",
     "breadcrumb_pack": "Pack {{pack}} · Level {{level}} · {{difficulty}}",
-    "tap_to_resume": "TAP TO RESUME"
+    "tap_to_resume": "TAP TO RESUME",
+    "unlock_all_sub": "Play any level · $4.99"
   },
   "result": {
     "difficulty": "Difficulty",
@@ -522,7 +523,8 @@
     "hint_pack": "Hint Pack",
     "hint_pack_price": "$1.99",
     "remove_ads": "Remove Ads",
-    "remove_ads_price": "$2.99"
+    "remove_ads_price": "$2.99",
+    "unlock_all": "Unlock All"
   },
   "levels": {
     "title": "PACK {{number}} LEVELS",

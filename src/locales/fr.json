@@ -140,7 +140,8 @@
     "breadcrumb_daily_classic": "Défi quotidien · Classique",
     "ad_unavailable": "Pub indisponible — réessayez",
     "breadcrumb_pack": "Pack {{pack}} · Niveau {{level}} · {{difficulty}}",
-    "tap_to_resume": "TOUCHEZ POUR REPRENDRE"
+    "tap_to_resume": "TOUCHEZ POUR REPRENDRE",
+    "unlock_all_sub": "Jouer n'importe quel niveau · $4.99"
   },
   "result": {
     "difficulty": "Difficulté",
@@ -522,7 +523,8 @@
     "hint_pack": "Pack d'indices",
     "hint_pack_price": "$1.99",
     "remove_ads": "Supprimer les pubs",
-    "remove_ads_price": "$2.99"
+    "remove_ads_price": "$2.99",
+    "unlock_all": "Tout débloquer"
   },
   "levels": {
     "title": "NIVEAUX DU PACK {{number}}",

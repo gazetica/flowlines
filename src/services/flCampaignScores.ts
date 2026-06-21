@@ -157,3 +157,39 @@ export async function fetchClassicLeaderboard(): Promise<FlLeaderboardRow[]> {
   if (error) throw error;
   return fromRpc(data as RpcLeaderboardRow[] | null);
 }
+
+// FL-UX-D-023 Fix 7: the GameScreen LEADER row should show the GLOBAL best for the
+// current level (highest score across ALL players), not the player's own best.
+export interface LevelBest {
+  alias: string;
+  country: string;
+  score: number;
+  moves: number;
+}
+
+/** Highest score for a single level across all players. null if none / on error. */
+export async function fetchLevelBest(
+  levelId: string,
+  mode: 'campaign' | 'classic',
+): Promise<LevelBest | null> {
+  try {
+    const { data, error } = await supabase
+      .from(TABLE)
+      .select('alias, country, score, moves')
+      .eq('level_id', levelId)
+      .eq('mode', mode)
+      .order('score', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error || !data) return null;
+    return {
+      alias: data.alias,
+      country: data.country,
+      score: data.score,
+      moves: data.moves,
+    };
+  } catch (err) {
+    console.warn('[flCampaignScores] fetchLevelBest failed:', err);
+    return null;
+  }
+}
