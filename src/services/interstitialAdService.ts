@@ -148,7 +148,7 @@ export async function maybeShowInterstitial(): Promise<void> {
 // AND not Remove-Ads, AND not Zen mode.
 
 // isTesting: true MUST be removed before production (T-015 Day 34 grep target).
-const isTesting = true;
+const isTesting = false;
 
 let levelCompletionCount = 0;
 let lastInterstitialTime = Date.now(); // start the 3-minute clock at app load

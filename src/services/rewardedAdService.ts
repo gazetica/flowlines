@@ -111,7 +111,7 @@ import type { Cell, Colour, DotPair } from '../game/engine/GridEngine';
 
 // isTesting: true MUST be removed before production (T-015 Day 34). Top-level const
 // so the Day-34 grep over rewarded/interstitial services finds it immediately.
-const isTesting = true;
+const isTesting = false;
 
 const HINT_REWARD_OPTIONS: RewardAdOptions = {
   adId: AD_UNITS.REWARDED, // test rewarded unit from admob.ts (live IDs at T-015)
