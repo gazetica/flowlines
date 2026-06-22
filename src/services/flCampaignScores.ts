@@ -42,11 +42,18 @@ export async function submitCampaignScore(
     if (!playerUid || !levelId) return; // no identity / no real level
 
     // Best-score policy: only overwrite if this run beats the stored score.
+    // FL-5B-004: the precheck MUST filter by `mode`. Without it, a Classic run on
+    // level p1_001 matched the player's existing *Campaign* row for the same level
+    // and was skipped whenever the Campaign score was >= the Classic score (almost
+    // always — Campaign time-efficiency points dominate). Result: zero Classic rows
+    // ever reached flowlines_scores. Mode-scoping the precheck keeps Campaign and
+    // Classic bests fully independent.
     const { data: existing } = await supabase
       .from(TABLE)
       .select('score')
       .eq('player_uid', playerUid)
       .eq('level_id', levelId)
+      .eq('mode', mode)
       .maybeSingle();
     if (existing && existing.score >= score) return;
 
@@ -61,7 +68,12 @@ export async function submitCampaignScore(
         player_uid: playerUid,
         mode, // FL-UX-D-004 — requires a `mode` column on flowlines_scores
       },
-      { onConflict: 'player_uid,level_id' },
+      // FL-5B-004: conflict target MUST include `mode` so a player can hold one
+      // Campaign AND one Classic best per level. REQUIRES the DB unique constraint
+      // to be (player_uid, level_id, mode) — see the migration in the task report.
+      // The old (player_uid, level_id) key let Classic overwrite / be blocked by
+      // the Campaign row for the same level.
+      { onConflict: 'player_uid,level_id,mode' },
     );
     if (error) console.warn('[flCampaignScores] submit:', error.message);
   } catch (err) {
