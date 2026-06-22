@@ -10,11 +10,12 @@
 // Reads flowSettingsStore (never mutates). Shared BottomNav reused as-is.
 
 import type { CSSProperties } from 'react';
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { skin } from '../styles/skin';
 import { useFlowSettingsStore } from '../store/flowSettingsStore';
+import { hapticLockIn } from '../services/hapticService'; // FL-5B-006 / T-018 (temporary)
 import type { PackModeProgress } from '../store/flowSettingsStore';
 import type { Difficulty } from '../types/level';
 import { flagOf } from '../data/countries';
@@ -166,6 +167,31 @@ export function HomeScreen() {
   useEffect(() => { claimDailyVisitGem(); }, [claimDailyVisitGem]);
   const isDailyGemClaimedToday = lastDailyVisitDate === new Date().toISOString().slice(0, 10);
 
+  // ─── FL-5B-006 / T-018: QA dev unlock toggle (TEMPORARY — removed in FL-5B-003) ───
+  // 3-second long-press on the logo opens a DEV MODE modal that toggles
+  // devUnlockActive, unlocking all packs/levels for QA. A red banner shows while
+  // active so QA screenshots are obviously identifiable. NOT shipped to production.
+  const devUnlockActive = useFlowSettingsStore((s) => s.devUnlockActive);
+  const setDevUnlockActive = useFlowSettingsStore((s) => s.setDevUnlockActive);
+  const [devModalOpen, setDevModalOpen] = useState(false);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearLongPress = () => {
+    if (longPressTimer.current !== null) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
+  const startLongPress = () => {
+    clearLongPress();
+    longPressTimer.current = setTimeout(() => {
+      longPressTimer.current = null;
+      void hapticLockIn();        // one pulse (no-op if haptics disabled)
+      setDevModalOpen(true);
+    }, 3000);
+  };
+  useEffect(() => clearLongPress, []); // clear any pending timer on unmount
+
   const campaign = findCurrentPack(campaignProgress);
   const classic = findCurrentPack(classicProgress);
 
@@ -228,7 +254,14 @@ export function HomeScreen() {
         >
           <div>
             {/* FL-UX-D-015: logo to the left of the title */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {/* FL-5B-006 / T-018: 3s long-press opens the QA dev-unlock modal (temporary) */}
+            <div
+              style={{ display: 'flex', alignItems: 'center', gap: 10, touchAction: 'none', cursor: 'pointer' }}
+              onPointerDown={startLongPress}
+              onPointerUp={clearLongPress}
+              onPointerLeave={clearLongPress}
+              onPointerCancel={clearLongPress}
+            >
               <FlowLinesLogo size={28} />
               <span
                 style={{
@@ -448,6 +481,113 @@ export function HomeScreen() {
       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 2 }}>
         <BottomNav />
       </div>
+
+      {/* FL-5B-006 / T-018: DEV UNLOCK banner (TEMPORARY — removed in FL-5B-003).
+          Renders only while active; sits above the 56px bottom nav, deliberately
+          loud so QA screenshots are obviously identifiable. */}
+      {devUnlockActive && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: 56,
+            left: 0,
+            right: 0,
+            height: 32,
+            background: '#CC0000',
+            color: '#FFFFFF',
+            fontWeight: 700,
+            fontSize: 13,
+            letterSpacing: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 100,
+            fontFamily: skin.fontBody,
+          }}
+        >
+          ⚠ DEV UNLOCK ACTIVE
+        </div>
+      )}
+
+      {/* FL-5B-006 / T-018: DEV MODE modal (TEMPORARY — removed in FL-5B-003). */}
+      {devModalOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 200,
+            background: 'rgba(0,0,0,0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 24,
+            fontFamily: skin.fontBody,
+          }}
+          onPointerDown={() => setDevModalOpen(false)}
+        >
+          <div
+            style={{
+              background: skin.bgCard,
+              border: `1px solid ${skin.bgBorder}`,
+              borderRadius: 16,
+              padding: 24,
+              width: '100%',
+              maxWidth: 320,
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
+          >
+            <div style={{ fontFamily: skin.fontDisplay, fontSize: 16, fontWeight: 700, color: '#CC0000', letterSpacing: 1, marginBottom: 10 }}>
+              DEV MODE
+            </div>
+            <div style={{ fontSize: 14, color: skin.white, marginBottom: 20, lineHeight: 1.4 }}>
+              {devUnlockActive ? 'Revert to normal lock state?' : 'Unlock all levels for QA testing?'}
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onPointerDown={(e) => {
+                  e.stopPropagation();
+                  setDevUnlockActive(!devUnlockActive);
+                  setDevModalOpen(false);
+                }}
+                style={{
+                  flex: 1,
+                  background: devUnlockActive ? skin.purpleDim : '#CC0000',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  borderRadius: 10,
+                  padding: '12px 0',
+                  fontSize: 13,
+                  fontWeight: 700,
+                  letterSpacing: 1,
+                  cursor: 'pointer',
+                }}
+              >
+                {devUnlockActive ? 'LOCK' : 'UNLOCK'}
+              </button>
+              <button
+                onPointerDown={(e) => {
+                  e.stopPropagation();
+                  setDevModalOpen(false);
+                }}
+                style={{
+                  flex: 1,
+                  background: 'transparent',
+                  color: skin.muted,
+                  border: `1px solid ${skin.bgBorder}`,
+                  borderRadius: 10,
+                  padding: '12px 0',
+                  fontSize: 13,
+                  fontWeight: 700,
+                  letterSpacing: 1,
+                  cursor: 'pointer',
+                }}
+              >
+                CANCEL
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

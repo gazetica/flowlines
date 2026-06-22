@@ -34,6 +34,7 @@ function reset() {
     lastDailyVisitDate: '',
     firstLaunchComplete: false,
     unlockAllPurchased: false,
+    devUnlockActive: false,
   });
 }
 
@@ -182,6 +183,36 @@ describe('unlockAllPurchased', () => {
   it('persists to FL_UNLOCK_ALL', () => {
     set().setUnlockAll();
     expect(mem.get('FL_UNLOCK_ALL')).toBe('true');
+  });
+});
+
+// FL-5B-006 / T-018: QA dev unlock toggle (TEMPORARY — removed in FL-5B-003).
+describe('devUnlockActive (FL-5B-006 / T-018)', () => {
+  it('defaults to false', () => {
+    expect(set().devUnlockActive).toBe(false);
+  });
+
+  it('setDevUnlockActive(true) unlocks all pack gates without touching the IAP flag', () => {
+    set().setDevUnlockActive(true);
+    expect(set().devUnlockActive).toBe(true);
+    expect(set().unlockAllPurchased).toBe(false); // IAP flag must never be set by the toggle
+    expect(set().isPackUnlocked(2, 'campaign')).toBe(true);
+    expect(set().isPackUnlocked(3, 'campaign')).toBe(true);
+    expect(set().isPackUnlocked(4, 'classic')).toBe(true);
+  });
+
+  it('setDevUnlockActive(false) reverts to actual progress-based gating', () => {
+    set().setDevUnlockActive(true);
+    set().setDevUnlockActive(false);
+    expect(set().devUnlockActive).toBe(false);
+    expect(set().isPackUnlocked(2, 'campaign')).toBe(false); // Pack 1 still 0 solved
+  });
+
+  it('persists to FL_DEV_UNLOCK', () => {
+    set().setDevUnlockActive(true);
+    expect(mem.get('FL_DEV_UNLOCK')).toBe('true');
+    set().setDevUnlockActive(false);
+    expect(mem.get('FL_DEV_UNLOCK')).toBe('false');
   });
 });
 

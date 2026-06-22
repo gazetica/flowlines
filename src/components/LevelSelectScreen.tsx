@@ -43,6 +43,8 @@ export default function LevelSelectScreen() {
   const campaignProgress = useFlowSettingsStore((s) => s.campaignProgress);
   const classicProgress = useFlowSettingsStore((s) => s.classicProgress);
   const unlockAllPurchased = useFlowSettingsStore((s) => s.unlockAllPurchased); // FL-5A-029
+  const devUnlockActive = useFlowSettingsStore((s) => s.devUnlockActive); // FL-5B-006 / T-018 (temporary)
+  const allLevelsUnlocked = unlockAllPurchased || devUnlockActive; // QA dev unlock mirrors the IAP
   const modeProgress = mode === 'classic' ? classicProgress : campaignProgress;
   const packProgress = modeProgress[packId];
 
@@ -109,7 +111,7 @@ export default function LevelSelectScreen() {
               const state: 'completed' | 'current' | 'unlocked' | 'locked' =
                 levelIndex < highest ? 'completed'
                   : levelIndex === highest ? 'current'
-                    : unlockAllPurchased ? 'unlocked' : 'locked';
+                    : allLevelsUnlocked ? 'unlocked' : 'locked';
 
               const tile = (() => {
                 if (state === 'locked') {

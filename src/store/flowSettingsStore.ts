@@ -30,6 +30,7 @@ const KEYS = {
   FIRST_LAUNCH:    'FL_FIRST_LAUNCH',
   CONSENT_REQ:     'FL_CONSENT_REQUESTED',
   NOTIF_SCHED:     'FL_NOTIF_SCHEDULED',
+  DEV_UNLOCK:      'FL_DEV_UNLOCK',    // FL-5B-006 / T-018: QA dev unlock (temporary — removed in FL-5B-003)
   CAMPAIGN_PROG:   'FL_CAMPAIGN_PROGRESS',
   CLASSIC_PROG:    'FL_CLASSIC_PROGRESS',
   DAILY_PROG:      'FL_DAILY_PROGRESS',
@@ -97,6 +98,7 @@ interface FlowSettingsState {
   gemBalance: number;
   removeAdsPurchased: boolean;
   unlockAllPurchased: boolean; // FL-5A-029: bypasses all sequential + pack unlock gates
+  devUnlockActive: boolean;    // FL-5B-006 / T-018: QA-only unlock toggle (NOT the IAP — temporary, removed in FL-5B-003)
 
   // Preferences
   soundEnabled: boolean;
@@ -137,6 +139,7 @@ interface FlowSettingsState {
   claimDailyVisitGem: () => void;
   setRemoveAds: (v: boolean) => Promise<void>;
   setUnlockAll: () => void; // FL-5A-029
+  setDevUnlockActive: (value: boolean) => void; // FL-5B-006 / T-018 (temporary)
   markLevelSolved: (packId: number, levelId: string, stars: 1 | 2 | 3) => Promise<void>;
   saveStars: (levelId: string, packId: number, stars: 0 | 1 | 2 | 3) => void;
   incrementDailyStreak: () => Promise<void>;
@@ -173,6 +176,7 @@ export const useFlowSettingsStore = create<FlowSettingsState>((set, get) => ({
   gemBalance: 0,
   removeAdsPurchased: false,
   unlockAllPurchased: false,
+  devUnlockActive: false,
   soundEnabled: true,
   musicEnabled: true,
   hapticsEnabled: true,
@@ -250,6 +254,15 @@ export const useFlowSettingsStore = create<FlowSettingsState>((set, get) => ({
   setUnlockAll: () => {
     set({ unlockAllPurchased: true });
     void Preferences.set({ key: KEYS.UNLOCK_ALL, value: 'true' });
+  },
+
+  // FL-5B-006 / T-018: QA-only dev unlock toggle. Separate field from the IAP
+  // (unlockAllPurchased is NEVER set by this). When true, all pack/level gates
+  // behave as if Unlock All were purchased. Persisted so it survives kill/reopen.
+  // TEMPORARY — this action and FL_DEV_UNLOCK are removed in FL-5B-003.
+  setDevUnlockActive: (value) => {
+    set({ devUnlockActive: value });
+    void Preferences.set({ key: KEYS.DEV_UNLOCK, value: String(value) });
   },
 
   markLevelSolved: async (packId, levelId, stars) => {
@@ -359,6 +372,7 @@ export const useFlowSettingsStore = create<FlowSettingsState>((set, get) => ({
   // The Unlock All Levels IAP bypasses every gate.
   isPackUnlocked: (packId, mode) => {
     if (get().unlockAllPurchased) return true; // FL-5A-029 IAP bypass
+    if (get().devUnlockActive) return true;    // FL-5B-006 / T-018 QA dev unlock (temporary)
     const prog = mode === 'classic' ? get().classicProgress : get().campaignProgress;
     const solved = (pk: number) => prog[pk]?.solved ?? 0;
     switch (packId) {
@@ -458,6 +472,7 @@ export const useFlowSettingsStore = create<FlowSettingsState>((set, get) => ({
     const gems = parseInt((await read(KEYS.GEM_BALANCE)) || '0', 10);
     const removeAds = (await read(KEYS.REMOVE_ADS)) === 'true';
     const unlockAll = (await read(KEYS.UNLOCK_ALL)) === 'true';
+    const devUnlock = (await read(KEYS.DEV_UNLOCK)) === 'true'; // FL-5B-006 / T-018 (temporary)
     const streak = parseInt((await read(KEYS.DAILY_STREAK)) || '0', 10);
     const lastDaily = (await read(KEYS.LAST_DAILY)) || '';
     const lastDailyVisit = (await read(KEYS.LAST_DAILY_VISIT)) || '';
@@ -523,6 +538,7 @@ export const useFlowSettingsStore = create<FlowSettingsState>((set, get) => ({
       gemBalance: gems,
       removeAdsPurchased: removeAds,
       unlockAllPurchased: unlockAll,
+      devUnlockActive: devUnlock,
       dailyStreakFL: streak,
       lastDailyDateFL: lastDaily,
       lastDailyVisitDate: lastDailyVisit,
