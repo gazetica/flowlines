@@ -1,9 +1,9 @@
 package com.gazetica.flowlines;
 
-// T-019: Real IAP via Google Play Billing Library 6.2.1, bridged to Capacitor.
-// All four products are ProductType.INAPP. Non-consumables (remove_ads,
-// campaign2, campaign3) are acknowledged on purchase; the consumable
-// (hint_pack_5) is left for the JS layer to consume() after granting hints.
+// T-019: Real IAP via Google Play Billing Library 8.0.0, bridged to Capacitor.
+// All three products are ProductType.INAPP. Non-consumables (remove_ads,
+// unlock_all) are acknowledged on purchase; the consumable (hint_pack) is
+// left for the JS layer to consume() after granting hints.
 
 import androidx.annotation.NonNull;
 
@@ -20,10 +20,12 @@ import com.android.billingclient.api.BillingClientStateListener;
 import com.android.billingclient.api.BillingFlowParams;
 import com.android.billingclient.api.BillingResult;
 import com.android.billingclient.api.ConsumeParams;
+import com.android.billingclient.api.PendingPurchasesParams;
 import com.android.billingclient.api.ProductDetails;
 import com.android.billingclient.api.Purchase;
 import com.android.billingclient.api.PurchasesUpdatedListener;
 import com.android.billingclient.api.QueryProductDetailsParams;
+import com.android.billingclient.api.QueryProductDetailsResult;
 import com.android.billingclient.api.QueryPurchasesParams;
 
 import java.util.ArrayList;
@@ -50,9 +52,13 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
 
     @Override
     public void load() {
+        // Billing 8: the no-arg enablePendingPurchases() was removed. enableOneTimeProducts()
+        // is its exact behavioural equivalent — all 3 SKUs are one-time INAPP products.
         billingClient = BillingClient.newBuilder(getContext())
             .setListener(this)
-            .enablePendingPurchases()
+            .enablePendingPurchases(
+                PendingPurchasesParams.newBuilder().enableOneTimeProducts().build()
+            )
             .build();
     }
 
@@ -96,7 +102,11 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
             .setProductList(products)
             .build();
 
-        billingClient.queryProductDetailsAsync(params, (result, detailsList) -> {
+        // Billing 8: the listener now receives a QueryProductDetailsResult rather than a
+        // List<ProductDetails>; unfetched products come back separately with status codes.
+        billingClient.queryProductDetailsAsync(params, (result, queryResult) -> {
+            List<ProductDetails> detailsList =
+                queryResult == null ? Collections.emptyList() : queryResult.getProductDetailsList();
             JSArray arr = new JSArray();
             if (result.getResponseCode() == BillingClient.BillingResponseCode.OK && detailsList != null) {
                 for (ProductDetails pd : detailsList) {
@@ -142,9 +152,11 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
         }
         billingClient.queryProductDetailsAsync(
             QueryProductDetailsParams.newBuilder().setProductList(products).build(),
-            (result, detailsList) -> {
-                if (detailsList != null) {
-                    for (ProductDetails d : detailsList) productDetails.put(d.getProductId(), d);
+            (result, queryResult) -> {
+                if (queryResult != null) {
+                    for (ProductDetails d : queryResult.getProductDetailsList()) {
+                        productDetails.put(d.getProductId(), d);
+                    }
                 }
                 ProductDetails found = productDetails.get(productId);
                 if (found == null) {
