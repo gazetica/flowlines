@@ -109,8 +109,7 @@ export async function showRewarded(): Promise<RewardedOutcome> {
 import { useFlowGameStore } from '../store/flowGameStore';
 import type { Cell, Colour, DotPair } from '../game/engine/GridEngine';
 
-// isTesting: true MUST be removed before production (T-015 Day 34). Top-level const
-// so the Day-34 grep over rewarded/interstitial services finds it immediately.
+// T-015 done (FL-5B-002): live ad units, test mode off.
 const isTesting = false;
 
 const HINT_REWARD_OPTIONS: RewardAdOptions = {

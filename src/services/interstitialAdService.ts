@@ -148,7 +148,7 @@ export async function maybeShowInterstitial(): Promise<void> {
 // AND not Remove-Ads. FL-5B-005b (Registry v1.2 §8): Zen also shows interstitials,
 // on its own independent counter pair (zenCompletionCount / lastZenInterstitialTime).
 
-// isTesting: true MUST be removed before production (T-015 Day 34 grep target).
+// T-015 done (FL-5B-002): live ad units, test mode off.
 const isTesting = false;
 
 let levelCompletionCount = 0;

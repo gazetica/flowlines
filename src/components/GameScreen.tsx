@@ -470,8 +470,8 @@ export function GameScreen() {
 
   // FL-UX-D-008L: §9 monetisation model updated per brief (approved override).
   // Watch one rewarded ad via the existing FL rewarded flow (showHintAd); we ignore
-  // the computed hint cell and act on the outcome. isTesting=true → instant reward
-  // in debug. Returns true only when the player actually earned the reward.
+  // the computed hint cell and act on the outcome. Returns true only when the
+  // player actually earned the reward.
   const watchRewarded = async (): Promise<boolean> => {
     if (adBusy) return false;
     setAdBusy(true);
