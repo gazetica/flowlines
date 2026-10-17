@@ -145,41 +145,78 @@ export async function maybeShowInterstitial(): Promise<void> {
 // Self-contained entry point called from ResultScreen.tsx on mount. Uses module-
 // level (not persisted) counters per the FL spec, distinct from the Numtap
 // persisted path above. Trigger: 5 completions OR 3 minutes since the last show,
-// AND not Remove-Ads, AND not Zen mode.
+// AND not Remove-Ads. FL-5B-005b (Registry v1.2 §8): Zen also shows interstitials,
+// on its own independent counter pair (zenCompletionCount / lastZenInterstitialTime).
 
 // isTesting: true MUST be removed before production (T-015 Day 34 grep target).
 const isTesting = false;
 
 let levelCompletionCount = 0;
 let lastInterstitialTime = Date.now(); // start the 3-minute clock at app load
+let zenCompletionCount = 0;
+let lastZenInterstitialTime = Date.now(); // Zen clock — wall-clock since cold start
 
 const FL_OPTIONS: AdOptions = {
-  adId: AD_UNITS.INTERSTITIAL, // test interstitial unit from admob.ts (T-015)
+  adId: AD_UNITS.INTERSTITIAL, // live interstitial unit from admob.ts (T-015)
   isTesting,
 };
+
+// FL-5B-008: preload state. Live ads take ~4–5 s to load; loading only at show
+// time let the ad land after the player had already tapped NEXT (mid-game ad).
+// One load in flight at a time; a loaded ad is held until shown.
+let flAdReady = false;
+let flAdLoading: Promise<void> | null = null;
+
+/**
+ * FL-5B-008: load an interstitial ahead of time so the result-screen show is
+ * near-instant. No-op for Remove-Ads owners, or when an ad is already loaded or
+ * loading. Silent on failure — onLevelComplete retries the load if needed.
+ */
+export function preloadInterstitial(removeAdsPurchased: boolean): Promise<void> {
+  if (removeAdsPurchased || flAdReady) return Promise.resolve();
+  if (!flAdLoading) {
+    flAdLoading = AdMob.prepareInterstitial(FL_OPTIONS)
+      .then(() => { flAdReady = true; })
+      .catch((err) => { console.warn('[interstitialAdService] FL preload failed:', err); })
+      .finally(() => { flAdLoading = null; });
+  }
+  return flAdLoading;
+}
 
 /**
  * Call on every level completion (ResultScreen mount). Increments the in-memory
  * completion count, then shows an interstitial when permitted — 5 completions OR
- * 3 minutes elapsed, never for Remove-Ads owners, never in Zen mode. Resets both
- * counters only on a confirmed show. Fire-and-forget; silent on no-fill / error.
+ * 3 minutes elapsed, never for Remove-Ads owners. Zen and Campaign/Classic each
+ * use their own counter pair and never affect each other. Resets the active pair
+ * only on a confirmed show. Fire-and-forget; silent on no-fill / error.
+ *
+ * FL-5B-008: `mountedRef` is the caller's "still on the ResultScreen" flag. It is
+ * checked after the ad is loaded and immediately before showing — if the player
+ * has navigated away, nothing is shown and no counter resets (the held ad is
+ * shown on a later result screen instead).
  */
 export async function onLevelComplete(
   isZenMode: boolean,
   removeAdsPurchased: boolean,
+  mountedRef: { current: boolean } = { current: true },
 ): Promise<void> {
-  levelCompletionCount += 1;
+  if (isZenMode) zenCompletionCount += 1; // counted synchronously, before any await
+  else levelCompletionCount += 1;
 
   if (removeAdsPurchased) return; // IAP guard — suppresses interstitials only
-  if (isZenMode) return;          // no interstitials in Zen mode
 
   const now = Date.now();
-  const shouldShow =
-    levelCompletionCount >= COMPLETION_CAP || now - lastInterstitialTime >= CAP_MS;
+  const shouldShow = isZenMode
+    ? zenCompletionCount >= COMPLETION_CAP || now - lastZenInterstitialTime >= CAP_MS
+    : levelCompletionCount >= COMPLETION_CAP || now - lastInterstitialTime >= CAP_MS;
   if (!shouldShow) return;
 
+  await preloadInterstitial(false); // joins the in-flight preload, or loads now
+  if (!flAdReady) return;           // no fill — retry next completion
+  if (!mountedRef.current) return;  // player left during the load — never show mid-game
+
   try {
-    await AdMob.prepareInterstitial(FL_OPTIONS);
+    flAdReady = false; // a shown (or failed-to-show) ad is consumed either way
     await AdMob.showInterstitial();
     analytics.adImpression('interstitial');
   } catch (err) {
@@ -187,8 +224,13 @@ export async function onLevelComplete(
     return; // no reset on failure — retry next completion while conditions hold
   }
 
-  levelCompletionCount = 0;
-  lastInterstitialTime = now;
+  if (isZenMode) {
+    zenCompletionCount = 0;
+    lastZenInterstitialTime = Date.now();
+  } else {
+    levelCompletionCount = 0;
+    lastInterstitialTime = Date.now();
+  }
 }
 
 /**
@@ -196,8 +238,11 @@ export async function onLevelComplete(
  * completion count → 0 and the 3-minute clock → now. Mirrors the reset a confirmed
  * interstitial show performs, so watching a rewarded ad buys the player a fresh
  * window and avoids back-to-back rewarded → interstitial exposure on the next result.
+ * FL-5B-005b: resets the Zen pair too — WATCH AD is available in Zen as well.
  */
 export function resetInterstitialGate(): void {
   levelCompletionCount = 0;
   lastInterstitialTime = Date.now();
+  zenCompletionCount = 0;
+  lastZenInterstitialTime = Date.now();
 }

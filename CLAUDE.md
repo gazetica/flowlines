@@ -208,7 +208,7 @@ interface SettingsState {
 | Max hints per level | 3 |
 | Hint penalty | −30 points per hint used |
 | `removeAdsPurchased` scope | Suppresses interstitials ONLY — rewarded hints always available |
-| Ads in Zen Mode | No interstitials — rewarded hints only |
+| Ads in Zen Mode | Interstitials enabled per Game Registry v1.2 §8 — every 5 Zen completions OR 3 min wall-clock since cold start / last Zen show, whichever first. Post-result only. Remove Ads IAP suppresses. Zen counters are independent of Campaign/Classic. Rewarded hints also available |
 | Home / Game screen ads | None ever |
 | ResultScreen bottom slot | GazeticaPromoCard only — never third-party |
 | IAP Remove Ads | `flowlines_remove_ads` — non-consumable — $2.99 |

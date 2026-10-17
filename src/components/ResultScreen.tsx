@@ -20,7 +20,7 @@ import { COLOUR_COUNT } from '../utils/zenLevelGenerator';
 import type { Difficulty } from '../types/level';
 import { ScoreEngine, type ScoreInput, type GameMode } from '../game/engine/ScoreEngine';
 import { globalLevelStr } from '../utils/levelUtils';
-import { onLevelComplete } from '../services/interstitialAdService';
+import { onLevelComplete, preloadInterstitial } from '../services/interstitialAdService';
 import { submitCampaignScore, type CampaignScoreMode } from '../services/flCampaignScores';
 import { submitDailyScore } from '../services/flDailyScores';
 import { trackLevelComplete } from '../services/analytics';
@@ -117,6 +117,14 @@ export function ResultScreen() {
   const bestTime = packProg?.bestTimes?.[levelId] ?? null;
   const bestMoves = packProg?.bestMoves?.[levelId] ?? null;
 
+  // FL-5B-008: "still on the ResultScreen" flag for the interstitial — checked
+  // right before showing so a slow live-ad load can never land mid-game.
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
+
   // ─── Mount side-effects (record + interstitial + Supabase + consent + notif) ──
   const ranRef = useRef(false);
   useEffect(() => {
@@ -137,8 +145,12 @@ export function ResultScreen() {
       });
     }
 
+    // FL-5B-008: start loading the ad now so it is ready when the timer fires. The
+    // timer is deliberately NOT cleared on unmount: the completion must still be
+    // counted when the player taps NEXT within 1.5 s — mountedRef blocks the show.
     const removeAds = useFlowSettingsStore.getState().removeAdsPurchased ?? false;
-    const adTimer = setTimeout(() => { void onLevelComplete(isZen, removeAds); }, 1500);
+    void preloadInterstitial(removeAds);
+    setTimeout(() => { void onLevelComplete(isZen, removeAds, mountedRef); }, 1500);
 
     const m = /^p(\d+)_(\d+)/.exec(levelId);
     if (m) {
@@ -161,7 +173,6 @@ export function ResultScreen() {
       });
     }
 
-    return () => clearTimeout(adTimer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
