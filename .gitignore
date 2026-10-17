@@ -41,3 +41,6 @@ android/app/google-services.json
 gazetica-numtap.jks
 *.jks
 android/keystore.properties
+
+# Play Store binary assets (manual Play Console upload only) — FL-5B-001
+store-assets/
